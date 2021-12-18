@@ -762,7 +762,7 @@ namespace V3UPSManager
                 // Copy the bak file to the .spc file
                 File.Move(actual_file, normal_file, true);
 
-                if (File.Exists(actual_file))
+                if (File.Exists(actual_file)  && File.Exists(before))
                 {
                     // Delete the .bak file
                     File.Delete(actual_file);
