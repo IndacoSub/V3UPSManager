@@ -60,6 +60,8 @@ namespace V3UPSManager
                 "Qualcosa non quadra coi file UPS!",
                 "Fatto! Buon divertimento!",
                 "Versione Switch non (ancora) supportata.",
+                "Non è stato trovato alcun file da disinstallare.",
+                "Disinstallazione completata!",
             };
 
             info_en = new string[] {
@@ -95,6 +97,8 @@ namespace V3UPSManager
                 "Something is wrong with the UPS files!",
                 "Done! Have fun!",
                 "Switch version not (yet) supported.",
+                "No file to be uninstalled was found.",
+                "Done uninstalling!",
             };
         }
 
@@ -122,6 +126,14 @@ namespace V3UPSManager
             return thisDir == actualDir;
         }
 
+        // From https://stackoverflow.com/questions/16183788/case-sensitive-directory-exists-file-exists
+        public static bool FileExistsCaseSensitive(string filename)
+        {
+            string name = Path.GetDirectoryName(filename);
+
+            return name != null
+                   && Array.Exists(Directory.GetFiles(name), s => s == Path.GetFullPath(filename));
+        }
         bool CheckSwitchConfiguration()
         {
             // Switch version NOT SUPPORTED
@@ -468,19 +480,30 @@ namespace V3UPSManager
             // and add them to a vector
             foreach (string file in files)
             {
+                // Remove the part before the UPS folder
                 string second_half = file.Substring(ups_folder.Length + 1);
+
+                // Get the "approximate" .spc file
                 string approximate_spc = Path.Combine(verified_installation_folder, second_half);
+
+                // I don't know
                 approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - 10);
+
                 string try_approximate_spc_lower = approximate_spc + ".spc";
                 string try_approximate_spc_upper = approximate_spc + ".SPC";
-                bool exists_lower = File.Exists(try_approximate_spc_lower);
-                bool exists_upper = File.Exists(try_approximate_spc_upper);
+
+                bool exists_lower = FileExistsCaseSensitive(try_approximate_spc_lower);
+                bool exists_upper = FileExistsCaseSensitive(try_approximate_spc_upper);
                 if (!exists_lower && !exists_upper)
                 {
+                    // try to see if the _bak exists
                     try_approximate_spc_lower = try_approximate_spc_lower + "_bak";
                     try_approximate_spc_upper = try_approximate_spc_upper + "_bak";
-                    exists_lower = File.Exists(try_approximate_spc_lower);
-                    exists_upper = File.Exists(try_approximate_spc_upper);
+
+                    // and which one exists
+                    exists_lower = FileExistsCaseSensitive(try_approximate_spc_lower);
+                    exists_upper = FileExistsCaseSensitive(try_approximate_spc_upper);
+
                     if (!exists_lower && !exists_upper)
                     {
                         couldnt_be_found.Add(try_approximate_spc_lower);
@@ -524,16 +547,16 @@ namespace V3UPSManager
                 DisplayInfo.Print(file);
             }
 
-            foreach(string file in couldnt_be_found)
-            {
-                DisplayInfo.Print("Couldn't find: " + file);
-            }
-
             foreach(string file in to_apply)
             {
                 DisplayInfo.Print("Will be \"installed\": " + file);
             }
             */
+
+            foreach (string file in couldnt_be_found)
+            {
+                DisplayInfo.Print("Couldn't find: " + file);
+            }
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -588,11 +611,15 @@ namespace V3UPSManager
 
             foreach (string file in to_apply)
             {
-                if (!File.Exists(file + "_bak"))
+                if(to_apply.Contains("_bak"))
                 {
-                    System.IO.File.Move(file, file + "_bak");
+                    continue;
+                } 
+                if (!File.Exists(file + "_bak") && File.Exists(file))
+                {
+                    System.IO.File.Copy(file, file + "_bak");
                 }
-                if (File.Exists(file))
+                if (File.Exists(file) && File.Exists(file + "_bak"))
                 {
                     File.Delete(file);
                 }
@@ -612,21 +639,34 @@ namespace V3UPSManager
                     DisplayInfo.Print(info[29]);
                     return;
                 }
+
+                // Output .spc file
                 string outfile = to_apply[j];
+
+                // Base .spc file
                 string before = outfile + "_bak";
+
+                // .ups file
                 string after = to_be_applied[j];
+
+                string command = "apply --base " + $"\"{before}\"" + " --patch " + $"\"{after}\"" + " --output " + $"\"{outfile}\"";
 
                 //Process.Start(ups, "apply --base " + $"\"{before}\"" + " --patch " + $"\"{after}\"" + " --output " + $"\"{outfile}\"").WaitForExit();
 
                 var p = new System.Diagnostics.Process();
                 //p.StartInfo.WorkingDirectory = cur;
                 p.StartInfo.FileName = "ups.exe";
-                p.StartInfo.Arguments = "apply --base " + $"\"{before}\"" + " --patch " + $"\"{after}\"" + " --output " + $"\"{outfile}\"";
+                p.StartInfo.Arguments = command;
                 p.StartInfo.RedirectStandardOutput = false;
                 p.StartInfo.UseShellExecute = false;
                 p.StartInfo.CreateNoWindow = true;
                 p.Start();
-                //p.WaitForExit();
+                p.WaitForExit();
+
+                if(!File.Exists(outfile))
+                {
+                    File.Move(before, outfile, false);
+                }
             }
 
             DisplayInfo.Print(info[30]);
@@ -651,14 +691,16 @@ namespace V3UPSManager
                     info = info_en;
                     button1.Text = "Choose installation folder";
                     button2.Text = "Choose patch folder";
-                    button3.Text = "Start";
+                    button3.Text = "Install / Update";
+                    button4.Text = "Uninstall";
                     break;
                 case 1:
                 default:
                     info = info_it;
                     button1.Text = "Seleziona cartella di installazione";
                     button2.Text = "Seleziona cartella patch";
-                    button3.Text = "Esegui";
+                    button3.Text = "Installa / Aggiorna";
+                    button4.Text = "Disinstalla";
                     break;
             }
         }
@@ -666,6 +708,78 @@ namespace V3UPSManager
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             CheckIndexChange();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            // Check if the installation folder is not valid
+            if (string.IsNullOrWhiteSpace(verified_installation_folder) || verified_installation_folder.Length <= 0 || !Directory.Exists(verified_installation_folder))
+            {
+                DisplayInfo.Print(info[25]);
+                return;
+            }
+
+            List<string> filelist = new List<string>();
+            // Count and get all .spc backup files in the patch folder
+            string[] files1 = Directory.GetFiles(verified_installation_folder, ("*.spc_bak"), SearchOption.AllDirectories);
+            string[] files2 = Directory.GetFiles(verified_installation_folder, ("*.SPC_bak"), SearchOption.AllDirectories);
+            if (files1 == null || files2 == null || files1.Length == 0 || files2.Length == 0)
+            {
+                DisplayInfo.Print(info[32]);
+                return;
+            }
+
+            foreach (string file in files1)
+            {
+                filelist.Add(file);
+            }
+
+            foreach (string file in files2)
+            {
+                filelist.Add(file);
+            }
+
+            int count_uninstalled = 0;
+            foreach (string file in filelist)
+            {
+                // .spc_bak
+                string actual_file = file;
+                // .spc
+                string normal_file = actual_file.Substring(0, actual_file.Length - 4);
+                if (!File.Exists(normal_file) || string.IsNullOrWhiteSpace(normal_file))
+                {
+                    continue;
+                }
+
+                if (!File.Exists(actual_file) || !File.Exists(file))
+                {
+                    continue;
+                }
+
+                // Delete the .spc file
+                File.Delete(normal_file);
+
+                // Copy the bak file to the .spc file
+                File.Move(actual_file, normal_file, true);
+
+                if (File.Exists(actual_file))
+                {
+                    // Delete the .bak file
+                    File.Delete(actual_file);
+                }
+
+                //DisplayInfo.Print("Normal: " + normal_file + ", actual: " + actual_file + "...");
+                count_uninstalled++;
+            }
+
+            if (count_uninstalled > 0)
+            {
+                DisplayInfo.Print(info[33]);
+            }
+            else
+            {
+                DisplayInfo.Print(info[32]);
+            }
         }
     }
 }
