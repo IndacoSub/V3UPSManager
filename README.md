@@ -4,7 +4,7 @@ A .ups file "manager", useful for installing the Italian translation for "Dangan
 
 UPS Manager depends on "UPS Tools" by rameshvarun (https://github.com/rameshvarun/ups), licensed under the MIT license (https://github.com/rameshvarun/ups/blob/master/LICENSE).
 
-The source code for "V3UPSManager" may be compiled without "UPS Tools", as those are only needed at runtime and are, therefore, only included and redistributed in our release builds, along with the source code and the license notice.
+The source code for "V3UPSManager" may be compiled without "UPS Tools", as those are only needed at runtime and are, therefore, only included and redistributed in our release builds (found here: https://github.com/IndacoSub/V3UPSManager/releases), along with the source code and the license notice.
 
 ## Credits ##
 
