@@ -132,17 +132,6 @@ namespace V3UPSManager
                     File.Copy(before, outfile, false);
                 }
             }
-
-            // Count backup files in the installation folder
-            string[] files = Directory.GetFiles(installation_folder, "*.*_bak", SearchOption.AllDirectories);
-            if (files != null && files.Length > 0 && files.Length == to_apply.Count)
-            {
-                DisplayInfo.Print(info[30]);
-            }
-            else
-            {
-                DisplayInfo.Print(info[34]);
-            }
         }
     }
 }
