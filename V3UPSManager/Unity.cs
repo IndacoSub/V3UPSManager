@@ -75,16 +75,17 @@ namespace V3UPSManager
                 return false;
             }
 
-            // Count .ab/.assets (Unity) files in the installation folder
+            // Count .pb (???) files and .ab/.assets (Unity) files in the installation folder
             string[] files = Directory.GetFiles(installation_folder, "*.ab", SearchOption.AllDirectories);
             string[] files2 = Directory.GetFiles(installation_folder, "*.assets", SearchOption.AllDirectories);
-            if (files == null || files2 == null)
+            string[] files3 = Directory.GetFiles(installation_folder, "*.pb", SearchOption.AllDirectories);
+            if (files == null || files2 == null || files3 == null)
             {
                 DisplayInfo.Print(info[31]);
                 return false;
             }
 
-            if (files.Length <= 0 && files2.Length <= 0)
+            if (files.Length <= 0 && files2.Length <= 0 && files3.Length <= 0)
             {
                 DisplayInfo.Print(info[31]);
                 return false;

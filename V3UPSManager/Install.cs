@@ -102,10 +102,10 @@ namespace V3UPSManager
                     return;
                 }
 
-                // Output .spc/.ab/.assets file
+                // Output .spc/.pb/.ab/.assets file
                 string outfile = to_apply[j];
 
-                // Base .spc/.ab/.assets file
+                // Base .spc/.pb/.ab/.assets file
                 string before = outfile + "_bak";
 
                 // .ups file

@@ -173,6 +173,7 @@ namespace V3UPSManager
             TryToApplySPCFiles(ups_files);
             if (!IsLegacy)
             {
+                TryToApplyPBFiles(ups_files);
                 TryToApplyABFiles(ups_files);
                 TryToApplyAssetsFiles(ups_files);
             }
@@ -190,6 +191,8 @@ namespace V3UPSManager
                 string abbak = ab + "_bak";
                 string assets = no_ext + ".assets";
                 string assetsbak = assets + "_bak";
+                string pb = no_ext + ".pb";
+                string pbbak = pb + "_bak";
                 string patchups = no_ext + ".ups";
                 string no_extbak = no_ext + "_bak";
                 RemoveFromList(f.ToLowerInvariant());
@@ -199,6 +202,8 @@ namespace V3UPSManager
                 RemoveFromList(abbak.ToLowerInvariant());
                 RemoveFromList(assets.ToLowerInvariant());
                 RemoveFromList(assetsbak.ToLowerInvariant());
+                RemoveFromList(pb.ToLowerInvariant());
+                RemoveFromList(pbbak.ToLowerInvariant());
                 RemoveFromList(patchups.ToLowerInvariant());
                 RemoveFromList(no_ext.ToLowerInvariant());
                 RemoveFromList(no_extbak.ToLowerInvariant());
@@ -395,6 +400,89 @@ namespace V3UPSManager
                 if (to_apply.Contains(approximate_ab))
                 {
                     couldnt_be_found.Remove(approximate_ab.ToLowerInvariant());
+                }
+            }
+        }
+
+        private void TryToApplyPBFiles(string[] ups_files)
+        {
+            // Calculate which PB files correspond to the UPS files
+            // and add them to a vector
+            foreach (string file in ups_files)
+            {
+                if (to_apply.Contains(file))
+                {
+                    continue;
+                }
+
+                if (IsDirectory(file))
+                {
+                    continue;
+                }
+
+                if (!file.Contains("_patch.ups"))
+                {
+                    continue;
+                }
+
+                // Remove the part before the UPS folder
+                string second_half = file.Substring(ups_folder.Length + 1);
+
+                if (already_checked.Contains(second_half))
+                {
+                    continue;
+                }
+
+                // Get the "approximate" .pb file
+                string approximate_pb = Path.Combine(verified_installation_folder, second_half);
+
+                if (IsDirectory(approximate_pb))
+                {
+                    continue;
+                }
+
+                string bak_approx = approximate_pb;
+
+                // _patch.ups (length: 10)
+                approximate_pb = approximate_pb.Substring(0, approximate_pb.Length - 10);
+
+                if (approximate_pb.Length <= 0)
+                {
+                    continue;
+                }
+
+                approximate_pb += ".pb";
+
+                if (!File.Exists(approximate_pb))
+                {
+                    // Does not exist
+
+                    approximate_pb += "_bak";
+
+                    if (!File.Exists(approximate_pb))
+                    {
+                        if (!to_apply.Contains(approximate_pb) &&
+                            !couldnt_be_found.Contains(approximate_pb.ToLowerInvariant()))
+                        {
+                            couldnt_be_found.Add(approximate_pb.ToLowerInvariant());
+                        }
+                        continue;
+                    }
+                    else
+                    {
+                        // restore backup
+                        string nobak = approximate_pb.Substring(0, approximate_pb.Length - 4);
+                        System.IO.File.Copy(approximate_pb, nobak, true);
+                        approximate_pb = nobak;
+                    }
+                }
+
+                to_apply.Add(approximate_pb);
+                already_checked.Add(second_half.ToLowerInvariant());
+
+                if (to_apply.Contains(approximate_pb))
+                {
+                    couldnt_be_found.Remove(approximate_pb.ToLowerInvariant());
                 }
             }
         }
