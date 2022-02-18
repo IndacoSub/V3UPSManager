@@ -10,7 +10,8 @@ namespace V3UPSManager
     {
         List<string> couldnt_be_found = new List<string>();
         bool IsLegacy = false;
-
+        string TitleID = "";
+        List<string> already_checked = new List<string>();
         private void LoadInstallationFolder()
         {
             using (var fold = new FolderBrowserDialog())
@@ -131,6 +132,14 @@ namespace V3UPSManager
                 to_be_applied = new List<string>();
                 foreach (string file in files)
                 {
+                    if (IsDirectory(file))
+                    {
+                        continue;
+                    }
+                    if(!file.Contains("_patch.ups"))
+                    {
+                        continue;
+                    }
                     to_be_applied.Add(file);
                 }
             }
@@ -139,7 +148,7 @@ namespace V3UPSManager
 
             foreach (string file in couldnt_be_found)
             {
-                DisplayInfo.Print("Couldn't find: " + file);
+                DisplayInfo.Print("Couldn't find: " + file.Substring(0, file.Length - Path.GetExtension(file).Length));
             }
 
             DisplayInfo.Print(info[23]);
@@ -151,17 +160,29 @@ namespace V3UPSManager
         {
 
             to_apply = new List<string>();
+            already_checked = new List<string>();
 
             TryToApplySPCFiles(ups_files);
-            TryToApplyABFiles(ups_files);
-            TryToApplyAssetsFiles(ups_files);
+            if (!IsLegacy)
+            {
+                TryToApplyABFiles(ups_files);
+                TryToApplyAssetsFiles(ups_files);
+            }
 
             foreach(string f in to_apply)
             {
-                if (to_apply.Contains(f))
+                if(!Path.HasExtension(f))
                 {
-                    couldnt_be_found.Remove(Path.GetFileNameWithoutExtension(f).ToLowerInvariant());
+                    continue;
                 }
+                string no_ext = f.Substring(0, f.Length - Path.GetExtension(f).Length);
+                string spc = no_ext + ".spc";
+                string ab = no_ext + ".ab";
+                string assets = no_ext + ".assets";
+                couldnt_be_found.Remove(spc.ToLowerInvariant());
+                couldnt_be_found.Remove(ab.ToLowerInvariant());
+                couldnt_be_found.Remove(assets.ToLowerInvariant());
+                couldnt_be_found.Remove(no_ext.ToLowerInvariant());
             }
         }
 
@@ -175,17 +196,45 @@ namespace V3UPSManager
                 {
                     continue;
                 }
+
+                if(IsDirectory(file))
+                {
+                    continue;
+                }
+
+                if (!file.Contains("_patch.ups"))
+                {
+                    continue;
+                }
+
                 // Remove the part before the UPS folder
                 string second_half = file.Substring(ups_folder.Length + 1);
+
+                if(already_checked.Contains(second_half))
+                {
+                    continue;
+                }
 
                 // Get the "approximate" .spc file
                 string approximate_spc = Path.Combine(verified_installation_folder, second_half);
 
+                if (IsDirectory(approximate_spc))
+                {
+                    continue;
+                }
+
                 // _patch.ups (length: 10)
                 approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - 10);
 
+                if(approximate_spc.Length <= 0)
+                {
+                    continue;
+                }
+
                 string try_approximate_spc_lower = approximate_spc + ".spc";
                 string try_approximate_spc_upper = approximate_spc + ".SPC";
+
+                string og_no_bak = try_approximate_spc_lower;
 
                 bool exists_lower = FileExistsCaseSensitive(try_approximate_spc_lower);
                 bool exists_upper = FileExistsCaseSensitive(try_approximate_spc_upper);
@@ -202,10 +251,10 @@ namespace V3UPSManager
                     if (!exists_lower && !exists_upper)
                     {
                         // None exists
-                        if (!to_apply.Contains(try_approximate_spc_lower) &&
-                            !couldnt_be_found.Contains(Path.GetFileNameWithoutExtension(try_approximate_spc_lower).ToLowerInvariant()))
+                        if (!to_apply.Contains(og_no_bak) &&
+                            !couldnt_be_found.Contains(og_no_bak.ToLowerInvariant()))
                         {
-                            couldnt_be_found.Add(Path.GetFileNameWithoutExtension(try_approximate_spc_lower).ToLowerInvariant());
+                            couldnt_be_found.Add(og_no_bak.ToLowerInvariant());
                         }
                         continue;
                     }
@@ -238,10 +287,12 @@ namespace V3UPSManager
                 {
                     to_apply.Add(try_approximate_spc_upper);
                 }
+                already_checked.Add(second_half.ToLowerInvariant());
 
                 if (to_apply.Contains(try_approximate_spc_lower))
                 {
-                    couldnt_be_found.Remove(Path.GetFileNameWithoutExtension(try_approximate_spc_lower).ToLowerInvariant());
+                    couldnt_be_found.Remove(try_approximate_spc_lower.ToLowerInvariant());
+                    couldnt_be_found.Remove(og_no_bak.ToLowerInvariant());
                 }
             }
         }
@@ -257,14 +308,41 @@ namespace V3UPSManager
                     continue;
                 }
 
+                if (IsDirectory(file))
+                {
+                    continue;
+                }
+
+                if (!file.Contains("_patch.ups"))
+                {
+                    continue;
+                }
+
                 // Remove the part before the UPS folder
                 string second_half = file.Substring(ups_folder.Length + 1);
+
+                if (already_checked.Contains(second_half))
+                {
+                    continue;
+                }
 
                 // Get the "approximate" .ab file
                 string approximate_ab = Path.Combine(verified_installation_folder, second_half);
 
+                if (IsDirectory(approximate_ab))
+                {
+                    continue;
+                }
+
+                string bak_approx = approximate_ab;
+
                 // _patch.ups (length: 10)
                 approximate_ab = approximate_ab.Substring(0, approximate_ab.Length - 10);
+
+                if(approximate_ab.Length <= 0)
+                {
+                    continue;
+                }
 
                 approximate_ab += ".ab";
 
@@ -277,9 +355,9 @@ namespace V3UPSManager
                     if (!File.Exists(approximate_ab))
                     {
                         if (!to_apply.Contains(approximate_ab) &&
-                            !couldnt_be_found.Contains(Path.GetFileNameWithoutExtension(approximate_ab).ToLowerInvariant()))
+                            !couldnt_be_found.Contains(approximate_ab.ToLowerInvariant()))
                         {
-                            couldnt_be_found.Add(Path.GetFileNameWithoutExtension(approximate_ab).ToLowerInvariant());
+                            couldnt_be_found.Add(approximate_ab.ToLowerInvariant());
                         }
                         continue;
                     }
@@ -293,10 +371,11 @@ namespace V3UPSManager
                 }
 
                 to_apply.Add(approximate_ab);
+                already_checked.Add(second_half.ToLowerInvariant());
 
                 if (to_apply.Contains(approximate_ab))
                 {
-                    couldnt_be_found.Remove(Path.GetFileNameWithoutExtension(approximate_ab).ToLowerInvariant());
+                    couldnt_be_found.Remove(approximate_ab.ToLowerInvariant());
                 }
             }
         }
@@ -311,14 +390,42 @@ namespace V3UPSManager
                 {
                     continue;
                 }
+
+                if (IsDirectory(file))
+                {
+                    continue;
+                }
+
+                if (!file.Contains("_patch.ups"))
+                {
+                    continue;
+                }
+
                 // Remove the part before the UPS folder
                 string second_half = file.Substring(ups_folder.Length + 1);
+
+                if (already_checked.Contains(second_half))
+                {
+                    continue;
+                }
 
                 // Get the "approximate" .assets file
                 string approximate_assets = Path.Combine(verified_installation_folder, second_half);
 
+                if (IsDirectory(approximate_assets))
+                {
+                    continue;
+                }
+
+                string bak_approx = approximate_assets;
+
                 // _patch.ups (length: 10)
                 approximate_assets = approximate_assets.Substring(0, approximate_assets.Length - 10);
+
+                if(approximate_assets.Length <= 0)
+                {
+                    continue;
+                }
 
                 approximate_assets += ".assets";
 
@@ -331,9 +438,9 @@ namespace V3UPSManager
                     if (!File.Exists(approximate_assets))
                     {
                         if (!to_apply.Contains(approximate_assets) &&
-                            !couldnt_be_found.Contains(Path.GetFileNameWithoutExtension(approximate_assets).ToLowerInvariant()))
+                            !couldnt_be_found.Contains(approximate_assets.ToLowerInvariant()))
                         {
-                            couldnt_be_found.Add(Path.GetFileNameWithoutExtension(approximate_assets).ToLowerInvariant());
+                            couldnt_be_found.Add(approximate_assets.ToLowerInvariant());
                         }
                         continue;
                     }
@@ -347,10 +454,11 @@ namespace V3UPSManager
                 }
 
                 to_apply.Add(approximate_assets);
+                already_checked.Add(second_half.ToLowerInvariant());
 
                 if (to_apply.Contains(approximate_assets))
                 {
-                    couldnt_be_found.Remove(Path.GetFileNameWithoutExtension(approximate_assets).ToLowerInvariant());
+                    couldnt_be_found.Remove(approximate_assets.ToLowerInvariant());
                 }
             }
         }

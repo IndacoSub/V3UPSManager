@@ -24,6 +24,10 @@ namespace V3UPSManager
                     DisplayInfo.Print(info[31]);
                     return false;
                 }
+            } else
+            {
+                // Assume titleid (for now)
+                TitleID = "010063F014176000";
             }
 
             string unity_root = "Data";

@@ -41,5 +41,22 @@ namespace V3UPSManager
             return result.ToString();
         }
 
+        // From https://stackoverflow.com/questions/1395205/better-way-to-check-if-a-path-is-a-file-or-a-directory
+
+        public static bool IsDirectory(string path)
+        {
+            if(!File.Exists(path) && !Directory.Exists(path))
+            {
+                return false;
+            }
+
+            // get the file attributes for file or directory
+            FileAttributes attr = File.GetAttributes(path);
+
+            if (attr.HasFlag(FileAttributes.Directory))
+                return true;
+            else
+                return false;
+        }
     }
 }

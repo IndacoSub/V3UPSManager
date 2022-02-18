@@ -21,6 +21,12 @@ namespace V3UPSManager
                 Directory.CreateDirectory(backupdir);
             }
 
+            if(TitleID.Length > 0)
+            {
+                backupdir = Path.Combine(backupdir, TitleID);
+                backupdir = Path.Combine(backupdir, "romfs");
+            }
+
             foreach (string file in to_apply)
             {
                 string after_installdir = file.Substring(verified_installation_folder.Length + 1);
