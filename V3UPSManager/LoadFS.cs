@@ -136,7 +136,7 @@ namespace V3UPSManager
                     {
                         continue;
                     }
-                    if(!file.Contains("_patch.ups"))
+                    if (!file.Contains("_patch.ups"))
                     {
                         continue;
                     }
@@ -148,12 +148,20 @@ namespace V3UPSManager
 
             foreach (string file in couldnt_be_found)
             {
-                DisplayInfo.Print("Couldn't find: " + file.Substring(0, file.Length - Path.GetExtension(file).Length));
+                DisplayInfo.Print("Couldn't find: " + file);
+                //DisplayInfo.Print("Couldn't find: " + file.Substring(0, file.Length - Path.GetExtension(file).Length));
             }
 
             DisplayInfo.Print(info[23]);
 
             textBox2.Text = ups_folder;
+        }
+
+        private void RemoveFromList(string str)
+        {
+            while (couldnt_be_found.IndexOf(str) >= 0) couldnt_be_found.RemoveAt(couldnt_be_found.IndexOf(str));
+            while (couldnt_be_found.Any(str.Contains)) couldnt_be_found.Remove(str);
+            couldnt_be_found.RemoveAll(x => ((string)x) == str);
         }
 
         private void GetToApply(string[] ups_files)
@@ -169,20 +177,31 @@ namespace V3UPSManager
                 TryToApplyAssetsFiles(ups_files);
             }
 
-            foreach(string f in to_apply)
+            foreach (string f in to_apply)
             {
-                if(!Path.HasExtension(f))
+                if (!Path.HasExtension(f))
                 {
                     continue;
                 }
                 string no_ext = f.Substring(0, f.Length - Path.GetExtension(f).Length);
                 string spc = no_ext + ".spc";
+                string spcbak = spc + "_bak";
                 string ab = no_ext + ".ab";
+                string abbak = ab + "_bak";
                 string assets = no_ext + ".assets";
-                couldnt_be_found.Remove(spc.ToLowerInvariant());
-                couldnt_be_found.Remove(ab.ToLowerInvariant());
-                couldnt_be_found.Remove(assets.ToLowerInvariant());
-                couldnt_be_found.Remove(no_ext.ToLowerInvariant());
+                string assetsbak = assets + "_bak";
+                string patchups = no_ext + ".ups";
+                string no_extbak = no_ext + "_bak";
+                RemoveFromList(f.ToLowerInvariant());
+                RemoveFromList(spc.ToLowerInvariant());
+                RemoveFromList(spcbak.ToLowerInvariant());
+                RemoveFromList(ab.ToLowerInvariant());
+                RemoveFromList(abbak.ToLowerInvariant());
+                RemoveFromList(assets.ToLowerInvariant());
+                RemoveFromList(assetsbak.ToLowerInvariant());
+                RemoveFromList(patchups.ToLowerInvariant());
+                RemoveFromList(no_ext.ToLowerInvariant());
+                RemoveFromList(no_extbak.ToLowerInvariant());
             }
         }
 
@@ -192,12 +211,12 @@ namespace V3UPSManager
             // and add them to a vector
             foreach (string file in ups_files)
             {
-                if(to_apply.Contains(file))
+                if (to_apply.Contains(file))
                 {
                     continue;
                 }
 
-                if(IsDirectory(file))
+                if (IsDirectory(file))
                 {
                     continue;
                 }
@@ -210,7 +229,7 @@ namespace V3UPSManager
                 // Remove the part before the UPS folder
                 string second_half = file.Substring(ups_folder.Length + 1);
 
-                if(already_checked.Contains(second_half))
+                if (already_checked.Contains(second_half))
                 {
                     continue;
                 }
@@ -226,7 +245,7 @@ namespace V3UPSManager
                 // _patch.ups (length: 10)
                 approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - 10);
 
-                if(approximate_spc.Length <= 0)
+                if (approximate_spc.Length <= 0)
                 {
                     continue;
                 }
@@ -339,7 +358,7 @@ namespace V3UPSManager
                 // _patch.ups (length: 10)
                 approximate_ab = approximate_ab.Substring(0, approximate_ab.Length - 10);
 
-                if(approximate_ab.Length <= 0)
+                if (approximate_ab.Length <= 0)
                 {
                     continue;
                 }
@@ -422,7 +441,7 @@ namespace V3UPSManager
                 // _patch.ups (length: 10)
                 approximate_assets = approximate_assets.Substring(0, approximate_assets.Length - 10);
 
-                if(approximate_assets.Length <= 0)
+                if (approximate_assets.Length <= 0)
                 {
                     continue;
                 }
