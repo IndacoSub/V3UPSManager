@@ -119,7 +119,7 @@ namespace V3UPSManager
                 //p.StartInfo.WorkingDirectory = cur;
                 p.StartInfo.FileName = "ups.exe";
                 p.StartInfo.Arguments = command;
-                p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.RedirectStandardOutput = false;
                 p.StartInfo.UseShellExecute = false;
                 p.StartInfo.CreateNoWindow = true;
                 p.Start();
@@ -128,6 +128,7 @@ namespace V3UPSManager
                 // If the outfile (not _bak) file does not exist while the backup does
                 if (!File.Exists(outfile) && File.Exists(before))
                 {
+                    DisplayInfo.Print("File does not exist: " + outfile + ", creating manually from backup... (please report this)");
                     // Then copy the backup
                     File.Copy(before, outfile, false);
                 }

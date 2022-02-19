@@ -234,7 +234,7 @@ namespace V3UPSManager
                 // Remove the part before the UPS folder
                 string second_half = file.Substring(ups_folder.Length + 1);
 
-                if (already_checked.Contains(second_half))
+                if (already_checked.Contains(second_half.ToLowerInvariant()))
                 {
                     continue;
                 }
@@ -345,7 +345,7 @@ namespace V3UPSManager
                 // Remove the part before the UPS folder
                 string second_half = file.Substring(ups_folder.Length + 1);
 
-                if (already_checked.Contains(second_half))
+                if (already_checked.Contains(second_half.ToLowerInvariant()))
                 {
                     continue;
                 }
@@ -428,7 +428,7 @@ namespace V3UPSManager
                 // Remove the part before the UPS folder
                 string second_half = file.Substring(ups_folder.Length + 1);
 
-                if (already_checked.Contains(second_half))
+                if (already_checked.Contains(second_half.ToLowerInvariant()))
                 {
                     continue;
                 }
