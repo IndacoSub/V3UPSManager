@@ -1,57 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace V3UPSManager;
 
-namespace V3UPSManager
+public partial class Form1 : Form
 {
-    public partial class Form1 : Form
+    private void BackupChanges()
     {
-        private void BackupChanges()
+        string cur = Directory.GetCurrentDirectory();
+        string backupdir = Path.Combine(cur, "Backup");
+
+        if (Directory.Exists(backupdir))
         {
-            string cur = Directory.GetCurrentDirectory();
-            string backupdir = Path.Combine(cur, "Backup");
-
-            if(Directory.Exists(backupdir))
-            {
-                Directory.Delete(backupdir, true);
-            } else
-            {
-                Directory.CreateDirectory(backupdir);
-            }
-
-            if(TitleID.Length > 0)
-            {
-                backupdir = Path.Combine(backupdir, TitleID);
-                backupdir = Path.Combine(backupdir, "romfs");
-            }
-
-            foreach (string file in to_apply)
-            {
-                string after_installdir = file.Substring(verified_installation_folder.Length + 1);
-                string newpath = Path.Combine(backupdir, after_installdir);
-                if(newpath == null || newpath.Length <= 0)
-                {
-                    continue;
-                }
-                Directory.CreateDirectory(Path.GetDirectoryName(newpath));
-                System.IO.File.Copy(file, newpath);
-            }
+            Directory.Delete(backupdir, true);
+        }
+        else
+        {
+            Directory.CreateDirectory(backupdir);
         }
 
-        private void DisplayStatus()
+        if (TitleID.Length > 0)
         {
-            // Count backup files in the installation folder
-            string[] files = Directory.GetFiles(installation_folder, "*.*_bak", SearchOption.AllDirectories);
-            if (files != null && files.Length > 0 && files.Length == to_apply.Count)
+            backupdir = Path.Combine(backupdir, TitleID);
+            backupdir = Path.Combine(backupdir, "romfs");
+        }
+
+        foreach (string file in to_apply)
+        {
+            string after_installdir = file.Substring(verified_installation_folder.Length + 1);
+            string newpath = Path.Combine(backupdir, after_installdir);
+            if (newpath == null || newpath.Length <= 0)
             {
-                DisplayInfo.Print(info[30]);
+                continue;
             }
-            else
-            {
-                DisplayInfo.Print(info[34]);
-            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(newpath));
+            File.Copy(file, newpath);
+        }
+    }
+
+    private void DisplayStatus()
+    {
+        // Count backup files in the installation folder
+        string[] files = Directory.GetFiles(installation_folder, "*.*_bak", SearchOption.AllDirectories);
+        if (files != null && files.Length > 0 && files.Length == to_apply.Count)
+        {
+            DisplayInfo.Print(info[30]);
+        }
+        else
+        {
+            DisplayInfo.Print(info[34]);
         }
     }
 }

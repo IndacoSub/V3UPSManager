@@ -1,15 +1,14 @@
-namespace V3UPSManager
+namespace V3UPSManager;
+
+internal static class Program
 {
-    internal static class Program
+    /// <summary>
+    ///     The main entry point for the application.
+    /// </summary>
+    [STAThread]
+    private static void Main()
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main()
-        {
-            ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
-        }
+        ApplicationConfiguration.Initialize();
+        Application.Run(new Form1());
     }
 }
