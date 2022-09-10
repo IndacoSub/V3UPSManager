@@ -6,12 +6,14 @@ public partial class Form1 : Form
     private string[] info_en = new string[30];
     private string[] info_it = new string[30];
 
+    private string UNITY_EXE_NAME = "DanganronpaV3.exe";
+
     private void LoadLanguages()
     {
         info_it = new[]
         {
             "La cartella di installazione non esiste!", // 0
-            "L'eseguibile (\"Dangan3Win.exe\") non è stato trovato (normale per installazioni versione Unity)!", // 1
+            "L'eseguibile (\"Dangan3Win.exe\") non è stato trovato (normale per installazioni versione Unity (Anniversary))!", // 1
             "Il file \"language.txt\" non è stato trovato!\nPer favore avvia il gioco almeno una volta\n(e controlla che funzioni).", // 2
             "Il gioco non è in inglese.\nPer favore disinstalla e installa nuovamente il gioco\ncon la lingua inglese.", // 3
             "La/e cartella/e \"data\" e \"win\" non sono state trovate!", // 4
@@ -46,13 +48,14 @@ public partial class Form1 : Form
             "Disinstallazione completata!", // 33
             "Non è stato possibile installare alcuni file...", // 34
             "La/e cartella/e \"Data\" e/o \"Data\\StreamingAssets\" non sono state trovate!", // 35
-            "Non sono state trovate informazioni sui file SPC/AB/Assets!" // 36
+            "Non sono state trovate informazioni sui file SPC/AB/Assets!", // 36
+            "Non è stato trovato l'eseguibile (\"" + UNITY_EXE_NAME + "\") (normale per installazioni versione non-Unity (Anniversary))!", // 37
         };
 
         info_en = new[]
         {
             "The installation folder doesn't exist!",
-            "The executable (\"Dangan3Win.exe\") couldn't be found (normal for Unity-version installations)!",
+            "The executable (\"Dangan3Win.exe\") couldn't be found (normal for Unity-version (Anniversary) installations)!",
             "The file \"language.txt\" couldn't be found!\nPlease boot the game at least once\n(and make sure it's working).",
             "Your game language is not set to English.\nPlease uninstall and reinstall the game\nwith the English language instead.",
             "The \"data\" and/or \"data\\win\" folders couldn't be found!",
@@ -87,7 +90,8 @@ public partial class Form1 : Form
             "Done uninstalling!",
             "Some files couldn't be installed...",
             "The \"Data\" and/or \"Data\\StreamingAssets\" folders couldn't be found!",
-            "No SPC/AB/Assets file info found!"
+            "No SPC/AB/Assets file info found!",
+            "The executable (\"" + UNITY_EXE_NAME + "\") couldn't be found (normal for non-Unity (Anniversary) installations)!",
         };
     }
 

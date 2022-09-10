@@ -9,12 +9,22 @@ public partial class Form1 : Form
 
         if (!supported_titleids.Any(installation_folder.Contains))
         {
-            // UWP version?
+            // Xbox version?
             if (!installation_folder.Contains("SpikeChunsoftCo.Ltd"))
             {
                 // Unknown version
                 DisplayInfo.Print(info[31]);
                 return false;
+            }
+            else
+            {
+                // Xbox version!
+                string exe = Path.Combine(installation_folder, UNITY_EXE_NAME);
+                if(!File.Exists(exe))
+                {
+                    DisplayInfo.Print(info[37]);
+                    return false;
+                }
             }
         }
         else
