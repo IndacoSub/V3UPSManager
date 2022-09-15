@@ -4,13 +4,14 @@ public partial class Form1 : Form
 {
     private bool CheckUnityConfiguration()
     {
+        bool is_xbox = false;
         List<string> supported_titleids = new List<string>();
         supported_titleids.Add("010063F014176000"); // Standalone V3 from Nintendo eShop (Europe)
 
         if (!supported_titleids.Any(installation_folder.Contains))
         {
             // Xbox version?
-            if (!installation_folder.Contains("SpikeChunsoftCo.Ltd"))
+            if (!installation_folder.Contains("V3- Killing Harmony"))
             {
                 // Unknown version
                 DisplayInfo.Print(info[31]);
@@ -25,12 +26,19 @@ public partial class Form1 : Form
                     DisplayInfo.Print(info[37]);
                     return false;
                 }
+                is_xbox = true;
             }
         }
         else
         {
             // Assume titleid (for now)
             TitleID = "010063F014176000";
+        }
+
+        if(is_xbox)
+        {
+            // NOT SUPPORTED
+            return false;
         }
 
         string unity_root = "Data";

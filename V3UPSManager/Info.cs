@@ -6,7 +6,7 @@ public partial class Form1 : Form
     private string[] info_en = new string[30];
     private string[] info_it = new string[30];
 
-    private string UNITY_EXE_NAME = "DanganronpaV3.exe";
+    private string UNITY_EXE_NAME = "Dangan3Desktop.exe";
 
     private void LoadLanguages()
     {
