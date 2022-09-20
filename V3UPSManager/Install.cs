@@ -40,7 +40,7 @@ public partial class Form1 : Form
 
         if (to_be_applied.Count <= 0)
         {
-            if (IsLegacy)
+            if (!IsUnity)
             {
                 DisplayInfo.Print(info[26]);
             }

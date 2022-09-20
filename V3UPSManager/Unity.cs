@@ -4,7 +4,6 @@ public partial class Form1 : Form
 {
     private bool CheckUnityConfiguration()
     {
-        bool is_xbox = false;
         List<string> supported_titleids = new List<string>();
         supported_titleids.Add("010063F014176000"); // Standalone V3 from Nintendo eShop (Europe)
 
@@ -19,26 +18,13 @@ public partial class Form1 : Form
             }
             else
             {
-                // Xbox version!
-                string exe = Path.Combine(installation_folder, UNITY_EXE_NAME);
-                if(!File.Exists(exe))
-                {
-                    DisplayInfo.Print(info[37]);
-                    return false;
-                }
-                is_xbox = true;
+                // Mobile?
             }
         }
         else
         {
             // Assume titleid (for now)
             TitleID = "010063F014176000";
-        }
-
-        if(is_xbox)
-        {
-            // NOT SUPPORTED
-            return false;
         }
 
         string unity_root = "Data";

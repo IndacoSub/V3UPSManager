@@ -40,7 +40,7 @@ public partial class Form1 : Form
             return false;
         }
 
-        // NOTE: Only for the PC version
+        // NOTE: Only for the Legacy PC version (Steam)
         // Check if the CPKs are in /data/win/
         string cpk_01_en = Path.Combine(windata, "partition_data_win.cpk");
         string cpk_02_en = Path.Combine(windata, "partition_data_win_us.cpk");
@@ -54,7 +54,24 @@ public partial class Form1 : Form
             return false;
         }
 
-        // NOTE: Only for the PC version
+        // Check if there are any .arc files from the Anniversary Edition
+        string arc_01 = Path.Combine(windata, "partition_data_win_us.arc");
+        string arc_02 = Path.Combine(windata, "partition_data_win.arc");
+        string arc_03 = Path.Combine(windata, "partition_resident_win.arc");
+        string arc_04 = Path.Combine(windata, "partition_data_win_jp.arc");
+        string arc_05 = Path.Combine(windata, "partition_data_win_zh.arc");
+        bool arc_01_exists = File.Exists(arc_01);
+        bool arc_02_exists = File.Exists(arc_02);
+        bool arc_03_exists = File.Exists(arc_03);
+        bool arc_04_exists = File.Exists(arc_04);
+        bool arc_05_exists = File.Exists(arc_05);
+        if(arc_01_exists || arc_02_exists || arc_03_exists)
+        {
+            DisplayInfo.Print(info[38]);
+            return false;
+        }
+
+        // NOTE: Only for the Legacy (Steam) PC version
         // Count the number of CPKs in /data/win/
         var count_lowercase = Directory.GetFiles(windata, "*.cpk", SearchOption.TopDirectoryOnly).Length;
         var count_uppercase = Directory.GetFiles(windata, "*.CPK", SearchOption.TopDirectoryOnly).Length;
@@ -64,7 +81,7 @@ public partial class Form1 : Form
             return false;
         }
 
-        // Calculate MD5 hash of Dangan3Win.exe
+        // Calculate MD5 hash of the executable
         string exe_md5 = "";
         using (var md5 = MD5.Create())
         {

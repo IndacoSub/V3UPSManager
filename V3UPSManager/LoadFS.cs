@@ -5,6 +5,7 @@ public partial class Form1 : Form
     private List<string> already_checked = new();
     private readonly List<string> couldnt_be_found = new();
     private bool IsLegacy;
+    private bool IsUnity;
     private string TitleID = "";
 
     private void LoadInstallationFolder()
@@ -32,10 +33,18 @@ public partial class Form1 : Form
         {
             if (!CheckUnityConfiguration())
             {
-                return;
+                if(!CheckXboxConfiguration())
+                {
+                    return;
+                }
+
+                data_folder = Path.Combine(installation_folder, "data");
+                data_folder = Path.Combine(data_folder, "WIN");
+
+                IsLegacy = false;
+                IsUnity = false;
             }
 
-            IsLegacy = false;
             data_folder = Path.Combine(installation_folder, "Data");
             data_folder = Path.Combine(data_folder, "StreamingAssets");
             string platform = GetUnityPlatformByExclusion(data_folder);
@@ -43,12 +52,17 @@ public partial class Form1 : Form
             {
                 data_folder = Path.Combine(installation_folder, platform);
             }
+
+            IsLegacy = false;
+            IsUnity = true;
         }
         else
         {
-            IsLegacy = true;
             data_folder = Path.Combine(installation_folder, "data");
             data_folder = Path.Combine(data_folder, "win");
+
+            IsLegacy = true;
+            IsUnity = false;
         }
 
         if (!CheckInstall(data_folder))
@@ -89,7 +103,7 @@ public partial class Form1 : Form
         }
 
         string upsfolder = "";
-        if (IsLegacy)
+        if (!IsUnity)
         {
             // Check if /data/win/ exists in the patch folder
             string upswindata = Path.Combine(ups_folder, "data");

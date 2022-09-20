@@ -6,7 +6,7 @@ public partial class Form1 : Form
     private string[] info_en = new string[30];
     private string[] info_it = new string[30];
 
-    private string UNITY_EXE_NAME = "Dangan3Desktop.exe";
+    private string ANNIVERSARY_EXE_NAME = "Dangan3Desktop.exe";
 
     private void LoadLanguages()
     {
@@ -16,7 +16,7 @@ public partial class Form1 : Form
             "L'eseguibile (\"Dangan3Win.exe\") non è stato trovato (normale per installazioni versione Unity (Anniversary))!", // 1
             "Il file \"language.txt\" non è stato trovato!\nPer favore avvia il gioco almeno una volta\n(e controlla che funzioni).", // 2
             "Il gioco non è in inglese.\nPer favore disinstalla e installa nuovamente il gioco\ncon la lingua inglese.", // 3
-            "La/e cartella/e \"data\" e \"win\" non sono state trovate!", // 4
+            "La/e cartella/e \"data\" e \"win\" (o \"WIN\") non sono state trovate!", // 4
             "Sono stati trovati dei file CPK in \"data\\win\"!\nAvresti dovuto estrarli e spostarli altrove.", // 5
             "Sono stati trovati dei file CPK non-inglesi in \"data\\win\"!\nPer favore disinstalla e installa nuovamente il gioco\ncon la lingua inglese.", // 6
             "Non è stato possibile calcolare l'hash MD5 per Dangan3Win.exe!", // 7
@@ -49,7 +49,10 @@ public partial class Form1 : Form
             "Non è stato possibile installare alcuni file...", // 34
             "La/e cartella/e \"Data\" e/o \"Data\\StreamingAssets\" non sono state trovate!", // 35
             "Non sono state trovate informazioni sui file SPC/AB/Assets!", // 36
-            "Non è stato trovato l'eseguibile (\"" + UNITY_EXE_NAME + "\") (normale per installazioni versione non-Unity (Anniversary))!", // 37
+            "Non è stato trovato l'eseguibile (\"" + ANNIVERSARY_EXE_NAME + "\") (normale per installazioni versione Switch o \"Legacy\" (Steam))!", // 37
+            "La cartella del gioco (versione \"Legacy\" (Steam)) contiene dei file provenienti dalla Anniversary Edition.", // 38
+            "La cartella del gioco (\"Anniversary Edition\") contiene dei file provenienti dalla versione \"Legacy\" (Steam).", // 39
+            "Sono stati trovati dei file ARC in \"data\\WIN\"!\nAvresti dovuto estrarli e spostarli altrove.", // 40
         };
 
         info_en = new[]
@@ -58,8 +61,8 @@ public partial class Form1 : Form
             "The executable (\"Dangan3Win.exe\") couldn't be found (normal for Unity-version (Anniversary) installations)!",
             "The file \"language.txt\" couldn't be found!\nPlease boot the game at least once\n(and make sure it's working).",
             "Your game language is not set to English.\nPlease uninstall and reinstall the game\nwith the English language instead.",
-            "The \"data\" and/or \"data\\win\" folders couldn't be found!",
-            "CPK file(s) found in \"win\\data\"!\nYou were supposed to extract them\nand move them elsewhere.",
+            "The \"data\" and/or \"win\" (or \"WIN\") folders couldn't be found!",
+            "CPK file(s) found in \"data\\win\"!\nYou were supposed to extract them\nand move them elsewhere.",
             "Non-English CPK file(s) found in \"data\\win\"!\nPlease uninstall and reinstall the game\nwith the English language instead.",
             "Couldn't compute MD5 hash for Dangan3Win.exe!",
             "You aren't using the latest version of the game,\nmaybe you chose the Demo version folder,\nor you might be using a pirated copy.\nPlease note that we don't support piracy and you won't\nreceive support for this installation, if so.\nThings might not work as expected while using an older version of the game.\nProceed anyway?",
@@ -91,7 +94,10 @@ public partial class Form1 : Form
             "Some files couldn't be installed...",
             "The \"Data\" and/or \"Data\\StreamingAssets\" folders couldn't be found!",
             "No SPC/AB/Assets file info found!",
-            "The executable (\"" + UNITY_EXE_NAME + "\") couldn't be found (normal for non-Unity (Anniversary) installations)!",
+            "The executable (\"" + ANNIVERSARY_EXE_NAME + "\") couldn't be found (normal for non-Switch and non-\"Legacy\" (Steam) installations)!",
+            "The game's folder (\"Legacy\" (Steam) version) contains files from the Anniversary Edition.",
+            "The game's folder (\"Anniversary Edition\") contains files from the \"Legacy\" (Steam) version.",
+            "ARC file(s) found in \"data\\win\"!\nYou were supposed to extract them\nand move them elsewhere.",
         };
     }
 
