@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 
 namespace V3UPSManager;
 
-public partial class Form1 : Form
+public partial class MainWindow : Form
 {
     private bool CheckXboxConfiguration()
     {

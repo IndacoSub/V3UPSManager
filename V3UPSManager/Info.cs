@@ -1,6 +1,6 @@
 ﻿namespace V3UPSManager;
 
-public partial class Form1 : Form
+public partial class MainWindow : Form
 {
     private string[] info = new string[30];
     private string[] info_en = new string[30];
@@ -104,22 +104,22 @@ public partial class Form1 : Form
     private void CheckIndexChange()
     {
         // Change the language of the program
-        switch (comboBox1.SelectedIndex)
+        switch (LanguageComboBox.SelectedIndex)
         {
             case 0:
                 info = info_en;
-                button1.Text = "Choose installation folder";
-                button2.Text = "Choose patch folder";
-                button3.Text = "Install / Update";
-                button4.Text = "Uninstall";
+                SelectInstallationFolderButton.Text = "Choose installation folder";
+                SelectPatchFolderButton.Text = "Choose patch folder";
+                InstallButton.Text = "Install / Update";
+                UninstallButton.Text = "Uninstall";
                 break;
             case 1:
             default:
                 info = info_it;
-                button1.Text = "Seleziona cartella di installazione";
-                button2.Text = "Seleziona cartella patch";
-                button3.Text = "Installa / Aggiorna";
-                button4.Text = "Disinstalla";
+                SelectInstallationFolderButton.Text = "Seleziona cartella di installazione";
+                SelectPatchFolderButton.Text = "Seleziona cartella patch";
+                InstallButton.Text = "Installa / Aggiorna";
+                UninstallButton.Text = "Disinstalla";
                 break;
         }
     }

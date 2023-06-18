@@ -1,6 +1,6 @@
 ﻿namespace V3UPSManager;
 
-public partial class Form1 : Form
+public partial class MainWindow : Form
 {
     private List<string> already_checked = new();
     private readonly List<string> couldnt_be_found = new();
@@ -72,7 +72,7 @@ public partial class Form1 : Form
 
         DisplayInfo.Print(info[18]);
         verified_installation_folder = installation_folder;
-        textBox1.Text = verified_installation_folder;
+        InstallationPathPreviewTextbox.Text = verified_installation_folder;
     }
 
     private void LoadPatchFolder()
@@ -95,7 +95,7 @@ public partial class Form1 : Form
             }
         }
 
-        if (!Directory.Exists(ups_folder) || ups_folder == null)
+        if (!Directory.Exists(ups_folder) || ups_folder.Length == 0)
         {
             // Maybe they deleted it?
             DisplayInfo.Print(info[20]);
@@ -164,7 +164,7 @@ public partial class Form1 : Form
 
         DisplayInfo.Print(info[23]);
 
-        textBox2.Text = ups_folder;
+        PatchPathPreviewTextbox.Text = ups_folder;
     }
 
     private void RemoveFromList(string str)

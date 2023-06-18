@@ -2,10 +2,10 @@
 
 namespace V3UPSManager;
 
-public partial class Form1 : Form
+public partial class MainWindow : Form
 {
-    private List<string> to_apply;
-    private List<string> to_be_applied;
+    private List<string> to_apply = new List<string>();
+    private List<string> to_be_applied = new List<string>();
 
     private void Install()
     {

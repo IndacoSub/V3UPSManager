@@ -2,7 +2,7 @@
 
 namespace V3UPSManager;
 
-public partial class Form1 : Form
+public partial class MainWindow : Form
 {
     // From https://stackoverflow.com/questions/16183788/case-sensitive-directory-exists-file-exists
     // (edited)
