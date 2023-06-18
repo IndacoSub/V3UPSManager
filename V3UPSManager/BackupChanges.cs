@@ -2,30 +2,30 @@
 
 public partial class MainWindow : Form
 {
-    private void BackupChanges()
-    {
-        // Get the current directory
-        // ex. C:\V3UPSManager\
-        string cur = Directory.GetCurrentDirectory();
+	private void BackupChanges()
+	{
+		// Get the current directory
+		// ex. C:\V3UPSManager\
+		string cur = Directory.GetCurrentDirectory();
 
-        // Get the backup directory
-        // ex. C:\V3UPSManager\Backup
-        string backupdir = Path.Combine(cur, "Backup");
+		// Get the backup directory
+		// ex. C:\V3UPSManager\Backup
+		string backupdir = Path.Combine(cur, "Backup");
 
-        // Delete the current backups, recursively (TODO: why?)
-        if (Directory.Exists(backupdir))
-        {
-            Directory.Delete(backupdir, true);
-        }
-        else
-        {
-            // TODO: Why is this in an "else"?
-            Directory.CreateDirectory(backupdir);
-        }
+		// Delete the current backups, recursively (TODO: why?)
+		if (Directory.Exists(backupdir))
+		{
+			Directory.Delete(backupdir, true);
+		}
+		else
+		{
+			// TODO: Why is this in an "else"?
+			Directory.CreateDirectory(backupdir);
+		}
 
 		// If the platform is detected as Switch (or emulator on PC?):
 		if (TitleID.Length > 0)
-        {
+		{
 			// Note: consoles often use a unique "ProductID" or a "TitleID" to differentiate between games, apps etc.
 			// since using their names -- or internal names -- might be "unreliable" and slower
 			// And that TitleID/ProductID is obviously different between games/apps
@@ -40,14 +40,14 @@ public partial class MainWindow : Form
 			// TODO: Why is this not implemented?
 
 			backupdir = Path.Combine(backupdir, TitleID);
-            backupdir = Path.Combine(backupdir, "romfs");
-        }
+			backupdir = Path.Combine(backupdir, "romfs");
+		}
 
-        foreach (string file in to_apply)
-        {
+		foreach (string file in to_apply)
+		{
 			// Get the relative path of the file compared to the installation folder
-            // ex. C:\Games\DanganronpaV3\data\win\game_resident\game_resident_US.spc
-            // would return \data\win\game_resident\game_resident_US.spc
+			// ex. C:\Games\DanganronpaV3\data\win\game_resident\game_resident_US.spc
+			// would return \data\win\game_resident\game_resident_US.spc
 
 			string after_installdir = file.Substring(verified_installation_folder.Length + 1);
 
@@ -55,38 +55,38 @@ public partial class MainWindow : Form
 			// ex. backup: C:\V3UPSManager\Backup
 			// ex. relative path: \data\win\game_resident\game_resident_US.spc
 			// would return
-            // ex. C:\V3UPSManager\Backup\data\win\game_resident\game_resident_US.spc
+			// ex. C:\V3UPSManager\Backup\data\win\game_resident\game_resident_US.spc
 			string newpath = Path.Combine(backupdir, after_installdir);
-            if (newpath == null || newpath.Length <= 0)
-            {
-                continue;
-            }
+			if (newpath == null || newpath.Length <= 0)
+			{
+				continue;
+			}
 
-            // Get the parent directory
-            // ex. \data\win\game_resident\game_resident_US.spc
-            // would return \data\win\game_resident\
-            string directory = Path.GetDirectoryName(newpath);
+			// Get the parent directory
+			// ex. \data\win\game_resident\game_resident_US.spc
+			// would return \data\win\game_resident\
+			string directory = Path.GetDirectoryName(newpath);
 
-            // Create the directory if it doesn't already exist
-            // TODO: Check if it already exists?
+			// Create the directory if it doesn't already exist
+			// TODO: Check if it already exists?
 			Directory.CreateDirectory(directory);
 
-            // Back up the file by copying it to the desired backup folder
-            File.Copy(file, newpath);
-        }
-    }
+			// Back up the file by copying it to the desired backup folder
+			File.Copy(file, newpath);
+		}
+	}
 
-    private void DisplayStatus()
-    {
-        // Count backup (containing "_bak") files in the installation folder
-        string[] files = Directory.GetFiles(installation_folder, "*.*_bak", SearchOption.AllDirectories);
-        if (files != null && files.Length > 0 && files.Length == to_apply.Count)
-        {
-            DisplayInfo.Print(info[30]);
-        }
-        else
-        {
-            DisplayInfo.Print(info[34]);
-        }
-    }
+	private void DisplayStatus()
+	{
+		// Count backup (containing "_bak") files in the installation folder
+		string[] files = Directory.GetFiles(installation_folder, "*.*_bak", SearchOption.AllDirectories);
+		if (files != null && files.Length > 0 && files.Length == to_apply.Count)
+		{
+			DisplayInfo.Print(info[30]);
+		}
+		else
+		{
+			DisplayInfo.Print(info[34]);
+		}
+	}
 }

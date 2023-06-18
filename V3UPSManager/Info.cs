@@ -2,21 +2,21 @@
 
 public partial class MainWindow : Form
 {
-    private string[] info = new string[30];
-    private string[] info_en = new string[30];
-    private string[] info_it = new string[30];
+	private string[] info = new string[30];
+	private string[] info_en = new string[30];
+	private string[] info_it = new string[30];
 
-    // The .exe name in the "Legacy" (Steam) edition
-    private string LEGACY_EXE_NAME = "Dangan3Win.exe";
+	// The .exe name in the "Legacy" (Steam) edition
+	private string LEGACY_EXE_NAME = "Dangan3Win.exe";
 
 	// The .exe name in the "Xbox" (Microsoft Store) Anniversary Edition
 	private string ANNIVERSARY_EXE_NAME = "Dangan3Desktop.exe";
 
-    private void LoadLanguages()
-    {
-        info_it = new[]
-        {
-            "La cartella di installazione non esiste!", // 0
+	private void LoadLanguages()
+	{
+		info_it = new[]
+		{
+			"La cartella di installazione non esiste!", // 0
             "L'eseguibile (\"" + LEGACY_EXE_NAME + "\") non è stato trovato (normale per installazioni versione Unity (Anniversary))!", // 1
             "Il file \"language.txt\" non è stato trovato!\nPer favore avvia il gioco almeno una volta\n(e controlla che funzioni).", // 2
             "Il gioco non è in inglese.\nPer favore disinstalla e installa nuovamente il gioco\ncon la lingua inglese.", // 3
@@ -60,82 +60,82 @@ public partial class MainWindow : Form
             "Il pulsante \"Disinstalla\" funziona solamente con le versioni Legacy (Steam) e Xbox!\nÈ molto facile disinstallare una mod per Switch/Emulatori, basta eliminare la cartella della mod!", // 41
         };
 
-        info_en = new[]
-        {
-            "The installation folder doesn't exist!",
+		info_en = new[]
+		{
+			"The installation folder doesn't exist!",
 			"The executable (\"" + LEGACY_EXE_NAME + "\") couldn't be found (normal for Unity-version (Anniversary) installations)!",
-            "The file \"language.txt\" couldn't be found!\nPlease boot the game at least once\n(and make sure it's working).",
-            "Your game language is not set to English.\nPlease uninstall and reinstall the game\nwith the English language instead.",
-            "The \"data\" and/or \"win\" (or \"WIN\") folders couldn't be found!",
-            "CPK file(s) found in \"data\\win\"!\nYou were supposed to extract them\nand move them elsewhere.",
-            "Non-English CPK file(s) found in \"data\\win\"!\nPlease uninstall and reinstall the game\nwith the English language instead.",
+			"The file \"language.txt\" couldn't be found!\nPlease boot the game at least once\n(and make sure it's working).",
+			"Your game language is not set to English.\nPlease uninstall and reinstall the game\nwith the English language instead.",
+			"The \"data\" and/or \"win\" (or \"WIN\") folders couldn't be found!",
+			"CPK file(s) found in \"data\\win\"!\nYou were supposed to extract them\nand move them elsewhere.",
+			"Non-English CPK file(s) found in \"data\\win\"!\nPlease uninstall and reinstall the game\nwith the English language instead.",
 			"Couldn't compute MD5 hash for " + LEGACY_EXE_NAME + "!",
-            "You aren't using the latest version of the game,\nmaybe you chose the Demo version folder,\nor you might be using a pirated copy.\nPlease note that we don't support piracy and you won't\nreceive support for this installation, if so.\nThings might not work as expected while using an older version of the game.\nProceed anyway?",
-            "A ReShade installation was found.\nThings might not work as expected while using ReShade.\nProceed anyway?",
-            "DR3Fix was found.\nThings might not work as expected while using DR3Fix.\nProceed anyway?",
-            "The \"data\\win\\boot\" folder couldn't be found!",
-            "The \"data\\win\\flash\" folder couldn't be found!",
-            "The \"data\\win\\game_resident\" folder couldn't be found!",
-            "The \"data\\win\\minigame\" folder couldn't be found!",
-            "The \"data\\win\\trial_font\" folder couldn't be found!",
-            "The \"data\\win\\wrd_data\" folder couldn't be found!",
-            "The \"data\\win\\wrd_script\" folder couldn't be found!",
-            "No problems found with your installation!\nHooray!",
-            "The installation folder is not valid!",
-            "The patch folder doesn't exist!",
-            "The \"data\" and/or \"data\\win\" folders couldn't be found!",
-            "Couldn't find any .ups file(s)!",
-            "File information loaded! Ready to apply!",
-            "\"ups.exe\" not found!\nRead the instructions in the README file!",
-            "The installation folder and/or the patch folder couldn't be loaded!",
-            "No SPC file info found!",
-            "No UPS file info found!",
-            "Something is wrong with the SPC files!",
-            "Something is wrong with the UPS files!",
-            "Done! Have fun!",
-            "Unknown/Unsupported game version.",
-            "No file to be uninstalled was found.",
-            "Done uninstalling!",
-            "Some files couldn't be installed...",
-            "The \"Data\" and/or \"Data\\StreamingAssets\" folders couldn't be found!",
-            "No SPC/AB/Assets file info found!",
-            "The executable (\"" + ANNIVERSARY_EXE_NAME + "\") couldn't be found (normal for non-Switch and non-\"Legacy\" (Steam) installations)!",
-            "The game's folder (\"Legacy\" (Steam) version) contains files from the Anniversary Edition.",
-            "The game's folder (\"Anniversary Edition\") contains files from the \"Legacy\" (Steam) version.",
-            "ARC file(s) found in \"data\\win\"!\nYou were supposed to extract them\nand move them elsewhere.",
-            "The \"Uninstall\" button only works with the Legacy (Steam) and Xbox versione!\nIt's much easier to uninstall mods on Switch/Emulators, you just need to delete the mod folder(s)!", // 41
+			"You aren't using the latest version of the game,\nmaybe you chose the Demo version folder,\nor you might be using a pirated copy.\nPlease note that we don't support piracy and you won't\nreceive support for this installation, if so.\nThings might not work as expected while using an older version of the game.\nProceed anyway?",
+			"A ReShade installation was found.\nThings might not work as expected while using ReShade.\nProceed anyway?",
+			"DR3Fix was found.\nThings might not work as expected while using DR3Fix.\nProceed anyway?",
+			"The \"data\\win\\boot\" folder couldn't be found!",
+			"The \"data\\win\\flash\" folder couldn't be found!",
+			"The \"data\\win\\game_resident\" folder couldn't be found!",
+			"The \"data\\win\\minigame\" folder couldn't be found!",
+			"The \"data\\win\\trial_font\" folder couldn't be found!",
+			"The \"data\\win\\wrd_data\" folder couldn't be found!",
+			"The \"data\\win\\wrd_script\" folder couldn't be found!",
+			"No problems found with your installation!\nHooray!",
+			"The installation folder is not valid!",
+			"The patch folder doesn't exist!",
+			"The \"data\" and/or \"data\\win\" folders couldn't be found!",
+			"Couldn't find any .ups file(s)!",
+			"File information loaded! Ready to apply!",
+			"\"ups.exe\" not found!\nRead the instructions in the README file!",
+			"The installation folder and/or the patch folder couldn't be loaded!",
+			"No SPC file info found!",
+			"No UPS file info found!",
+			"Something is wrong with the SPC files!",
+			"Something is wrong with the UPS files!",
+			"Done! Have fun!",
+			"Unknown/Unsupported game version.",
+			"No file to be uninstalled was found.",
+			"Done uninstalling!",
+			"Some files couldn't be installed...",
+			"The \"Data\" and/or \"Data\\StreamingAssets\" folders couldn't be found!",
+			"No SPC/AB/Assets file info found!",
+			"The executable (\"" + ANNIVERSARY_EXE_NAME + "\") couldn't be found (normal for non-Switch and non-\"Legacy\" (Steam) installations)!",
+			"The game's folder (\"Legacy\" (Steam) version) contains files from the Anniversary Edition.",
+			"The game's folder (\"Anniversary Edition\") contains files from the \"Legacy\" (Steam) version.",
+			"ARC file(s) found in \"data\\win\"!\nYou were supposed to extract them\nand move them elsewhere.",
+			"The \"Uninstall\" button only works with the Legacy (Steam) and Xbox versione!\nIt's much easier to uninstall mods on Switch/Emulators, you just need to delete the mod folder(s)!", // 41
         };
-    }
+	}
 
-    private void CheckIndexChange()
-    {
-        // Change the GUI strings based on the selected language
+	private void CheckIndexChange()
+	{
+		// Change the GUI strings based on the selected language
 
-        switch (LanguageComboBox.SelectedIndex)
-        {
-            // English
-            case 0:
-                info = info_en;
-                SelectInstallationFolderButton.Text = "Choose installation folder";
-                SelectPatchFolderButton.Text = "Choose patch folder";
-                InstallButton.Text = "Install / Update";
-                UninstallButton.Text = "Uninstall";
-                break;
+		switch (LanguageComboBox.SelectedIndex)
+		{
+			// English
+			case 0:
+				info = info_en;
+				SelectInstallationFolderButton.Text = "Choose installation folder";
+				SelectPatchFolderButton.Text = "Choose patch folder";
+				InstallButton.Text = "Install / Update";
+				UninstallButton.Text = "Uninstall";
+				break;
 
-            // Italian
-            case 1:
-            default:
-                info = info_it;
-                SelectInstallationFolderButton.Text = "Seleziona cartella di installazione";
-                SelectPatchFolderButton.Text = "Seleziona cartella patch";
-                InstallButton.Text = "Installa / Aggiorna";
-                UninstallButton.Text = "Disinstalla";
-                break;
-        }
-    }
+			// Italian
+			case 1:
+			default:
+				info = info_it;
+				SelectInstallationFolderButton.Text = "Seleziona cartella di installazione";
+				SelectPatchFolderButton.Text = "Seleziona cartella patch";
+				InstallButton.Text = "Installa / Aggiorna";
+				UninstallButton.Text = "Disinstalla";
+				break;
+		}
+	}
 
-    private void LanguageComboBox_SelectedIndexChanged(object sender, EventArgs e)
-    {
-        CheckIndexChange();
-    }
+	private void LanguageComboBox_SelectedIndexChanged(object sender, EventArgs e)
+	{
+		CheckIndexChange();
+	}
 }
