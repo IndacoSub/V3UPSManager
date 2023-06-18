@@ -9,6 +9,7 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
+    // Xbox = Microsoft Store "Anniversary Edition" version
     private bool CheckXboxConfiguration()
     {
         // Xbox version?
@@ -19,7 +20,8 @@ public partial class MainWindow : Form
             return false;
         }
 
-        // Check if /data/win/ exists
+        // Check if /data/WIN/ exists
+        // Yes, "WIN" is uppercase
         string windata = Path.Combine(installation_folder, "data");
         windata = Path.Combine(windata, "WIN");
         if (!Directory.Exists(windata))
@@ -29,7 +31,8 @@ public partial class MainWindow : Form
         }
 
         // NOTE: Only for the Legacy PC version (Steam)
-        // Check if the CPKs are in /data/win/
+        // so they shouldn't be there
+        // Check if the CPKs are in /data/WIN/
         string cpk_01_en = Path.Combine(windata, "partition_data_win.cpk");
         string cpk_02_en = Path.Combine(windata, "partition_data_win_us.cpk");
         string cpk_03_en = Path.Combine(windata, "partition_resident_win.cpk");
@@ -42,7 +45,7 @@ public partial class MainWindow : Form
             return false;
         }
 
-        // Check if there are any .arc files from the Anniversary Edition
+        // Check if there are any .arc ("ARC0") files from the Anniversary Edition
         string arc_01 = Path.Combine(windata, "partition_data_win_us.arc");
         string arc_02 = Path.Combine(windata, "partition_data_win.arc");
         string arc_03 = Path.Combine(windata, "partition_resident_win.arc");
@@ -59,10 +62,11 @@ public partial class MainWindow : Form
             return false;
         }
 
-        // Cannot check SHA-256 for Anniversary Edition
+		// Cannot check SHA-256 for Anniversary Edition
+		// (TODO: because of limitations with the Microsoft Store?)
 
-        // Check if ReShade is present
-        string reshade_ini = Path.Combine(installation_folder, "ReShade.ini");
+		// Check if ReShade ( https://reshade.me/ ) is present
+		string reshade_ini = Path.Combine(installation_folder, "ReShade.ini");
         if (File.Exists(reshade_ini))
         {
             var proceed = DisplayInfo.Ask(info[9]);

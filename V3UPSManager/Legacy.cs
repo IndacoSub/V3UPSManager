@@ -4,13 +4,14 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
+    // Legacy = Steam version
     private bool CheckLegacyConfiguration()
     {
         // Check if Dangan3Win.exe exists
-        string exe = Path.Combine(installation_folder, "Dangan3Win.exe");
+        string exe = Path.Combine(installation_folder, LEGACY_EXE_NAME);
         if (!File.Exists(exe))
         {
-            // Maybe they deleted it?
+            // Maybe the user deleted it?
             DisplayInfo.Print(info[1]);
             return false;
         }
@@ -103,6 +104,7 @@ public partial class MainWindow : Form
         }
 
         // Check if the calculated hash corresponds to the expected hash
+        // (as of June 2023, the latest game version is 1.01)
         const string expected_hash = "ff2dd8163a9b2f5b018339fbee69f5ea";
         if (exe_md5.ToLower() != expected_hash)
         {
@@ -113,8 +115,8 @@ public partial class MainWindow : Form
             }
         }
 
-        // Check if ReShade is present
-        string reshade_ini = Path.Combine(installation_folder, "ReShade.ini");
+		// Check if ReShade ( https://reshade.me/ ) is present
+		string reshade_ini = Path.Combine(installation_folder, "ReShade.ini");
         if (File.Exists(reshade_ini))
         {
             var proceed = DisplayInfo.Ask(info[9]);
@@ -124,8 +126,8 @@ public partial class MainWindow : Form
             }
         }
 
-        // Check if DR3Fix is present
-        string dr3fix_cfg = Path.Combine(installation_folder, "dr3fix.cfg");
+		// Check if DR3Fix ( https://github.com/AltimorTASDK/dr3fix ) is present
+		string dr3fix_cfg = Path.Combine(installation_folder, "dr3fix.cfg");
         if (File.Exists(dr3fix_cfg))
         {
             var proceed = DisplayInfo.Ask(info[10]);

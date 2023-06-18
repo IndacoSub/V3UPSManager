@@ -5,6 +5,7 @@ public partial class MainWindow : Form
     private bool CheckUnityConfiguration()
     {
         List<string> supported_titleids = new List<string>();
+        // For now, we only support the standalone version of V3, not the one in Decadence
         supported_titleids.Add("010063F014176000"); // Standalone V3 from Nintendo eShop (Europe)
 
         if (!supported_titleids.Any(installation_folder.Contains))
@@ -55,6 +56,7 @@ public partial class MainWindow : Form
             return false;
         }
 
+        // Ex. "Switch"
         string platform = GetUnityPlatformByExclusion(unity_find);
         unity_find = Path.Combine(unity_find, platform);
         if (!Directory.Exists(unity_find))
@@ -93,13 +95,20 @@ public partial class MainWindow : Form
 
     private string GetUnityPlatformByExclusion(string path)
     {
+        // The "StreamingAssets" folder contains four subfolders
+        // The fourth subfolder is the one we're looking for
+        // And is the name of the platform the game was compiled for
+
         string ret = "";
+        // These are the three subfolders we don't care about
         List<string> excluded = new List<string>
         {
             "map",
             "master",
             "static"
         };
+        // Look for literally any subfolder in StreamingAssets that's not excluded
+        // and return it
         string[] dirs = Directory.GetDirectories(path);
         foreach (string dir in dirs)
         {

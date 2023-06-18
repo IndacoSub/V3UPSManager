@@ -37,7 +37,6 @@ public partial class MainWindow : Form
     }
 
     // From https://stackoverflow.com/questions/1395205/better-way-to-check-if-a-path-is-a-file-or-a-directory
-
     public static bool IsDirectory(string path)
     {
         if (!File.Exists(path) && !Directory.Exists(path))

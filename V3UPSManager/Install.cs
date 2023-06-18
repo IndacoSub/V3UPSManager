@@ -4,7 +4,10 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
+    // UPS Files to apply
     private List<string> to_apply = new List<string>();
+
+    // SPC/AB/etc. files to mod
     private List<string> to_be_applied = new List<string>();
 
     private void Install()
@@ -68,6 +71,8 @@ public partial class MainWindow : Form
         // but *will* break for any new
         // game update which updates the
         // base files (hasn't happened yet)
+        // As of June 2023, the latest game version for the Legacy (Steam) version is 1.01
+        // It's safe to assume that there won't be any update anytime soon
 
         foreach (string file in to_apply)
         {

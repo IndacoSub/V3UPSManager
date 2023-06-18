@@ -15,24 +15,24 @@ public partial class MainWindow : Form
 		CheckIndexChange();
 	}
 
-	private void button1_Click(object sender, EventArgs e)
+	private void SelectInstallationFolderButton_Click(object sender, EventArgs e)
 	{
 		LoadInstallationFolder();
 	}
 
-	private void button2_Click(object sender, EventArgs e)
+	private void SelectPatchFolderButton_Click(object sender, EventArgs e)
 	{
 		LoadPatchFolder();
 	}
 
-	private void button3_Click(object sender, EventArgs e)
+	private void InstallButton_Click(object sender, EventArgs e)
 	{
 		Install();
 		BackupChanges();
 		DisplayStatus();
 	}
 
-	private void button4_Click(object sender, EventArgs e)
+	private void UninstallButton_Click(object sender, EventArgs e)
 	{
 		Uninstall();
 	}

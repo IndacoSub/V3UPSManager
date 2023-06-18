@@ -54,7 +54,7 @@
 			SelectInstallationFolderButton.TabIndex = 1;
 			SelectInstallationFolderButton.Text = "Seleziona cartella di installazione";
 			SelectInstallationFolderButton.UseVisualStyleBackColor = true;
-			SelectInstallationFolderButton.Click += button1_Click;
+			SelectInstallationFolderButton.Click += SelectInstallationFolderButton_Click;
 			// 
 			// SelectPatchFolderButton
 			// 
@@ -64,7 +64,7 @@
 			SelectPatchFolderButton.TabIndex = 2;
 			SelectPatchFolderButton.Text = "Seleziona cartella patch";
 			SelectPatchFolderButton.UseVisualStyleBackColor = true;
-			SelectPatchFolderButton.Click += button2_Click;
+			SelectPatchFolderButton.Click += SelectPatchFolderButton_Click;
 			// 
 			// PatchPathPreviewTextbox
 			// 
@@ -82,7 +82,7 @@
 			InstallButton.TabIndex = 4;
 			InstallButton.Text = "Installa";
 			InstallButton.UseVisualStyleBackColor = true;
-			InstallButton.Click += button3_Click;
+			InstallButton.Click += InstallButton_Click;
 			// 
 			// LanguageComboBox
 			// 
@@ -93,7 +93,7 @@
 			LanguageComboBox.Name = "LanguageComboBox";
 			LanguageComboBox.Size = new Size(120, 23);
 			LanguageComboBox.TabIndex = 5;
-			LanguageComboBox.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
+			LanguageComboBox.SelectedIndexChanged += LanguageComboBox_SelectedIndexChanged;
 			// 
 			// ChooseLanguageLabel
 			// 
@@ -112,7 +112,7 @@
 			UninstallButton.TabIndex = 7;
 			UninstallButton.Text = "Disinstalla";
 			UninstallButton.UseVisualStyleBackColor = true;
-			UninstallButton.Click += button4_Click;
+			UninstallButton.Click += UninstallButton_Click;
 			// 
 			// MainWindow
 			// 

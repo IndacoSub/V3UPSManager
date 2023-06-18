@@ -8,8 +8,13 @@ public partial class MainWindow : Form
     private bool IsUnity;
     private string TitleID = "";
 
-    private void LoadInstallationFolder()
+    // Patch-file-specific string
+    // AKA: All .ups patch files have "_patch" in common
+	string patch_specific = "_patch.ups";
+
+	private void LoadInstallationFolder()
     {
+        // Let the user select the folder manually
         using (var fold = new FolderBrowserDialog())
         {
             DialogResult res = fold.ShowDialog();
@@ -29,14 +34,24 @@ public partial class MainWindow : Form
 
         string data_folder = installation_folder;
 
+        // Detect game edition/platform
         if (!CheckLegacyConfiguration())
         {
+            // At this point: not Legacy (Steam)
             if (!CheckUnityConfiguration())
             {
-                if(!CheckXboxConfiguration())
+				// At this point: not Legacy (Steam) or Unity (Switch, Anniversary Edition)
+				if (!CheckXboxConfiguration())
                 {
-                    return;
+					// At this point: not Legacy (Steam), Unity (Switch, Anniversary Edition) or Xbox (Microsoft Store, Anniversary Edition)
+                    // So... Android/iOS/PS4/PSVita?
+                    // We currently don't have any plans to support any other ports
+
+					return;
                 }
+
+                // Xbox (Microsoft Store, AE) version:
+                // Yes, the "WIN" is in uppercase
 
                 data_folder = Path.Combine(installation_folder, "data");
                 data_folder = Path.Combine(data_folder, "WIN");
@@ -44,6 +59,9 @@ public partial class MainWindow : Form
                 IsLegacy = false;
                 IsUnity = false;
             }
+
+            // Unity (Switch, AE) version:
+            // Just like most Unity games, V3 AE's Switch port also has the "Data" and "StreamingAssets" folders
 
             data_folder = Path.Combine(installation_folder, "Data");
             data_folder = Path.Combine(data_folder, "StreamingAssets");
@@ -58,7 +76,11 @@ public partial class MainWindow : Form
         }
         else
         {
-            data_folder = Path.Combine(installation_folder, "data");
+
+			// Legacy (Steam) version:
+			// Yes, the "win" is in lowercase
+
+			data_folder = Path.Combine(installation_folder, "data");
             data_folder = Path.Combine(data_folder, "win");
 
             IsLegacy = true;
@@ -85,7 +107,8 @@ public partial class MainWindow : Form
             return;
         }
 
-        using (var fold = new FolderBrowserDialog())
+		// Let the user select the folder manually
+		using (var fold = new FolderBrowserDialog())
         {
             DialogResult res = fold.ShowDialog();
 
@@ -105,9 +128,24 @@ public partial class MainWindow : Form
         string upsfolder = "";
         if (!IsUnity)
         {
-            // Check if /data/win/ exists in the patch folder
+            // If not Unity, so Legacy (Steam) or Xbox (Microsoft Store, AE)
+            // ...or more version which we won't support
+
             string upswindata = Path.Combine(ups_folder, "data");
-            upswindata = Path.Combine(upswindata, "win");
+
+			// Check if /data/win/ exists in the patch folder
+			// AKA: Find out if the user is actually installing the patch for the Legacy or Xbox version(s)
+			// (yes, with most certainty)
+			// You never know, less "techy" users might have downloaded the wrong version of the mod
+
+			if (IsLegacy)
+            {
+                upswindata = Path.Combine(upswindata, "win");
+            } else
+            {
+                upswindata = Path.Combine(upswindata, "WIN");
+            }
+
             if (!Directory.Exists(upswindata))
             {
                 DisplayInfo.Print(info[21]);
@@ -118,7 +156,11 @@ public partial class MainWindow : Form
         }
         else
         {
-            // Check if /Data/StreaminAssets exists in the patch folder
+            // Check if /Data/StreamingAssets exists in the patch folder
+            // AKA: Find out if the user is actually installing the patch for a Unity version
+            // (yes, with most certainty)
+            // You never know, less "techy" users might have downloaded the wrong version of the mod
+
             string upsdatasa = Path.Combine(ups_folder, "Data");
             upsdatasa = Path.Combine(upsdatasa, "StreamingAssets");
             if (!Directory.Exists(upsdatasa))
@@ -130,7 +172,7 @@ public partial class MainWindow : Form
             upsfolder = ups_folder;
         }
 
-        // Count and get all .ups files in the patch folder
+        // Count and get all .ups files inside the patch folder
         string[] files = Directory.GetFiles(upsfolder, "*.ups", SearchOption.AllDirectories);
         if (files == null || files.Length == 0)
         {
@@ -139,14 +181,19 @@ public partial class MainWindow : Form
         }
 
         to_be_applied = new List<string>();
-        foreach (string file in files)
+
+        // Look for any ups file
+        // that is not a folder (obviously) which contains "_patch.ups" ("patch specific" string)
+        // TODO: Why? Because the user might have random non-patch .ups files in the patch folder?
+
+		foreach (string file in files)
         {
             if (IsDirectory(file))
             {
                 continue;
             }
 
-            if (!file.Contains("_patch.ups"))
+            if (!file.Contains(patch_specific))
             {
                 continue;
             }
@@ -154,6 +201,8 @@ public partial class MainWindow : Form
             to_be_applied.Add(file);
         }
 
+        // Prepare... something???
+        // TODO: Explain this better
         GetToApply(files);
 
         foreach (string file in couldnt_be_found)
@@ -167,8 +216,11 @@ public partial class MainWindow : Form
         PatchPathPreviewTextbox.Text = ups_folder;
     }
 
-    private void RemoveFromList(string str)
+    private void RemoveFromMissingList(string str)
     {
+        // Remove a file? from the list of files? that could not be found
+        // ...Because apparently they were just found???
+
         while (couldnt_be_found.IndexOf(str) >= 0) couldnt_be_found.RemoveAt(couldnt_be_found.IndexOf(str));
         while (couldnt_be_found.Any(str.Contains)) couldnt_be_found.Remove(str);
         couldnt_be_found.RemoveAll(x => x == str);
@@ -180,8 +232,9 @@ public partial class MainWindow : Form
         already_checked = new List<string>();
 
         TryToApplySPCFiles(ups_files);
-        if (!IsLegacy)
+        if (IsUnity)
         {
+            // .ab, .pb e .asset files are only in the Unity version(s?)
             TryToApplyPBFiles(ups_files);
             TryToApplyABFiles(ups_files);
             TryToApplyAssetsFiles(ups_files);
@@ -191,10 +244,16 @@ public partial class MainWindow : Form
         {
             if (!Path.HasExtension(f))
             {
+                // If it doesn't have an extension, we don't care about this file
                 continue;
             }
 
+            // Remove the extension
+
             string no_ext = f.Substring(0, f.Length - Path.GetExtension(f).Length);
+
+            // All "possible" extensions, backups included
+
             string spc = no_ext + ".spc";
             string spcbak = spc + "_bak";
             string ab = no_ext + ".ab";
@@ -205,18 +264,23 @@ public partial class MainWindow : Form
             string pbbak = pb + "_bak";
             string patchups = no_ext + ".ups";
             string no_extbak = no_ext + "_bak";
-            RemoveFromList(f.ToLowerInvariant());
-            RemoveFromList(spc.ToLowerInvariant());
-            RemoveFromList(spcbak.ToLowerInvariant());
-            RemoveFromList(ab.ToLowerInvariant());
-            RemoveFromList(abbak.ToLowerInvariant());
-            RemoveFromList(assets.ToLowerInvariant());
-            RemoveFromList(assetsbak.ToLowerInvariant());
-            RemoveFromList(pb.ToLowerInvariant());
-            RemoveFromList(pbbak.ToLowerInvariant());
-            RemoveFromList(patchups.ToLowerInvariant());
-            RemoveFromList(no_ext.ToLowerInvariant());
-            RemoveFromList(no_extbak.ToLowerInvariant());
+
+            // Remove all extension versions of the file from the "could not find" list
+            // TODO: Any scenario where this is actually useful?
+            // There must be some, or otherwise these functions below wouldn't be there, but which ones?
+
+            RemoveFromMissingList(f.ToLowerInvariant());
+			RemoveFromMissingList(spc.ToLowerInvariant());
+			RemoveFromMissingList(spcbak.ToLowerInvariant());
+            RemoveFromMissingList(ab.ToLowerInvariant());
+            RemoveFromMissingList(abbak.ToLowerInvariant());
+            RemoveFromMissingList(assets.ToLowerInvariant());
+            RemoveFromMissingList(assetsbak.ToLowerInvariant());
+            RemoveFromMissingList(pb.ToLowerInvariant());
+            RemoveFromMissingList(pbbak.ToLowerInvariant());
+            RemoveFromMissingList(patchups.ToLowerInvariant());
+            RemoveFromMissingList(no_ext.ToLowerInvariant());
+            RemoveFromMissingList(no_extbak.ToLowerInvariant());
         }
     }
 
@@ -224,46 +288,77 @@ public partial class MainWindow : Form
     {
         // Calculate which SPC files correspond to the UPS files
         // and add them to a vector
-        foreach (string file in ups_files)
+
+        // Find out which file corresponds to
+        // ex. C:\Patch\data\win\game_resident\game_resident_US.spc
+        // the solution would be
+        // ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US.spc
+
+		foreach (string file in ups_files)
         {
+            // We don't want duplicates
             if (to_apply.Contains(file))
             {
                 continue;
             }
 
+            // We don't want folders
             if (IsDirectory(file))
             {
                 continue;
             }
 
-            if (!file.Contains("_patch.ups"))
+            // If it doesn't contain the patch-specific string, then it's a random .ups file?
+            // We don't care about it
+            if (!file.Contains(patch_specific))
             {
                 continue;
             }
 
-            // Remove the part before the UPS folder
+            // Remove the part before (and) the UPS folder
+            // ...So, like,
+            // ex. C:\Patch\data\win\game_resident\game_resident_US_patch.ups
+            // would become
+            // ex. data\win\game_resident\game_resident_US_patch.ups
+            // right?
             string second_half = file.Substring(ups_folder.Length + 1);
 
+            // If it's already in the "already_checked" vector, we already checked it(?)
             if (already_checked.Contains(second_half.ToLowerInvariant()))
             {
                 continue;
             }
 
-            // Get the "approximate" .spc file
-            string approximate_spc = Path.Combine(verified_installation_folder, second_half);
+			// Get the "approximate" .spc file
+			// By combining the installation folder and the relative path of the .ups file
+			// ex. data\win\game_resident\game_resident_US_patch.ups
+			// would become
+			// ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US_patch.ups
+			string approximate_spc = Path.Combine(verified_installation_folder, second_half);
 
+            // If it's a directory, ...which it most certainly isn't
             if (IsDirectory(approximate_spc))
             {
                 continue;
             }
 
-            // _patch.ups (length: 10)
-            approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - 10);
+			// Remove the patch-specific string from the file
+			// patch_specific is, currently at least, "_patch.ups" (length: 10)
+			// So,
+			// ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US_patch.ups
+			// would become
+			// // ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US
 
+			approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - patch_specific.Length);
+
+            // If the string is now empty, because apparently it was literally just the patch-specific string
             if (approximate_spc.Length <= 0)
             {
                 continue;
             }
+
+            // The objective is now to find the .spc file
+            // Try to see if the .spc file exists
 
             string try_approximate_spc_lower = approximate_spc + ".spc";
             string try_approximate_spc_upper = approximate_spc + ".SPC";
@@ -294,11 +389,11 @@ public partial class MainWindow : Form
                     continue;
                 }
 
-                // One has to exist
+                // One has to exist, if we're here
                 if (exists_lower)
                 {
                     // Lower exists
-                    // Restore bak
+                    // Restore bak (bak -> spc)
                     string nobak = try_approximate_spc_lower.Substring(0, try_approximate_spc_lower.Length - 4);
                     File.Copy(try_approximate_spc_lower, nobak, true);
                     try_approximate_spc_lower = nobak;
@@ -306,12 +401,14 @@ public partial class MainWindow : Form
                 else
                 {
                     // Upper exists
+                    // Restore bak (bak -> spc)
                     string nobak = try_approximate_spc_upper.Substring(0, try_approximate_spc_upper.Length - 4);
                     File.Copy(try_approximate_spc_upper, nobak, true);
                     try_approximate_spc_upper = nobak;
                 }
             }
 
+            // Add the right version to to_apply
             if (exists_lower)
             {
                 to_apply.Add(try_approximate_spc_lower);
@@ -321,8 +418,10 @@ public partial class MainWindow : Form
                 to_apply.Add(try_approximate_spc_upper);
             }
 
+            // Add the relative path to the list of paths we already checked
             already_checked.Add(second_half.ToLowerInvariant());
 
+            // If we found it, then it's not "not found"
             if (to_apply.Contains(try_approximate_spc_lower))
             {
                 couldnt_be_found.Remove(try_approximate_spc_lower.ToLowerInvariant());
@@ -333,9 +432,12 @@ public partial class MainWindow : Form
 
     private void TryToApplyABFiles(string[] ups_files)
     {
-        // Calculate which AB files correspond to the UPS files
-        // and add them to a vector
-        foreach (string file in ups_files)
+		// Calculate which AB files correspond to the UPS files
+		// and add them to a vector
+
+		// For more info, check out the above functions, it's really not that different
+
+		foreach (string file in ups_files)
         {
             if (to_apply.Contains(file))
             {
@@ -347,7 +449,7 @@ public partial class MainWindow : Form
                 continue;
             }
 
-            if (!file.Contains("_patch.ups"))
+            if (!file.Contains(patch_specific))
             {
                 continue;
             }
@@ -370,8 +472,8 @@ public partial class MainWindow : Form
 
             string bak_approx = approximate_ab;
 
-            // _patch.ups (length: 10)
-            approximate_ab = approximate_ab.Substring(0, approximate_ab.Length - 10);
+			// patch_specific is, currently at least, "_patch.ups" (length: 10)
+			approximate_ab = approximate_ab.Substring(0, approximate_ab.Length - patch_specific.Length);
 
             if (approximate_ab.Length <= 0)
             {
@@ -417,6 +519,9 @@ public partial class MainWindow : Form
     {
         // Calculate which PB files correspond to the UPS files
         // and add them to a vector
+
+        // For more info, check out the above functions, it's really not that different
+
         foreach (string file in ups_files)
         {
             if (to_apply.Contains(file))
@@ -429,7 +534,7 @@ public partial class MainWindow : Form
                 continue;
             }
 
-            if (!file.Contains("_patch.ups"))
+            if (!file.Contains(patch_specific))
             {
                 continue;
             }
@@ -452,8 +557,8 @@ public partial class MainWindow : Form
 
             string bak_approx = approximate_pb;
 
-            // _patch.ups (length: 10)
-            approximate_pb = approximate_pb.Substring(0, approximate_pb.Length - 10);
+			// patch_specific is, currently at least, "_patch.ups" (length: 10)
+			approximate_pb = approximate_pb.Substring(0, approximate_pb.Length - patch_specific.Length);
 
             if (approximate_pb.Length <= 0)
             {
@@ -497,9 +602,12 @@ public partial class MainWindow : Form
 
     private void TryToApplyAssetsFiles(string[] ups_files)
     {
-        // Calculate which Assets files correspond to the UPS files
-        // and add them to a vector
-        foreach (string file in ups_files)
+		// Calculate which Assets files correspond to the UPS files
+		// and add them to a vector
+
+		// For more info, check out the above functions, it's really not that different
+
+		foreach (string file in ups_files)
         {
             if (to_apply.Contains(file))
             {
@@ -511,7 +619,7 @@ public partial class MainWindow : Form
                 continue;
             }
 
-            if (!file.Contains("_patch.ups"))
+            if (!file.Contains(patch_specific))
             {
                 continue;
             }
@@ -534,8 +642,8 @@ public partial class MainWindow : Form
 
             string bak_approx = approximate_assets;
 
-            // _patch.ups (length: 10)
-            approximate_assets = approximate_assets.Substring(0, approximate_assets.Length - 10);
+			// patch_specific is, currently at least, "_patch.ups" (length: 10)
+			approximate_assets = approximate_assets.Substring(0, approximate_assets.Length - patch_specific.Length);
 
             if (approximate_assets.Length <= 0)
             {
