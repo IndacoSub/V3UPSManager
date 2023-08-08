@@ -2,13 +2,17 @@
 
 public partial class MainWindow : Form
 {
-	private bool CheckUnityConfiguration()
+    const bool dev_mode = false;
+
+    private bool CheckUnityConfiguration()
 	{
 		List<string> supported_titleids = new List<string>();
 		// For now, we only support the standalone version of V3, not the one in Decadence
 		supported_titleids.Add("010063F014176000"); // Standalone V3 from Nintendo eShop (Europe)
 
-		if (!supported_titleids.Any(installation_folder.Contains))
+		bool folder_contains_valid_titleid = supported_titleids.Any(installation_folder.Contains);
+
+        if (!folder_contains_valid_titleid && !dev_mode)
 		{
 			// Xbox version?
 			if (!installation_folder.Contains("V3- Killing Harmony"))
@@ -27,6 +31,8 @@ public partial class MainWindow : Form
 			// Assume titleid (for now)
 			TitleID = "010063F014176000";
 		}
+
+		DisplayInfo.Print(info[42]);
 
 		string unity_root = "Data";
 

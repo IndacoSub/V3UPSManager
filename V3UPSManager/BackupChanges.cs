@@ -2,17 +2,38 @@
 
 public partial class MainWindow : Form
 {
-	private void BackupChanges()
-	{
-		// Get the current directory
-		// ex. C:\V3UPSManager\
-		string cur = Directory.GetCurrentDirectory();
 
-		// Get the backup directory
-		// ex. C:\V3UPSManager\Backup
-		string backupdir = Path.Combine(cur, "Backup");
+	private string GetBackupFolder()
+	{
+
+        // Get the current directory
+        // ex. C:\V3UPSManager\
+        string cur = Directory.GetCurrentDirectory();
+
+        // Get the backup directory
+        // ex. C:\V3UPSManager\Backup
+        string backupdir = Path.Combine(cur, "Backup");
+
+		return backupdir;
+    }
+
+	private string GetModFolder()
+	{
+		// See GetBackupFolder for comments
+
+		string cur = Directory.GetCurrentDirectory();
+		string moddir = Path.Combine(cur, "ModdedFiles");
+
+		return moddir;
+	}
+
+	private void BackupChanges(bool use_mod_folder)
+	{
+
+		string backupdir = use_mod_folder ? GetModFolder() : GetBackupFolder();
 
 		// Delete the current backups, recursively (TODO: why?)
+		// Answer (maybe): because then you may include files that might not be needed anymore in a later patch?
 		if (Directory.Exists(backupdir))
 		{
 			Directory.Delete(backupdir, true);

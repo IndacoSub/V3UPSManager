@@ -2,19 +2,19 @@
 
 public partial class MainWindow : Form
 {
-	private string[] info = new string[30];
-	private string[] info_en = new string[30];
-	private string[] info_it = new string[30];
+	private List<string> info = new List<string>();
+	private List<string> info_en = new List<string>();
+    private List<string> info_it = new List<string>();
 
-	// The .exe name in the "Legacy" (Steam) edition
-	private string LEGACY_EXE_NAME = "Dangan3Win.exe";
+    // The .exe name in the "Legacy" (Steam) edition
+    private string LEGACY_EXE_NAME = "Dangan3Win.exe";
 
 	// The .exe name in the "Xbox" (Microsoft Store) Anniversary Edition
 	private string ANNIVERSARY_EXE_NAME = "Dangan3Desktop.exe";
 
 	private void LoadLanguages()
 	{
-		info_it = new[]
+		info_it = new List<string>
 		{
 			"La cartella di installazione non esiste!", // 0
             "L'eseguibile (\"" + LEGACY_EXE_NAME + "\") non è stato trovato (normale per installazioni versione Unity (Anniversary))!", // 1
@@ -58,9 +58,10 @@ public partial class MainWindow : Form
             "La cartella del gioco (\"Anniversary Edition\") contiene dei file provenienti dalla versione \"Legacy\" (Steam).", // 39
             "Sono stati trovati dei file ARC in \"data\\WIN\"!\nAvresti dovuto estrarli e spostarli altrove.", // 40
             "Il pulsante \"Disinstalla\" funziona solamente con le versioni Legacy (Steam) e Xbox!\nÈ molto facile disinstallare una mod per Switch/Emulatori, basta eliminare la cartella della mod!", // 41
-        };
+			"Versione Switch (Anniversary Edition) riconosciuta!", // 42
+		};
 
-		info_en = new[]
+		info_en = new List<string>
 		{
 			"The installation folder doesn't exist!",
 			"The executable (\"" + LEGACY_EXE_NAME + "\") couldn't be found (normal for Unity-version (Anniversary) installations)!",
@@ -104,7 +105,8 @@ public partial class MainWindow : Form
 			"The game's folder (\"Anniversary Edition\") contains files from the \"Legacy\" (Steam) version.",
 			"ARC file(s) found in \"data\\win\"!\nYou were supposed to extract them\nand move them elsewhere.",
 			"The \"Uninstall\" button only works with the Legacy (Steam) and Xbox versione!\nIt's much easier to uninstall mods on Switch/Emulators, you just need to delete the mod folder(s)!", // 41
-        };
+			"Switch version (Anniversary Edition) recognized!",
+		};
 	}
 
 	private void CheckIndexChange()
