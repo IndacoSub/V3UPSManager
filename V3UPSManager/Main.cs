@@ -10,8 +10,7 @@ public partial class MainWindow : Form
 	{
 		InitializeComponent();
 		LoadLanguages();
-		info = info_it;
-		LanguageComboBox.SelectedIndex = 1; // Default to Italian
+		LanguageComboBox.SelectedIndex = (int)SupportedLanguages.Italian; // Default to Italian
 		CheckIndexChange();
 	}
 

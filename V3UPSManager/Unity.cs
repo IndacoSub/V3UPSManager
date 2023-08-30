@@ -2,11 +2,15 @@
 
 public partial class MainWindow : Form
 {
+	// Allow any folder name(?)
     const bool dev_mode = false;
 
     private bool CheckUnityConfiguration()
 	{
+		// We already established that it's not the Legacy (Steam) PC version, at this point
+
 		List<string> supported_titleids = new List<string>();
+
 		// For now, we only support the standalone version of V3, not the one in Decadence
 		supported_titleids.Add("010063F014176000"); // Standalone V3 from Nintendo eShop (Europe)
 
@@ -14,21 +18,25 @@ public partial class MainWindow : Form
 
         if (!folder_contains_valid_titleid && !dev_mode)
 		{
-			// Xbox version?
-			if (!installation_folder.Contains("V3- Killing Harmony"))
+            // Xbox version?
+            // The Xbox App automatically creates a folder called
+			// "Danganronpa V3- Killing Harmony Anniversary Edition"
+			// and cannot be renamed AFAIK
+            if (!installation_folder.Contains("V3- Killing Harmony"))
 			{
-				// Unknown version
+				// Unknown version: not PC, Xbox or Switch, so... mobile? PS4/Vita?
 				DisplayInfo.Print(info[31]);
 				return false;
 			}
 			else
 			{
-				// Mobile?
+				// Xbox version... now what?
 			}
 		}
 		else
 		{
-			// Assume titleid (for now)
+			// Switch (Unity) version
+			// Assume TitleID (for now? until we support the Decadence version)
 			TitleID = "010063F014176000";
 		}
 
@@ -113,8 +121,8 @@ public partial class MainWindow : Form
 			"master",
 			"static"
 		};
-		// Look for literally any subfolder in StreamingAssets that's not excluded
-		// and return it
+		// Look for literally any subfolder in StreamingAssets that's not excluded (^)
+		// and return it (the first one found)
 		string[] dirs = Directory.GetDirectories(path);
 		foreach (string dir in dirs)
 		{

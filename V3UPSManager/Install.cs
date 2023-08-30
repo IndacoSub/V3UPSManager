@@ -4,10 +4,10 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
-	// UPS Files to apply
+	// UPS Files to apply (so the "patch" section)
 	private List<string> to_apply = new List<string>();
 
-	// SPC/AB/etc. files to mod
+	// SPC/AB/etc. files to mod (so the "installation folder" section)
 	private List<string> to_be_applied = new List<string>();
 
 	private void Install()
@@ -43,6 +43,8 @@ public partial class MainWindow : Form
 
 		if (to_be_applied.Count <= 0)
 		{
+			DisplayInfo.Print(info[43]);
+
 			if (!IsUnity)
 			{
 				DisplayInfo.Print(info[26]);

@@ -8,10 +8,6 @@ public partial class MainWindow : Form
 	private bool IsUnity;
 	private string TitleID = "";
 
-	// Patch-file-specific string
-	// AKA: All .ups patch files have "_patch" in common
-	string patch_specific = "_patch.ups";
-
 	private void LoadInstallationFolder()
 	{
 		// Let the user select the folder manually
@@ -99,6 +95,7 @@ public partial class MainWindow : Form
 
 	private void LoadPatchFolder()
 	{
+		// No installation folder? Go back
 		if (!Directory.Exists(verified_installation_folder) || verified_installation_folder == null ||
 			verified_installation_folder.Length == 0)
 		{
@@ -107,7 +104,7 @@ public partial class MainWindow : Form
 			return;
 		}
 
-		// Let the user select the folder manually
+		// Let the user select the patch (ups) folder manually
 		using (var fold = new FolderBrowserDialog())
 		{
 			DialogResult res = fold.ShowDialog();
@@ -118,6 +115,7 @@ public partial class MainWindow : Form
 			}
 		}
 
+		// No patch folder? Go back
 		if (!Directory.Exists(ups_folder) || ups_folder.Length == 0)
 		{
 			// Maybe they deleted it?
@@ -126,10 +124,12 @@ public partial class MainWindow : Form
 		}
 
 		string upsfolder = "";
+
 		if (!IsUnity)
 		{
-			// If not Unity, so Legacy (Steam) or Xbox (Microsoft Store, AE)
-			// ...or more version which we won't support
+			// If you're here: NOT Unity!
+			// It could be Legacy (Steam) or Xbox (Microsoft Store, AE)
+			// ...or weird versions which we won't support (such as mobile or PS4/Vita)
 
 			string upswindata = Path.Combine(ups_folder, "data");
 
@@ -153,10 +153,14 @@ public partial class MainWindow : Form
 				return;
 			}
 
+			// Safe to assume that the /data/win/ folder exists
+			// They are empty, outside of the CPKs/ARCs, so we can just "skip" them
 			upsfolder = upswindata;
 		}
 		else
 		{
+			// If you're here: this is Unity! Good luck with debugging
+
 			// Check if /Data/StreamingAssets exists in the patch folder
 			// AKA: Find out if the user is actually installing the patch for a Unity version
 			// (yes, with most certainty)
@@ -174,6 +178,8 @@ public partial class MainWindow : Form
 		}
 
 		// Count and get all .ups files inside the patch folder
+		// and do it recursively
+		// TODO: Does this also count the patch files?
 		string[] files = Directory.GetFiles(upsfolder, "*.ups", SearchOption.AllDirectories);
 		if (files == null || files.Length == 0)
 		{
@@ -181,12 +187,14 @@ public partial class MainWindow : Form
 			return;
 		}
 
+		// Clear (or "reset") the to_be_applied list
 		to_be_applied = new List<string>();
+
+		List<string> actual_ups_files = new List<string>();
 
 		// Look for any ups file
 		// that is not a folder (obviously) which contains "_patch.ups" ("patch specific" string)
 		// TODO: Why? Because the user might have random non-patch .ups files in the patch folder?
-
 		foreach (string file in files)
 		{
 			if (IsDirectory(file))
@@ -194,12 +202,20 @@ public partial class MainWindow : Form
 				continue;
 			}
 
-			if (!file.Contains(patch_specific))
+			actual_ups_files.Add(file);
+
+			if (!file.Contains(PatchSpecificString))
 			{
 				continue;
 			}
 
 			to_be_applied.Add(file);
+		}
+
+		if(to_be_applied.Count <= 0 && actual_ups_files.Count > 0)
+		{
+			DisplayInfo.Print(info[44]);
+			return;
 		}
 
 		// Prepare... something???
@@ -311,7 +327,7 @@ public partial class MainWindow : Form
 
 			// If it doesn't contain the patch-specific string, then it's a random .ups file?
 			// We don't care about it
-			if (!file.Contains(patch_specific))
+			if (!file.Contains(PatchSpecificString))
 			{
 				continue;
 			}
@@ -344,13 +360,13 @@ public partial class MainWindow : Form
 			}
 
 			// Remove the patch-specific string from the file
-			// patch_specific is, currently at least, "_patch.ups" (length: 10)
+			// PatchSpecificString is, currently at least, "_patch.ups" (length: 10)
 			// So,
 			// ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US_patch.ups
 			// would become
 			// // ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US
 
-			approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - patch_specific.Length);
+			approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - PatchSpecificString.Length);
 
 			// If the string is now empty, because apparently it was literally just the patch-specific string
 			if (approximate_spc.Length <= 0)
@@ -450,7 +466,7 @@ public partial class MainWindow : Form
 				continue;
 			}
 
-			if (!file.Contains(patch_specific))
+			if (!file.Contains(PatchSpecificString))
 			{
 				continue;
 			}
@@ -473,8 +489,8 @@ public partial class MainWindow : Form
 
 			string bak_approx = approximate_ab;
 
-			// patch_specific is, currently at least, "_patch.ups" (length: 10)
-			approximate_ab = approximate_ab.Substring(0, approximate_ab.Length - patch_specific.Length);
+			// PatchSpecificString is, currently at least, "_patch.ups" (length: 10)
+			approximate_ab = approximate_ab.Substring(0, approximate_ab.Length - PatchSpecificString.Length);
 
 			if (approximate_ab.Length <= 0)
 			{
@@ -535,7 +551,7 @@ public partial class MainWindow : Form
 				continue;
 			}
 
-			if (!file.Contains(patch_specific))
+			if (!file.Contains(PatchSpecificString))
 			{
 				continue;
 			}
@@ -558,8 +574,8 @@ public partial class MainWindow : Form
 
 			string bak_approx = approximate_pb;
 
-			// patch_specific is, currently at least, "_patch.ups" (length: 10)
-			approximate_pb = approximate_pb.Substring(0, approximate_pb.Length - patch_specific.Length);
+			// PatchSpecificString is, currently at least, "_patch.ups" (length: 10)
+			approximate_pb = approximate_pb.Substring(0, approximate_pb.Length - PatchSpecificString.Length);
 
 			if (approximate_pb.Length <= 0)
 			{
@@ -620,7 +636,7 @@ public partial class MainWindow : Form
 				continue;
 			}
 
-			if (!file.Contains(patch_specific))
+			if (!file.Contains(PatchSpecificString))
 			{
 				continue;
 			}
@@ -643,8 +659,8 @@ public partial class MainWindow : Form
 
 			string bak_approx = approximate_assets;
 
-			// patch_specific is, currently at least, "_patch.ups" (length: 10)
-			approximate_assets = approximate_assets.Substring(0, approximate_assets.Length - patch_specific.Length);
+			// PatchSpecificString is, currently at least, "_patch.ups" (length: 10)
+			approximate_assets = approximate_assets.Substring(0, approximate_assets.Length - PatchSpecificString.Length);
 
 			if (approximate_assets.Length <= 0)
 			{
