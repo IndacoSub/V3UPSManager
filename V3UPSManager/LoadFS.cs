@@ -359,10 +359,18 @@ public partial class MainWindow : Form
 			// ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US_patch.ups
 			string approximate_spc = Path.Combine(verified_installation_folder, second_half);
 
-			// If it's a directory, ...which it most certainly isn't
-			if (IsDirectory(approximate_spc))
+            // If it's a directory, ...which it most certainly isn't
+            // UPDATE (September 2023)
+            // Some users complained that files would not install
+            // if there was a folder name that had the same name as the file
+            // So let's just ask the user what they want to do, in this case
+            if (IsDirectory(approximate_spc))
 			{
-				continue;
+				var res = MessageBox.Show(approximate_spc + ": " + ui_messages[1], ui_messages[0], MessageBoxButtons.YesNo);
+				if (res != DialogResult.Yes)
+				{
+					continue;
+				}
 			}
 
 			// Remove the patch-specific string from the file

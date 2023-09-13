@@ -3,6 +3,7 @@
 public partial class MainWindow : Form
 {
 	private List<string> info = new List<string>();
+    private List<string> ui_messages = new List<string>();
 
     // The .exe name in the "Legacy" (Steam) edition
     private const string LEGACY_EXE_NAME = "Dangan3Win.exe";

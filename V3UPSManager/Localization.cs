@@ -11,8 +11,14 @@ public partial class MainWindow : Form
     private List<string> info_en = new List<string>();
     private List<string> info_it = new List<string>();
 
+    private List<string> ui_messages_en = new List<string>();
+    private List<string> ui_messages_it = new List<string>();
+
     private void LoadLanguages()
     {
+
+        /* Italian */
+
         info_it = new List<string>
         {
             "La cartella di installazione non esiste!", // 0
@@ -62,6 +68,18 @@ public partial class MainWindow : Form
             "Sono stati trovati dei file UPS, ma non contengono \"" + PatchSpecificString + "\" come invece dovrebbero (rinominali manualmente?)\nInoltre, non devono contenere due estensioni (ad esempio \"myfile.SPC" + PatchSpecificString + "\" non va bene), ma \"" + PatchSpecificString + "\" (esempio corretto: \"myfile" + PatchSpecificString + "\")", // 44
 		};
 
+        ui_messages_it = new List<string>
+        {
+            "ATTENZIONE",
+            "Sembra esserci una cartella con lo stesso nome del file. Procedere con l'installazione?",
+            "Seleziona cartella di installazione",
+            "Seleziona cartella patch",
+            "Installa / Aggiorna",
+            "Disinstalla",
+        };
+
+        /* English */
+
         info_en = new List<string>
         {
             "The installation folder doesn't exist!",
@@ -110,6 +128,16 @@ public partial class MainWindow : Form
             "No file(s) in the installation folder are ready to be patched\nThe installation cannot proceed, make sure you selected the right folder (ex. not \"win\" or \"data\")",
             "UPS files were found, but they aren't \"" + PatchSpecificString + "\" files, as they should instead be (rename them manually?)\nAlso, they must NOT contain two extensions (for example, \"myfile.SPC" + PatchSpecificString + "\" is not a valid name), only \"" + PatchSpecificString + "\" (correct example: \"myfile" + PatchSpecificString + "\")",
         };
+
+        ui_messages_en = new List<string>()
+        {
+            "WARNING",
+            "There seems to be a folder with the exact same name as the file. Continue?",
+            "Choose installation folder",
+            "Choose patch folder",
+            "Install / Update",
+            "Uninstall",
+        };
     }
 
     private void CheckIndexChange()
@@ -121,21 +149,20 @@ public partial class MainWindow : Form
             // English
             case SupportedLanguages.English:
                 info = info_en;
-                SelectInstallationFolderButton.Text = "Choose installation folder";
-                SelectPatchFolderButton.Text = "Choose patch folder";
-                InstallButton.Text = "Install / Update";
-                UninstallButton.Text = "Uninstall";
+                ui_messages = ui_messages_en;
                 break;
 
             // Italian
             case SupportedLanguages.Italian:
             default:
                 info = info_it;
-                SelectInstallationFolderButton.Text = "Seleziona cartella di installazione";
-                SelectPatchFolderButton.Text = "Seleziona cartella patch";
-                InstallButton.Text = "Installa / Aggiorna";
-                UninstallButton.Text = "Disinstalla";
+                ui_messages = ui_messages_it;
                 break;
         }
+
+        SelectInstallationFolderButton.Text = ui_messages[2];
+        SelectPatchFolderButton.Text = ui_messages[3];
+        InstallButton.Text = ui_messages[4];
+        UninstallButton.Text = ui_messages[5];
     }
 }
