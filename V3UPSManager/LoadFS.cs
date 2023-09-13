@@ -248,14 +248,17 @@ public partial class MainWindow : Form
 		to_apply = new List<string>();
 		already_checked = new List<string>();
 
-		TryToApplySPCFiles(ups_files);
-		if (IsUnity)
+		// WHY were those all different functions?
+
+		TryToApplyFiles(ups_files, ".spc");
+        TryToApplyFiles(ups_files, ".awb");
+        if (IsUnity)
 		{
-			// .ab, .pb e .asset files are only in the Unity version(s?)
-			TryToApplyPBFiles(ups_files);
-			TryToApplyABFiles(ups_files);
-			TryToApplyAssetsFiles(ups_files);
-		}
+            // .ab, .pb e .asset files are only in the Unity version(s?)
+            TryToApplyFiles(ups_files, ".pb");
+            TryToApplyFiles(ups_files, ".ab");
+            TryToApplyFiles(ups_files, ".assets");
+        }
 
 		foreach (string f in to_apply)
 		{
@@ -269,41 +272,44 @@ public partial class MainWindow : Form
 
 			string no_ext = f.Substring(0, f.Length - Path.GetExtension(f).Length);
 
-			// All "possible" extensions, backups included
+			// All "possible" extensions, backups and UPS included
 
-			string spc = no_ext + ".spc";
-			string spcbak = spc + "_bak";
-			string ab = no_ext + ".ab";
-			string abbak = ab + "_bak";
-			string assets = no_ext + ".assets";
-			string assetsbak = assets + "_bak";
-			string pb = no_ext + ".pb";
-			string pbbak = pb + "_bak";
-			string patchups = no_ext + ".ups";
-			string no_extbak = no_ext + "_bak";
+			List<string> all_installable_extensions = new List<string>()
+			{
+				// Legacy and Xbox
+				".spc",
+				".awb",
+
+				// Unity
+				".ab",
+				".pb",
+				".assets",
+
+				// Patch
+				".ups",
+			};
+
+			string bak = "_bak";
 
 			// Remove all extension versions of the file from the "could not find" list
 			// TODO: Any scenario where this is actually useful?
 			// There must be some, or otherwise these functions below wouldn't be there, but which ones?
 
-			RemoveFromMissingList(f.ToLowerInvariant());
-			RemoveFromMissingList(spc.ToLowerInvariant());
-			RemoveFromMissingList(spcbak.ToLowerInvariant());
-			RemoveFromMissingList(ab.ToLowerInvariant());
-			RemoveFromMissingList(abbak.ToLowerInvariant());
-			RemoveFromMissingList(assets.ToLowerInvariant());
-			RemoveFromMissingList(assetsbak.ToLowerInvariant());
-			RemoveFromMissingList(pb.ToLowerInvariant());
-			RemoveFromMissingList(pbbak.ToLowerInvariant());
-			RemoveFromMissingList(patchups.ToLowerInvariant());
-			RemoveFromMissingList(no_ext.ToLowerInvariant());
-			RemoveFromMissingList(no_extbak.ToLowerInvariant());
-		}
+			foreach (string extension in all_installable_extensions)
+			{
+				string file = no_ext + extension;
+				string filebak = no_ext + extension + bak;
+				RemoveFromMissingList(file);
+				RemoveFromMissingList(filebak);
+			}
+            RemoveFromMissingList(no_ext.ToLowerInvariant());
+            RemoveFromMissingList(no_ext + bak.ToLowerInvariant());
+        }
 	}
 
-	private void TryToApplySPCFiles(string[] ups_files)
+	private void TryToApplyFiles(string[] ups_files, string extension)
 	{
-		// Calculate which SPC files correspond to the UPS files
+		// Calculate which (extension, ex. SPC) files correspond to the UPS files
 		// and add them to a vector
 
 		// Find out which file corresponds to
@@ -346,7 +352,7 @@ public partial class MainWindow : Form
 				continue;
 			}
 
-			// Get the "approximate" .spc file
+			// Get the "approximate" (extension, ex. .spc) path
 			// By combining the installation folder and the relative path of the .ups file
 			// ex. data\win\game_resident\game_resident_US_patch.ups
 			// would become
@@ -368,31 +374,31 @@ public partial class MainWindow : Form
 
 			approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - PatchSpecificString.Length);
 
-			// If the string is now empty, because apparently it was literally just the patch-specific string
+			// If the string is now empty, because apparently it was literally just the patch-specific string?
 			if (approximate_spc.Length <= 0)
 			{
 				continue;
 			}
 
-			// The objective is now to find the .spc file
-			// Try to see if the .spc file exists
+            // The objective is now to find the (extension, ex. .spc) file
+            // Try to see if the (extension, ex. .spc) file exists
 
-			string try_approximate_spc_lower = approximate_spc + ".spc";
-			string try_approximate_spc_upper = approximate_spc + ".SPC";
+            string try_approximate_ext_lower = approximate_spc + (extension.ToLowerInvariant());
+			string try_approximate_ext_upper = approximate_spc + (extension.ToUpperInvariant());
 
-			string og_no_bak = try_approximate_spc_lower;
+			string og_no_bak = try_approximate_ext_lower;
 
-			bool exists_lower = FileExistsCaseSensitive(try_approximate_spc_lower);
-			bool exists_upper = FileExistsCaseSensitive(try_approximate_spc_upper);
+			bool exists_lower = FileExistsCaseSensitive(try_approximate_ext_lower);
+			bool exists_upper = FileExistsCaseSensitive(try_approximate_ext_upper);
 			if (!exists_lower && !exists_upper)
 			{
 				// try to see if the _bak exists
-				try_approximate_spc_lower = try_approximate_spc_lower + "_bak";
-				try_approximate_spc_upper = try_approximate_spc_upper + "_bak";
+				try_approximate_ext_lower = try_approximate_ext_lower + "_bak";
+				try_approximate_ext_upper = try_approximate_ext_upper + "_bak";
 
 				// and, if so, which one exists
-				exists_lower = FileExistsCaseSensitive(try_approximate_spc_lower);
-				exists_upper = FileExistsCaseSensitive(try_approximate_spc_upper);
+				exists_lower = FileExistsCaseSensitive(try_approximate_ext_lower);
+				exists_upper = FileExistsCaseSensitive(try_approximate_ext_upper);
 
 				if (!exists_lower && !exists_upper)
 				{
@@ -407,297 +413,43 @@ public partial class MainWindow : Form
 				}
 
 				// One has to exist, if we're here
+				// Lower checked first as that's the rule, not the exception
 				if (exists_lower)
 				{
 					// Lower exists
-					// Restore bak (bak -> spc)
-					string nobak = try_approximate_spc_lower.Substring(0, try_approximate_spc_lower.Length - 4);
-					File.Copy(try_approximate_spc_lower, nobak, true);
-					try_approximate_spc_lower = nobak;
+					// Restore bak to extension (ex. bak -> spc)
+					string nobak = try_approximate_ext_lower.Substring(0, try_approximate_ext_lower.Length - extension.Length);
+					File.Copy(try_approximate_ext_lower, nobak, true);
+					try_approximate_ext_lower = nobak;
 				}
 				else
 				{
 					// Upper exists
-					// Restore bak (bak -> spc)
-					string nobak = try_approximate_spc_upper.Substring(0, try_approximate_spc_upper.Length - 4);
-					File.Copy(try_approximate_spc_upper, nobak, true);
-					try_approximate_spc_upper = nobak;
+					// Restore bak to extension (ex. bak -> spc)
+					string nobak = try_approximate_ext_upper.Substring(0, try_approximate_ext_upper.Length - extension.Length);
+					File.Copy(try_approximate_ext_upper, nobak, true);
+					try_approximate_ext_upper = nobak;
 				}
 			}
 
 			// Add the right version to to_apply
 			if (exists_lower)
 			{
-				to_apply.Add(try_approximate_spc_lower);
+				to_apply.Add(try_approximate_ext_lower);
 			}
 			else
 			{
-				to_apply.Add(try_approximate_spc_upper);
+				to_apply.Add(try_approximate_ext_upper);
 			}
 
 			// Add the relative path to the list of paths we already checked
 			already_checked.Add(second_half.ToLowerInvariant());
 
 			// If we found it, then it's not "not found"
-			if (to_apply.Contains(try_approximate_spc_lower))
+			if (to_apply.Contains(try_approximate_ext_lower))
 			{
-				couldnt_be_found.Remove(try_approximate_spc_lower.ToLowerInvariant());
+				couldnt_be_found.Remove(try_approximate_ext_lower.ToLowerInvariant());
 				couldnt_be_found.Remove(og_no_bak.ToLowerInvariant());
-			}
-		}
-	}
-
-	private void TryToApplyABFiles(string[] ups_files)
-	{
-		// Calculate which AB files correspond to the UPS files
-		// and add them to a vector
-
-		// For more info, check out the above functions, it's really not that different
-
-		foreach (string file in ups_files)
-		{
-			if (to_apply.Contains(file))
-			{
-				continue;
-			}
-
-			if (IsDirectory(file))
-			{
-				continue;
-			}
-
-			if (!file.Contains(PatchSpecificString))
-			{
-				continue;
-			}
-
-			// Remove the part before the UPS folder
-			string second_half = file.Substring(ups_folder.Length + 1);
-
-			if (already_checked.Contains(second_half.ToLowerInvariant()))
-			{
-				continue;
-			}
-
-			// Get the "approximate" .ab file
-			string approximate_ab = Path.Combine(verified_installation_folder, second_half);
-
-			if (IsDirectory(approximate_ab))
-			{
-				continue;
-			}
-
-			string bak_approx = approximate_ab;
-
-			// PatchSpecificString is, currently at least, "_patch.ups" (length: 10)
-			approximate_ab = approximate_ab.Substring(0, approximate_ab.Length - PatchSpecificString.Length);
-
-			if (approximate_ab.Length <= 0)
-			{
-				continue;
-			}
-
-			approximate_ab += ".ab";
-
-			if (!File.Exists(approximate_ab))
-			{
-				// Does not exist
-
-				approximate_ab += "_bak";
-
-				if (!File.Exists(approximate_ab))
-				{
-					if (!to_apply.Contains(approximate_ab) &&
-						!couldnt_be_found.Contains(approximate_ab.ToLowerInvariant()))
-					{
-						couldnt_be_found.Add(approximate_ab.ToLowerInvariant());
-					}
-
-					continue;
-				}
-
-				// restore backup
-				string nobak = approximate_ab.Substring(0, approximate_ab.Length - 4);
-				File.Copy(approximate_ab, nobak, true);
-				approximate_ab = nobak;
-			}
-
-			to_apply.Add(approximate_ab);
-			already_checked.Add(second_half.ToLowerInvariant());
-
-			if (to_apply.Contains(approximate_ab))
-			{
-				couldnt_be_found.Remove(approximate_ab.ToLowerInvariant());
-			}
-		}
-	}
-
-	private void TryToApplyPBFiles(string[] ups_files)
-	{
-		// Calculate which PB files correspond to the UPS files
-		// and add them to a vector
-
-		// For more info, check out the above functions, it's really not that different
-
-		foreach (string file in ups_files)
-		{
-			if (to_apply.Contains(file))
-			{
-				continue;
-			}
-
-			if (IsDirectory(file))
-			{
-				continue;
-			}
-
-			if (!file.Contains(PatchSpecificString))
-			{
-				continue;
-			}
-
-			// Remove the part before the UPS folder
-			string second_half = file.Substring(ups_folder.Length + 1);
-
-			if (already_checked.Contains(second_half.ToLowerInvariant()))
-			{
-				continue;
-			}
-
-			// Get the "approximate" .pb file
-			string approximate_pb = Path.Combine(verified_installation_folder, second_half);
-
-			if (IsDirectory(approximate_pb))
-			{
-				continue;
-			}
-
-			string bak_approx = approximate_pb;
-
-			// PatchSpecificString is, currently at least, "_patch.ups" (length: 10)
-			approximate_pb = approximate_pb.Substring(0, approximate_pb.Length - PatchSpecificString.Length);
-
-			if (approximate_pb.Length <= 0)
-			{
-				continue;
-			}
-
-			approximate_pb += ".pb";
-
-			if (!File.Exists(approximate_pb))
-			{
-				// Does not exist
-
-				approximate_pb += "_bak";
-
-				if (!File.Exists(approximate_pb))
-				{
-					if (!to_apply.Contains(approximate_pb) &&
-						!couldnt_be_found.Contains(approximate_pb.ToLowerInvariant()))
-					{
-						couldnt_be_found.Add(approximate_pb.ToLowerInvariant());
-					}
-
-					continue;
-				}
-
-				// restore backup
-				string nobak = approximate_pb.Substring(0, approximate_pb.Length - 4);
-				File.Copy(approximate_pb, nobak, true);
-				approximate_pb = nobak;
-			}
-
-			to_apply.Add(approximate_pb);
-			already_checked.Add(second_half.ToLowerInvariant());
-
-			if (to_apply.Contains(approximate_pb))
-			{
-				couldnt_be_found.Remove(approximate_pb.ToLowerInvariant());
-			}
-		}
-	}
-
-	private void TryToApplyAssetsFiles(string[] ups_files)
-	{
-		// Calculate which Assets files correspond to the UPS files
-		// and add them to a vector
-
-		// For more info, check out the above functions, it's really not that different
-
-		foreach (string file in ups_files)
-		{
-			if (to_apply.Contains(file))
-			{
-				continue;
-			}
-
-			if (IsDirectory(file))
-			{
-				continue;
-			}
-
-			if (!file.Contains(PatchSpecificString))
-			{
-				continue;
-			}
-
-			// Remove the part before the UPS folder
-			string second_half = file.Substring(ups_folder.Length + 1);
-
-			if (already_checked.Contains(second_half))
-			{
-				continue;
-			}
-
-			// Get the "approximate" .assets file
-			string approximate_assets = Path.Combine(verified_installation_folder, second_half);
-
-			if (IsDirectory(approximate_assets))
-			{
-				continue;
-			}
-
-			string bak_approx = approximate_assets;
-
-			// PatchSpecificString is, currently at least, "_patch.ups" (length: 10)
-			approximate_assets = approximate_assets.Substring(0, approximate_assets.Length - PatchSpecificString.Length);
-
-			if (approximate_assets.Length <= 0)
-			{
-				continue;
-			}
-
-			approximate_assets += ".assets";
-
-			if (!File.Exists(approximate_assets))
-			{
-				// Does not exist
-
-				approximate_assets += "_bak";
-
-				if (!File.Exists(approximate_assets))
-				{
-					if (!to_apply.Contains(approximate_assets) &&
-						!couldnt_be_found.Contains(approximate_assets.ToLowerInvariant()))
-					{
-						couldnt_be_found.Add(approximate_assets.ToLowerInvariant());
-					}
-
-					continue;
-				}
-
-				// restore backup
-				string nobak = approximate_assets.Substring(0, approximate_assets.Length - 4);
-				File.Copy(approximate_assets, nobak, true);
-				approximate_assets = nobak;
-			}
-
-			to_apply.Add(approximate_assets);
-			already_checked.Add(second_half.ToLowerInvariant());
-
-			if (to_apply.Contains(approximate_assets))
-			{
-				couldnt_be_found.Remove(approximate_assets.ToLowerInvariant());
 			}
 		}
 	}

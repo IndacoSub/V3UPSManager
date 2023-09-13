@@ -111,10 +111,10 @@ public partial class MainWindow : Form
 				return;
 			}
 
-			// Output .spc/.pb/.ab/.assets file
+			// Output .spc/.awb/.pb/.ab/.assets file
 			string outfile = to_apply[j];
 
-			// Base .spc/.pb/.ab/.assets file
+			// Base .spc/.awb/.pb/.ab/.assets file
 			string before = outfile + "_bak";
 
 			// .ups file
