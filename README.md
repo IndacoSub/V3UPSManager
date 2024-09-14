@@ -12,9 +12,23 @@ Note: this program will NOT handle conflicts between files!
 
 For example, if two mods need to edit the same file, then that file might get overwritten, and the mod(s) might not work correctly!
 
+## Localization ##
+
+Feel free to localize this tool into your preferred language!
+
+All you need to do is boot the program once, wait for it to create the Localization folder, copy the English subfolder and rename it, then translate the files inside your newly-renamed folder.
+
+Once you're done, restart the tool in order for it to scan the subfolders, and hopefully it should load your new localization.
+
+If you wish to include your localization in our next release of this tool, please contact us.
+
+You may find an invite to our Discord server here: https://indacosub.github.io/about/useful.html#discord
+
+## License ##
+
 This tool is licensed under the ISC License.
 
-UPS Manager depends on "UPS Tools" by rameshvarun (https://github.com/rameshvarun/ups), licensed under the MIT license (https://github.com/rameshvarun/ups/blob/master/LICENSE).
+"V3UPSManager" depends on "UPS Tools" by rameshvarun (https://github.com/rameshvarun/ups), licensed under the MIT license (https://github.com/rameshvarun/ups/blob/master/LICENSE).
 
 The source code for "V3UPSManager" may be compiled without "UPS Tools".
 

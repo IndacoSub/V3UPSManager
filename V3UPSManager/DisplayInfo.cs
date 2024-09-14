@@ -8,17 +8,17 @@ internal class DisplayInfo
 	{
 		SystemSounds.Question.Play();
 		string msg = string.Join(Environment.NewLine + Environment.NewLine, lines);
-		return MessageBox.Show(msg, "Prompt", btn, MessageBoxIcon.Asterisk);
+		return MessageBox.Show(msg.Replace("\\n", "\n"), "Prompt", btn, MessageBoxIcon.Asterisk);
 	}
 
 	internal static DialogResult Print(string line)
 	{
 		MessageBoxButtons btn = new MessageBoxButtons();
-		return MessageBox.Show(line, "Prompt", btn, MessageBoxIcon.Asterisk);
+		return MessageBox.Show(line.Replace("\\n", "\n"), "Prompt", btn, MessageBoxIcon.Asterisk);
 	}
 
 	internal static DialogResult Ask(string line)
 	{
-		return MessageBox.Show(line, "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
+		return MessageBox.Show(line.Replace("\\n", "\n"), "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
 	}
 }

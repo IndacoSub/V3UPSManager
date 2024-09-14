@@ -88,7 +88,6 @@
 			// 
 			LanguageComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
 			LanguageComboBox.FormattingEnabled = true;
-			LanguageComboBox.Items.AddRange(new object[] { "English", "Italiano" });
 			LanguageComboBox.Location = new Point(234, 11);
 			LanguageComboBox.Name = "LanguageComboBox";
 			LanguageComboBox.Size = new Size(120, 23);
