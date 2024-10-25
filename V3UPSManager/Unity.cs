@@ -5,7 +5,20 @@ public partial class MainWindow : Form
 	// Allow any folder name(?)
     const bool dev_mode = false;
 
-    private bool CheckUnityConfiguration()
+	private bool CheckUnityConfiguration()
+	{
+		switch (CurrentGame.GameID)
+		{
+			case Game.DanganronpaV3:
+				return CheckDRV3UnityConfiguration();
+			case Game.AITheSomniumFiles:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+    private bool CheckDRV3UnityConfiguration()
 	{
 		// We already established that it's not the Legacy (Steam) PC version, at this point
 

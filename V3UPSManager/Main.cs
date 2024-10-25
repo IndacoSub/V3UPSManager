@@ -2,6 +2,9 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
+
+	public GameBase CurrentGame = new DRV3();
+
 	private string installation_folder = "";
 	private string ups_folder = "";
 	private string verified_installation_folder = "";

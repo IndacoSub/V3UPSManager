@@ -4,6 +4,20 @@ public partial class MainWindow : Form
 {
 	private bool CheckInstall(string data_folder)
 	{
+		switch (CurrentGame.GameID)
+		{
+			case Game.DanganronpaV3:
+				return CheckInstallV3(data_folder);
+			case Game.AITheSomniumFiles:
+				// TODO: Implement
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	private bool CheckInstallV3(string data_folder)
+	{
 		// Dome some checks about the folder where the .ups files will be installed
 
 		if (data_folder == null || string.IsNullOrEmpty(data_folder) || !Directory.Exists(data_folder))

@@ -9,14 +9,29 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
-	// Xbox = Microsoft Store "Anniversary Edition" version
+
 	private bool CheckXboxConfiguration()
 	{
+		switch (CurrentGame.GameID)
+		{
+			case Game.DanganronpaV3:
+				return CheckDRV3XboxConfiguration();
+			case Game.AITheSomniumFiles:
+				// TODO: Implement
+				return false;
+			default:
+				return false;
+		}
+	}
+
+	// Xbox = Microsoft Store "Anniversary Edition" version
+	private bool CheckDRV3XboxConfiguration()
+	{
 		// Xbox version?
-		string exe = Path.Combine(installation_folder, ANNIVERSARY_EXE_NAME);
+		string exe = Path.Combine(installation_folder, CurrentGame.ANNIVERSARY_EXE_NAME);
 		if (!File.Exists(exe))
 		{
-			DisplayInfo.Print(info[37]);
+			DisplayInfo.Print(info[37], CurrentGame);
 			return false;
 		}
 

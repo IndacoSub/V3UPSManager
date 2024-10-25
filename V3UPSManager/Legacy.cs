@@ -4,15 +4,30 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
+
+	private bool CheckLegacyConfiguration() {
+
+		switch(CurrentGame.GameID)
+		{
+			case Game.DanganronpaV3:
+				return CheckDRV3LegacyConfiguration();
+			case Game.AITheSomniumFiles:
+				// TODO: Implement
+				return false;
+			default:
+				return false;
+		}
+	}
+
 	// Legacy = Steam version
-	private bool CheckLegacyConfiguration()
+	private bool CheckDRV3LegacyConfiguration()
 	{
 		// Check if Dangan3Win.exe exists
-		string exe = Path.Combine(installation_folder, LEGACY_EXE_NAME);
+		string exe = Path.Combine(installation_folder, CurrentGame.LEGACY_EXE_NAME);
 		if (!File.Exists(exe))
 		{
 			// Maybe the user deleted it?
-			DisplayInfo.Print(info[1]);
+			DisplayInfo.Print(info[1], CurrentGame);
 			return false;
 		}
 
@@ -99,7 +114,7 @@ public partial class MainWindow : Form
 		// Check if the MD5 hash is valid
 		if (exe_md5.Length == 0 || string.IsNullOrWhiteSpace(exe_md5))
 		{
-			DisplayInfo.Print(info[7]);
+			DisplayInfo.Print(info[7], CurrentGame);
 			return false;
 		}
 

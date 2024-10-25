@@ -4,21 +4,25 @@ namespace V3UPSManager;
 
 internal class DisplayInfo
 {
-	internal static DialogResult Prompt(MessageBoxButtons btn, params string[] lines)
+	internal static string FormatString(string str, GameBase gb = null)
 	{
-		SystemSounds.Question.Play();
-		string msg = string.Join(Environment.NewLine + Environment.NewLine, lines);
-		return MessageBox.Show(msg.Replace("\\n", "\n"), "Prompt", btn, MessageBoxIcon.Asterisk);
+		if(gb != null)
+		{
+			str = str.Replace("VAR_LEGACY_EXE_NAME", gb.LEGACY_EXE_NAME);
+			str = str.Replace("VAR_ANNIVERSARY_EXE_NAME", gb.ANNIVERSARY_EXE_NAME);
+			str = str.Replace("VAR_PATCH_SPECIFIC_STRING", gb.PatchSpecificString);
+		}
+		return str.Replace("\\n", "\n");
 	}
 
-	internal static DialogResult Print(string line)
+	internal static DialogResult Print(string line, GameBase gb = null)
 	{
 		MessageBoxButtons btn = new MessageBoxButtons();
-		return MessageBox.Show(line.Replace("\\n", "\n"), "Prompt", btn, MessageBoxIcon.Asterisk);
+		return MessageBox.Show(FormatString(line, gb), "Prompt", btn, MessageBoxIcon.Asterisk);
 	}
 
-	internal static DialogResult Ask(string line)
+	internal static DialogResult Ask(string line, GameBase gb = null)
 	{
-		return MessageBox.Show(line.Replace("\\n", "\n"), "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
+		return MessageBox.Show(FormatString(line, gb), "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
 	}
 }

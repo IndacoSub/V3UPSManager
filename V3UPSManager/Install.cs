@@ -19,7 +19,10 @@ public partial class MainWindow : Form
 		// UPS Tools is licensed under the MIT license
 		// https://github.com/rameshvarun/ups
 		// https://github.com/rameshvarun/ups/LICENSE
-		string ups = Path.Combine(current_dir, "ups.exe");
+
+		string patch_tool_exe = CurrentGame.PatchFormatInstaller + ".exe";
+
+		string ups = Path.Combine(current_dir, patch_tool_exe);
 		if (!File.Exists(ups))
 		{
 			DisplayInfo.Print(info[24]);
@@ -120,14 +123,30 @@ public partial class MainWindow : Form
 			// .ups file
 			string after = to_be_applied[j];
 
-			string command = "apply --base " + $"\"{before}\"" + " --patch " + $"\"{after}\"" + " --output " +
-							 $"\"{outfile}\"";
+			string command = "";
+
+			switch(CurrentGame.PatchFormat)
+			{
+				case FormatType.UPS:
+					command = "apply --base " + $"\"{before}\"" + " --patch " + $"\"{after}\"" + " --output " + $"\"{outfile}\"";
+					break;
+				case FormatType.XDelta:
+					command = "-d -f -s " + $"\"{before}\"" + " " + $"\"{after}\"" + " " + $"\"{outfile}\""; 
+					break;
+				default:
+					break;
+			}
+
+			if(command.Length == 0)
+			{
+				// TODO: Implement
+			}
 
 			//Process.Start(ups, "apply --base " + $"\"{before}\"" + " --patch " + $"\"{after}\"" + " --output " + $"\"{outfile}\"").WaitForExit();
 
 			var p = new Process();
 			//p.StartInfo.WorkingDirectory = cur;
-			p.StartInfo.FileName = "ups.exe";
+			p.StartInfo.FileName = patch_tool_exe;
 			p.StartInfo.Arguments = command;
 			p.StartInfo.RedirectStandardOutput = false;
 			p.StartInfo.UseShellExecute = false;
