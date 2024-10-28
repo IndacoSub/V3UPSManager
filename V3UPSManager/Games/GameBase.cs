@@ -24,6 +24,10 @@ namespace V3UPSManager
 		public virtual string PatchFormatExtension { get; } = ".ups";
 		public virtual string PatchFormatInstaller { get; } = "ups";
 
+		// UPS Tools is licensed under the MIT license
+		// https://github.com/rameshvarun/ups
+		// https://github.com/rameshvarun/ups/LICENSE
+
 		// Patch-file-specific string
 		// AKA: All .ups patch files have "_patch" in common, or any custom string really (as long as they actually contain it in their name)
 		public virtual string PatchSpecificString { get; } = "_patch.ups";

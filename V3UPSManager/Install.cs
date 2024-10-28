@@ -15,11 +15,6 @@ public partial class MainWindow : Form
 		string cur = Directory.GetCurrentDirectory();
 		string current_dir = Path.GetFullPath(cur);
 
-		// Check if "ups.exe" from "UPS Tools" exists
-		// UPS Tools is licensed under the MIT license
-		// https://github.com/rameshvarun/ups
-		// https://github.com/rameshvarun/ups/LICENSE
-
 		string patch_tool_exe = CurrentGame.PatchFormatInstaller + ".exe";
 
 		string ups = Path.Combine(current_dir, patch_tool_exe);
