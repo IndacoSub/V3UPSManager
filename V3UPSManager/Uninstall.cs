@@ -12,18 +12,33 @@ public partial class MainWindow : Form
 			return;
 		}
 
-		if (IsUnity)
-		{
-			Log(info[41]);
-			return;
-		}
+        switch(CurrentGame.GameID) {
+            case Game.DanganronpaV3:
+                // Unity is only in the Switch version
+                if (IsUnity)
+		        {
+			        Log(info[41]);
+			        return;
+		        }
+                break;
+            default:
+                break;
+        }
 
         // This is a nightmare to maintain
-		List<string> extensions_to_uninstall = new List<string>()
-		{
-			".spc",
-			".awb",
-		};
+		List<string> extensions_to_uninstall = new List<string>();
+        switch(CurrentGame.GameID)
+        {
+            case Game.DanganronpaV3:
+                extensions_to_uninstall.Add(".spc");
+                extensions_to_uninstall.Add(".awb");
+                break;
+            case Game.AITheSomniumFiles:
+                extensions_to_uninstall.Add("*");
+                break;
+            default:
+                break;
+        }
 
         int count_uninstalled = 0;
 
@@ -34,8 +49,8 @@ public partial class MainWindow : Form
             // Count and get all (extension, ex. spc) backup files (ex. ".spc_bak") in the patch folder
             // TODO: Why does this only work with the non-Unity versions?
             // Probably because it's *much* easier to uninstall mods on Switch/Emulators (just delete the mod folder)
-            string[] lowercase_files = Directory.GetFiles(verified_installation_folder, "*" + extension.ToLowerInvariant() + "_bak", SearchOption.AllDirectories);
-            string[] uppercase_files = Directory.GetFiles(verified_installation_folder, "*" + extension.ToUpperInvariant() + "_bak", SearchOption.AllDirectories);
+            string[] lowercase_files = Directory.GetFiles(verified_installation_folder, "*" + (extension == "*" ? "" : extension.ToLowerInvariant()) + "_bak", SearchOption.AllDirectories);
+            string[] uppercase_files = Directory.GetFiles(verified_installation_folder, "*" + (extension == "*" ? "" : extension.ToUpperInvariant()) + "_bak", SearchOption.AllDirectories);
             if (lowercase_files == null || uppercase_files == null ||lowercase_files.Length == 0 || uppercase_files.Length == 0)
             {
                 Log(info[32]);
