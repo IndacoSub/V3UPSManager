@@ -65,6 +65,7 @@ namespace V3UPSManager
 			foreach (GameBase game in games)
 			{
 				List<string> folders = game.FolderIdentifiers;
+				// Contains or EndsWith?
 				if(folders.Any(x => folder.Replace("\\", "/").EndsWith(x.Replace("\\", "/"))))
 				{
 					return game.GameID;

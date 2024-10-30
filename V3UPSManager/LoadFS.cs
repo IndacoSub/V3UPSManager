@@ -25,7 +25,7 @@ public partial class MainWindow : Form
 		if (!Directory.Exists(installation_folder) || installation_folder == null)
 		{
 			// Maybe they deleted it?
-			DisplayInfo.Print(info[0]);
+			Log(info[0], null, Verbosity.Error);
 			return;
 		}
 
@@ -35,7 +35,7 @@ public partial class MainWindow : Form
 
 		if(CurrentGameID == Game.None)
 		{
-			// TODO: Implement
+			Log(info[45], null, Verbosity.Error);
 
 			return;
 		}
@@ -44,12 +44,14 @@ public partial class MainWindow : Form
 
 		if(CurrentGame == null || CurrentGame.GameID == Game.None)
 		{
-			// TODO: Implement
+			Log(info[46], null, Verbosity.Error);
 
 			return;
 		}
 
-		this.Text += " - " + CurrentGameID.ToString();
+		Log("Game recognized: " + CurrentGameID.ToString(), null, Verbosity.Info, LogType.ConsoleOnly);
+
+		this.Text = "V3 UPS Manager" + " - " + CurrentGameID.ToString();
 
 		// Detect game edition/platform
 		if (!CheckLegacyConfiguration())
@@ -75,7 +77,6 @@ public partial class MainWindow : Form
 					case Game.DanganronpaV3:
 						data_folder = Path.Combine(installation_folder, "data");
 						data_folder = Path.Combine(data_folder, "WIN");
-						// TODO: why assign? The value is immediately overwritten
 						break;
 					default:
 						break;
@@ -84,25 +85,29 @@ public partial class MainWindow : Form
 
 				IsLegacy = false;
 				IsUnity = false;
-			}
-
-			// Unity (Switch, AE) version:
-			// Just like most Unity games, V3 AE's Switch port also has the "Data" and "StreamingAssets" folders
-
-			data_folder = Path.Combine(installation_folder, CurrentGame.UnityDataFolder);
-			if (!File.Exists(data_folder))
+			} else
 			{
-				// TODO: Implement
-			}
-			data_folder = Path.Combine(data_folder, "StreamingAssets");
-			string platform = GetUnityPlatformByExclusion(data_folder);
-			if (platform != null && !string.IsNullOrWhiteSpace(platform) && platform.Length > 0)
-			{
-				data_folder = Path.Combine(installation_folder, platform);
-			}
+				// This wasn't an else, before October 30th 2024
+				// This was right after the Xbox version checks, which means data_folder would get overwritten
 
-			IsLegacy = false;
-			IsUnity = true;
+				// Unity (Switch, AE) version:
+				// Just like most Unity games, V3 AE's Switch port also has the "Data" and "StreamingAssets" folders
+
+				data_folder = Path.Combine(installation_folder, CurrentGame.UnityDataFolder);
+				if (!File.Exists(data_folder))
+				{
+					// TODO: Implement
+				}
+				data_folder = Path.Combine(data_folder, "StreamingAssets");
+				string platform = GetUnityPlatformByExclusion(data_folder);
+				if (platform != null && !string.IsNullOrWhiteSpace(platform) && platform.Length > 0)
+				{
+					data_folder = Path.Combine(installation_folder, platform);
+				}
+
+				IsLegacy = false;
+				IsUnity = true;
+			}
 		}
 		else
 		{
@@ -129,7 +134,7 @@ public partial class MainWindow : Form
 			return;
 		}
 
-		DisplayInfo.Print(info[18]);
+		Log(info[18]);
 		verified_installation_folder = installation_folder;
 		InstallationPathPreviewTextbox.Text = verified_installation_folder;
 	}
@@ -141,7 +146,7 @@ public partial class MainWindow : Form
 			verified_installation_folder.Length == 0)
 		{
 			// Maybe they deleted it?
-			DisplayInfo.Print(info[19]);
+			Log(info[19], null, Verbosity.Error);
 			return;
 		}
 
@@ -160,7 +165,7 @@ public partial class MainWindow : Form
 		if (!Directory.Exists(ups_folder) || ups_folder.Length == 0)
 		{
 			// Maybe they deleted it?
-			DisplayInfo.Print(info[20]);
+			Log(info[20], null, Verbosity.Error);
 			return;
 		}
 
@@ -193,7 +198,7 @@ public partial class MainWindow : Form
 
 					if (!Directory.Exists(upswindata))
 					{
-						DisplayInfo.Print(info[21]);
+						Log(info[21], null, Verbosity.Error);
 						return;
 					}
 
@@ -218,7 +223,7 @@ public partial class MainWindow : Form
 			upsdatasa = Path.Combine(upsdatasa, "StreamingAssets");
 			if (!Directory.Exists(upsdatasa))
 			{
-				DisplayInfo.Print(info[35]);
+				Log(info[35], null, Verbosity.Error);
 				return;
 			}
 
@@ -232,7 +237,10 @@ public partial class MainWindow : Form
 		string[] files = Directory.GetFiles(upsfolder, "*" + patch_format, SearchOption.AllDirectories);
 		if (files == null || files.Length == 0)
 		{
-			DisplayInfo.Print(info[22]);
+			Log(info[22], new Dictionary<string, string>()
+			{
+				{ "VAR_PATCH_FORMAT_EXTENSION", CurrentGame.PatchFormatExtension },
+			}, Verbosity.Error);
 			return;
 		}
 
@@ -263,7 +271,10 @@ public partial class MainWindow : Form
 
 		if(to_be_applied.Count <= 0 && actual_ups_files.Count > 0)
 		{
-			DisplayInfo.Print(info[44], CurrentGame);
+			Log(info[44], new Dictionary<string, string>(){
+				{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
+				{ "VAR_PATCH_SPECIFIC_STRING", CurrentGame.PatchSpecificString },
+			});
 			return;
 		}
 
@@ -273,11 +284,13 @@ public partial class MainWindow : Form
 
 		foreach (string file in couldnt_be_found)
 		{
-			DisplayInfo.Print("Couldn't find: " + file);
-			//DisplayInfo.Print("Couldn't find: " + file.Substring(0, file.Length - Path.GetExtension(file).Length));
+			Log(info[47], new Dictionary<string, string>()
+			{
+				{ "VAR_SOME_FILE", file },
+			});
 		}
 
-		DisplayInfo.Print(info[23]);
+		Log(info[23]);
 
 		PatchPathPreviewTextbox.Text = ups_folder;
 	}

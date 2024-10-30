@@ -20,7 +20,10 @@ public partial class MainWindow : Form
 		string ups = Path.Combine(current_dir, patch_tool_exe);
 		if (!File.Exists(ups))
 		{
-			DisplayInfo.Print(info[24]);
+			Log(info[24], new Dictionary<string, string>()
+			{
+				{ "VAR_PATCH_FORMAT_INSTALLER_EXE", CurrentGame.PatchFormatInstaller },
+			}, Verbosity.Error);
 			return;
 		}
 
@@ -28,28 +31,38 @@ public partial class MainWindow : Form
 		if (string.IsNullOrWhiteSpace(verified_installation_folder) || verified_installation_folder.Length <= 0 ||
 			!Directory.Exists(verified_installation_folder))
 		{
-			DisplayInfo.Print(info[25]);
+			Log(info[25], null, Verbosity.Error);
 			return;
 		}
 
 		// Check if the UPS folder is not valid
 		if (string.IsNullOrWhiteSpace(ups_folder) || ups_folder.Length <= 0 || !Directory.Exists(ups_folder))
 		{
-			DisplayInfo.Print(info[25]);
+			Log(info[25], null, Verbosity.Error);
 			return;
 		}
 
 		if (to_be_applied.Count <= 0)
 		{
-			DisplayInfo.Print(info[43]);
+			Log(info[43], null, Verbosity.Error);
 
-			if (!IsUnity)
+			switch (CurrentGame.GameID)
 			{
-				DisplayInfo.Print(info[26]);
-			}
-			else
-			{
-				DisplayInfo.Print(info[36]);
+				case Game.DanganronpaV3:
+					if (!IsUnity)
+					{
+						Log(info[26], null, Verbosity.Error);
+					}
+					else
+					{
+						Log(info[36], null, Verbosity.Error);
+					}
+					break;
+				case Game.AITheSomniumFiles:
+					// TODO: Implement
+					break;
+				default:
+					break;
 			}
 
 			return;
@@ -57,22 +70,25 @@ public partial class MainWindow : Form
 
 		if (to_apply.Count <= 0)
 		{
-			DisplayInfo.Print(info[27]);
+			Log(info[27], new Dictionary<string, string>()
+			{
+				{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
+			}, Verbosity.Error);
 			return;
 		}
 
 		// DO NOT SORT THE STRING ARRAYS
 		/*
-		string logFileApplyBefore = "to_apply_before.txt";
-		string logFileApplyAfter = "to_apply_after.txt";
-		string logFileToBeAppliedBefore = "to_be_applied_before.txt";
-		string logFileToBeAppliedAfter = "to_be_applied_after.txt";
-		File.WriteAllLines(logFileApplyBefore, to_apply);
-		File.WriteAllLines(logFileToBeAppliedBefore, to_be_applied);
-		to_apply.Sort();
-		to_be_applied.Sort();
-		File.WriteAllLines(logFileApplyAfter, to_apply);
-		File.WriteAllLines(logFileToBeAppliedAfter, to_be_applied);
+			string logFileApplyBefore = "to_apply_before.txt";
+			string logFileApplyAfter = "to_apply_after.txt";
+			string logFileToBeAppliedBefore = "to_be_applied_before.txt";
+			string logFileToBeAppliedAfter = "to_be_applied_after.txt";
+			File.WriteAllLines(logFileApplyBefore, to_apply);
+			File.WriteAllLines(logFileToBeAppliedBefore, to_be_applied);
+			to_apply.Sort();
+			to_be_applied.Sort();
+			File.WriteAllLines(logFileApplyAfter, to_apply);
+			File.WriteAllLines(logFileToBeAppliedAfter, to_be_applied);
 		*/
 
 		// *If they don't exist already*, copy the SPCs/Unity-files
@@ -126,13 +142,13 @@ public partial class MainWindow : Form
 		{
 			if (to_apply[j] == null)
 			{
-				DisplayInfo.Print(info[28]);
+				Log(info[28], null, Verbosity.Error);
 				return;
 			}
 
 			if (to_be_applied[j] == null)
 			{
-				DisplayInfo.Print(info[29]);
+				Log(info[29], null, Verbosity.Error);
 				return;
 			}
 
@@ -176,7 +192,7 @@ public partial class MainWindow : Form
 
 			if (false)
 			{
-				DisplayInfo.Print(patch_tool_exe + " used: " + command);
+				Log(patch_tool_exe + " used: " + command);
 				Clipboard.SetText(patch_tool_exe + " " + command);
 			}
 			File.AppendAllText(logFile, patch_tool_exe + " " + command + Environment.NewLine);
@@ -190,20 +206,22 @@ public partial class MainWindow : Form
 
 			if (output.Length > 0)
 			{
-				//DisplayInfo.Print("Output:\n" + output);
+				//Log("Output:\n" + output);
 			}
 
 			if (error.Length > 0)
 			{
-				DisplayInfo.Print("Error:\n" + error);
+				Log("Error:\n" + error, null, Verbosity.Error);
 			}
 
 			// WHY IS THIS AFTER INSTALLING? (October 2024)
 			// If the outfile (not _bak) file does not exist while the backup does
 			if (!File.Exists(outfile) && File.Exists(before))
 			{
-				DisplayInfo.Print("POST-INSTALL: File does not exist: " + outfile +
-								  ", creating manually from backup... (please report this)");
+				Log(ui_messages[6], new Dictionary<string, string>()
+				{
+					{ "VAR_OUTPUT_FILE", outfile },
+				});
 				// Then copy the backup
 				File.Copy(before, outfile, false);
 			}

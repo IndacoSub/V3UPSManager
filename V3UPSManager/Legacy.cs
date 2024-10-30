@@ -12,7 +12,7 @@ public partial class MainWindow : Form
 			case Game.DanganronpaV3:
 				return CheckDRV3LegacyConfiguration();
 			case Game.AITheSomniumFiles:
-				// TODO: Implement
+				// AI only has a Unity version
 				return false;
 			default:
 				return false;
@@ -27,7 +27,9 @@ public partial class MainWindow : Form
 		if (!File.Exists(exe))
 		{
 			// Maybe the user deleted it?
-			DisplayInfo.Print(info[1], CurrentGame);
+			Log(info[1], new Dictionary<string, string>(){
+				{ "VAR_LEGACY_EXE_NAME", CurrentGame.LEGACY_EXE_NAME },
+			});
 			return false;
 		}
 
@@ -35,7 +37,7 @@ public partial class MainWindow : Form
 		string config_language = Path.Combine(installation_folder, "language.txt");
 		if (!File.Exists(config_language))
 		{
-			DisplayInfo.Print(info[2]);
+			Log(info[2]);
 			return false;
 		}
 
@@ -43,7 +45,7 @@ public partial class MainWindow : Form
 		string language = File.ReadAllText(config_language);
 		if (string.IsNullOrWhiteSpace(language) || language != "US")
 		{
-			DisplayInfo.Print(info[3]);
+			Log(info[3]);
 			return false;
 		}
 
@@ -52,7 +54,7 @@ public partial class MainWindow : Form
 		windata = Path.Combine(windata, "win");
 		if (!Directory.Exists(windata))
 		{
-			DisplayInfo.Print(info[4]);
+			Log(info[4], null, Verbosity.Error);
 			return false;
 		}
 
@@ -66,7 +68,7 @@ public partial class MainWindow : Form
 		bool cpk_03_en_exists = File.Exists(cpk_03_en);
 		if (cpk_01_en_exists || cpk_02_en_exists || cpk_03_en_exists)
 		{
-			DisplayInfo.Print(info[5]);
+			Log(info[5], null, Verbosity.Error);
 			return false;
 		}
 
@@ -83,7 +85,7 @@ public partial class MainWindow : Form
 		bool arc_05_exists = File.Exists(arc_05);
 		if (arc_01_exists || arc_02_exists || arc_03_exists)
 		{
-			DisplayInfo.Print(info[38]);
+			Log(info[38]);
 			return false;
 		}
 
@@ -93,7 +95,7 @@ public partial class MainWindow : Form
 		var count_uppercase = Directory.GetFiles(windata, "*.CPK", SearchOption.TopDirectoryOnly).Length;
 		if (count_lowercase + count_uppercase > 0)
 		{
-			DisplayInfo.Print(info[6]);
+			Log(info[6], null, Verbosity.Error);
 			return false;
 		}
 
@@ -114,16 +116,18 @@ public partial class MainWindow : Form
 		// Check if the MD5 hash is valid
 		if (exe_md5.Length == 0 || string.IsNullOrWhiteSpace(exe_md5))
 		{
-			DisplayInfo.Print(info[7], CurrentGame);
+			Log(info[7], new Dictionary<string, string>(){
+				{ "VAR_LEGACY_EXE_NAME", CurrentGame.LEGACY_EXE_NAME },
+			});
 			return false;
 		}
 
 		// Check if the calculated hash corresponds to the expected hash
 		// (as of June 2023, the latest game version is 1.01)
 		const string expected_hash = "ff2dd8163a9b2f5b018339fbee69f5ea";
-		if (exe_md5.ToLower() != expected_hash)
+		if (exe_md5.ToLower() != expected_hash.ToLower()) // Added tolower to the hash just in case
 		{
-			var proceed = DisplayInfo.Ask(info[8]);
+			var proceed = Log(info[8], null, Verbosity.Info, LogType.Ask);
 			if (proceed == DialogResult.No || proceed == DialogResult.Cancel)
 			{
 				return false;
@@ -134,7 +138,7 @@ public partial class MainWindow : Form
 		string reshade_ini = Path.Combine(installation_folder, "ReShade.ini");
 		if (File.Exists(reshade_ini))
 		{
-			var proceed = DisplayInfo.Ask(info[9]);
+			var proceed = Log(info[9], null, Verbosity.Info, LogType.Ask);
 			if (proceed == DialogResult.No || proceed == DialogResult.Cancel)
 			{
 				return false;
@@ -145,7 +149,21 @@ public partial class MainWindow : Form
 		string dr3fix_cfg = Path.Combine(installation_folder, "dr3fix.cfg");
 		if (File.Exists(dr3fix_cfg))
 		{
-			var proceed = DisplayInfo.Ask(info[10]);
+			var proceed = Log(info[10], new Dictionary<string, string>()
+			{
+				{ "VAR_GAME_FIX", "DR3Fix" },
+			}, Verbosity.Info, LogType.Ask);
+			if (proceed == DialogResult.No || proceed == DialogResult.Cancel)
+			{
+				return false;
+			}
+		}
+
+		// Check if Special-K ( https://github.com/SpecialKO/SpecialK ) or Reloaded-II (https://github.com/Sewer56/CriFs.V2.Hook.ReloadedII) are present
+		string dinput_ini = Path.Combine(installation_folder, "dinput8.ini");
+		if (File.Exists(dinput_ini))
+		{
+			var proceed = Log(info[49], null, Verbosity.Info, LogType.Ask);
 			if (proceed == DialogResult.No || proceed == DialogResult.Cancel)
 			{
 				return false;

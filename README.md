@@ -30,16 +30,22 @@ This tool is licensed under the ISC License.
 
 "V3UPSManager" depends on "UPS Tools" by rameshvarun (https://github.com/rameshvarun/ups), licensed under the MIT license (https://github.com/rameshvarun/ups/blob/master/LICENSE).
 
-The source code for "V3UPSManager" may be compiled without "UPS Tools".
+Since version 1.2, "V3UPSManager" also depends on "xdelta-gpl" by jmacd (https://github.com/jmacd/xdelta-gpl/tree/release3_1), licensed under the GPLv2 (or newer) license (https://github.com/jmacd/xdelta-gpl/blob/release3_1/xdelta3/xdelta3.h)
 
-The "UPS Tools" are only needed at runtime and are, therefore, only included and redistributed in our release builds (found here: https://github.com/IndacoSub/V3UPSManager/releases), along with the source code and the license notice, in order to fully comply with the MIT license.
+The source code for "V3UPSManager" may be compiled without "UPS Tools" or "xdelta-gpl".
+
+Those tools are only needed at runtime and are, therefore, only included and redistributed in our release builds (found here: https://github.com/IndacoSub/V3UPSManager/releases), along with the source code, the license notice and a summary of any changes made, in order to fully comply with the MIT and GPLv2 licenses.
 
 ## Credits ##
 
-     “DANGANRONPA” is a registered trademark of Spike Chunsoft Co., Ltd. and NIS America Inc.
+     “DANGANRONPA” is a registered trademark of Spike Chunsoft Co., Ltd., Too Kyo Games, LLC and/or NIS America Inc.
+	 "AI: THE SOMNIUM FILES" is a registered trademark of Spike Chunsoft Co., Ltd., Too Kyo Games and/or NIS America Inc.
      We are not in any way affiliated or associated with them.
      
      Thanks to rameshvarun for the UPS command line tools, "UPS Tools" (https://github.com/rameshvarun/ups)
      The UPS command line tools are licensed under the MIT license (https://github.com/rameshvarun/ups/blob/master/LICENSE).
+	 
+	 Thanks to jmacd for the XDelta 3.1 command line tools, "xdelta-gpl" (https://github.com/jmacd/xdelta-gpl/tree/release3_1)
+	 The XDelta 3.1 command line tools are licensed under the GPLv2 (or newer) license (https://github.com/jmacd/xdelta-gpl/blob/release3_1/xdelta3/xdelta3.h)
      
      Thanks to all of our collaborators and reviewers.

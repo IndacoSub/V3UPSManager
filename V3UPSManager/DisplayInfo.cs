@@ -2,27 +2,84 @@
 
 namespace V3UPSManager;
 
-internal class DisplayInfo
+// https://stackoverflow.com/questions/1926264/color-different-parts-of-a-richtextbox-string
+public static class RichTextBoxExtensions
 {
-	internal static string FormatString(string str, GameBase gb = null)
+	public static void AppendText(this RichTextBox box, string text, Color color)
 	{
-		if(gb != null)
+		box.SelectionStart = box.TextLength;
+		box.SelectionLength = 0;
+
+		box.SelectionColor = color;
+		box.AppendText(text);
+		box.SelectionColor = box.ForeColor;
+	}
+}
+
+public partial class MainWindow : Form
+{
+
+	internal enum Verbosity {
+		Debug,
+		Info,
+		Error,
+	};
+
+	internal enum LogType {
+		
+		ConsoleOnly,
+		MessageBoxOnly,
+		Print,
+		Ask,
+	}
+
+	internal void AddConsoleLogLine(string str, Color c)
+	{
+		LogConsole.AppendText(str + Environment.NewLine, c);
+		LogConsole.ScrollToCaret();
+	}
+
+	internal DialogResult Log(string str, Dictionary<string, string> args = null, Verbosity verbosity = Verbosity.Info, LogType logtype = LogType.Print)
+	{
+		if (args != null && args.Count > 0)
 		{
-			str = str.Replace("VAR_LEGACY_EXE_NAME", gb.LEGACY_EXE_NAME);
-			str = str.Replace("VAR_ANNIVERSARY_EXE_NAME", gb.ANNIVERSARY_EXE_NAME);
-			str = str.Replace("VAR_PATCH_SPECIFIC_STRING", gb.PatchSpecificString);
+			foreach (var arg in args)
+			{
+				if (!arg.Key.StartsWith("VAR_") || arg.Value.StartsWith("VAR_"))
+				{
+					// ???
+					continue;
+				}
+				str = str.Replace(arg.Key, arg.Value);
+			}
 		}
-		return str.Replace("\\n", "\n");
-	}
 
-	internal static DialogResult Print(string line, GameBase gb = null)
-	{
-		MessageBoxButtons btn = new MessageBoxButtons();
-		return MessageBox.Show(FormatString(line, gb), "Prompt", btn, MessageBoxIcon.Asterisk);
-	}
+		Color logcolor = verbosity == Verbosity.Error ? Color.Red : Color.Black;
 
-	internal static DialogResult Ask(string line, GameBase gb = null)
-	{
-		return MessageBox.Show(FormatString(line, gb), "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
+		DialogResult ret = DialogResult.OK;
+
+		switch (logtype)
+		{
+			case LogType.ConsoleOnly:
+				AddConsoleLogLine(str, logcolor);
+				return DialogResult.OK;
+			case LogType.MessageBoxOnly:
+			case LogType.Print:
+				MessageBoxButtons btn = new MessageBoxButtons();
+				ret = MessageBox.Show(str, "Prompt", btn, MessageBoxIcon.Asterisk);
+				break;
+			case LogType.Ask:
+				ret = MessageBox.Show(str, "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
+				break;
+			default:
+				break;
+		}
+
+		if (logtype != LogType.MessageBoxOnly)
+		{
+			AddConsoleLogLine(str, logcolor);
+		}
+
+		return ret;
 	}
 }

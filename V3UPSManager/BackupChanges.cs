@@ -103,11 +103,11 @@ public partial class MainWindow : Form
 		string[] files = Directory.GetFiles(installation_folder, "*.*_bak", SearchOption.AllDirectories);
 		if (files != null && files.Length > 0 && files.Length == to_apply.Count)
 		{
-			DisplayInfo.Print(info[30]);
+			Log(info[30]);
 		}
 		else
 		{
-			DisplayInfo.Print(info[34]);
+			Log(info[34], null, Verbosity.Error);
 		}
 	}
 }

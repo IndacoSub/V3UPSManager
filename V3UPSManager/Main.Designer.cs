@@ -36,6 +36,7 @@
 			LanguageComboBox = new ComboBox();
 			ChooseLanguageLabel = new Label();
 			UninstallButton = new Button();
+			LogConsole = new RichTextBox();
 			SuspendLayout();
 			// 
 			// InstallationPathPreviewTextbox
@@ -113,11 +114,21 @@
 			UninstallButton.UseVisualStyleBackColor = true;
 			UninstallButton.Click += UninstallButton_Click;
 			// 
+			// LogConsole
+			// 
+			LogConsole.Location = new Point(12, 273);
+			LogConsole.Name = "LogConsole";
+			LogConsole.ReadOnly = true;
+			LogConsole.Size = new Size(776, 126);
+			LogConsole.TabIndex = 8;
+			LogConsole.Text = "";
+			// 
 			// MainWindow
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(800, 265);
+			ClientSize = new Size(800, 411);
+			Controls.Add(LogConsole);
 			Controls.Add(UninstallButton);
 			Controls.Add(ChooseLanguageLabel);
 			Controls.Add(LanguageComboBox);
@@ -126,8 +137,8 @@
 			Controls.Add(SelectPatchFolderButton);
 			Controls.Add(SelectInstallationFolderButton);
 			Controls.Add(InstallationPathPreviewTextbox);
-			MaximumSize = new Size(816, 304);
-			MinimumSize = new Size(816, 304);
+			MaximumSize = new Size(816, 450);
+			MinimumSize = new Size(816, 450);
 			Name = "MainWindow";
 			Text = "V3 UPS Manager";
 			ResumeLayout(false);
@@ -144,5 +155,6 @@
 		private ComboBox LanguageComboBox;
 		private Label ChooseLanguageLabel;
 		private Button UninstallButton;
+		public RichTextBox LogConsole;
 	}
 }
