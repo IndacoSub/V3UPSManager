@@ -2,23 +2,84 @@
 
 namespace V3UPSManager;
 
-internal class DisplayInfo
+// https://stackoverflow.com/questions/1926264/color-different-parts-of-a-richtextbox-string
+public static class RichTextBoxExtensions
 {
-	internal static DialogResult Prompt(MessageBoxButtons btn, params string[] lines)
+	public static void AppendText(this RichTextBox box, string text, Color color)
 	{
-		SystemSounds.Question.Play();
-		string msg = string.Join(Environment.NewLine + Environment.NewLine, lines);
-		return MessageBox.Show(msg.Replace("\\n", "\n"), "Prompt", btn, MessageBoxIcon.Asterisk);
+		box.SelectionStart = box.TextLength;
+		box.SelectionLength = 0;
+
+		box.SelectionColor = color;
+		box.AppendText(text);
+		box.SelectionColor = box.ForeColor;
+	}
+}
+
+public partial class MainWindow : Form
+{
+
+	internal enum Verbosity {
+		Debug,
+		Info,
+		Error,
+	};
+
+	internal enum LogType {
+		
+		ConsoleOnly,
+		MessageBoxOnly,
+		Print,
+		Ask,
 	}
 
-	internal static DialogResult Print(string line)
+	internal void AddConsoleLogLine(string str, Color c)
 	{
-		MessageBoxButtons btn = new MessageBoxButtons();
-		return MessageBox.Show(line.Replace("\\n", "\n"), "Prompt", btn, MessageBoxIcon.Asterisk);
+		LogConsole.AppendText(str + Environment.NewLine, c);
+		LogConsole.ScrollToCaret();
 	}
 
-	internal static DialogResult Ask(string line)
+	internal DialogResult Log(string str, Dictionary<string, string> args = null, Verbosity verbosity = Verbosity.Info, LogType logtype = LogType.Print)
 	{
-		return MessageBox.Show(line.Replace("\\n", "\n"), "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
+		if (args != null && args.Count > 0)
+		{
+			foreach (var arg in args)
+			{
+				if (!arg.Key.StartsWith("VAR_") || arg.Value.StartsWith("VAR_"))
+				{
+					// ???
+					continue;
+				}
+				str = str.Replace(arg.Key, arg.Value);
+			}
+		}
+
+		Color logcolor = verbosity == Verbosity.Error ? Color.Red : Color.Black;
+
+		DialogResult ret = DialogResult.OK;
+
+		switch (logtype)
+		{
+			case LogType.ConsoleOnly:
+				AddConsoleLogLine(str, logcolor);
+				return DialogResult.OK;
+			case LogType.MessageBoxOnly:
+			case LogType.Print:
+				MessageBoxButtons btn = new MessageBoxButtons();
+				ret = MessageBox.Show(str, "Prompt", btn, MessageBoxIcon.Asterisk);
+				break;
+			case LogType.Ask:
+				ret = MessageBox.Show(str, "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
+				break;
+			default:
+				break;
+		}
+
+		if (logtype != LogType.MessageBoxOnly)
+		{
+			AddConsoleLogLine(str, logcolor);
+		}
+
+		return ret;
 	}
 }

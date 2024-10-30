@@ -8,21 +8,37 @@ public partial class MainWindow : Form
 		if (string.IsNullOrWhiteSpace(verified_installation_folder) || verified_installation_folder.Length <= 0 ||
 			!Directory.Exists(verified_installation_folder))
 		{
-			DisplayInfo.Print(info[25]);
+			Log(info[25], null, Verbosity.Error);
 			return;
 		}
 
-		if (IsUnity)
-		{
-			DisplayInfo.Print(info[41]);
-			return;
-		}
+        switch(CurrentGame.GameID) {
+            case Game.DanganronpaV3:
+                // Unity is only in the Switch version
+                if (IsUnity)
+		        {
+			        Log(info[41]);
+			        return;
+		        }
+                break;
+            default:
+                break;
+        }
 
-		List<string> extensions_to_uninstall = new List<string>()
-		{
-			".spc",
-			".awb",
-		};
+        // This is a nightmare to maintain
+		List<string> extensions_to_uninstall = new List<string>();
+        switch(CurrentGame.GameID)
+        {
+            case Game.DanganronpaV3:
+                extensions_to_uninstall.Add(".spc");
+                extensions_to_uninstall.Add(".awb");
+                break;
+            case Game.AITheSomniumFiles:
+                extensions_to_uninstall.Add("*");
+                break;
+            default:
+                break;
+        }
 
         int count_uninstalled = 0;
 
@@ -33,11 +49,11 @@ public partial class MainWindow : Form
             // Count and get all (extension, ex. spc) backup files (ex. ".spc_bak") in the patch folder
             // TODO: Why does this only work with the non-Unity versions?
             // Probably because it's *much* easier to uninstall mods on Switch/Emulators (just delete the mod folder)
-            string[] lowercase_files = Directory.GetFiles(verified_installation_folder, "*" + extension.ToLowerInvariant() + "_bak", SearchOption.AllDirectories);
-            string[] uppercase_files = Directory.GetFiles(verified_installation_folder, "*" + extension.ToUpperInvariant() + "_bak", SearchOption.AllDirectories);
+            string[] lowercase_files = Directory.GetFiles(verified_installation_folder, "*" + (extension == "*" ? "" : extension.ToLowerInvariant()) + "_bak", SearchOption.AllDirectories);
+            string[] uppercase_files = Directory.GetFiles(verified_installation_folder, "*" + (extension == "*" ? "" : extension.ToUpperInvariant()) + "_bak", SearchOption.AllDirectories);
             if (lowercase_files == null || uppercase_files == null ||lowercase_files.Length == 0 || uppercase_files.Length == 0)
             {
-                DisplayInfo.Print(info[32]);
+                Log(info[32]);
                 return;
             }
 
@@ -95,11 +111,11 @@ public partial class MainWindow : Form
 		if (count_uninstalled > 0)
 		{
 			// *Insert "we've achieved something" meme*
-			DisplayInfo.Print(info[33]);
+			Log(info[33]);
 		}
 		else
 		{
-			DisplayInfo.Print(info[32]);
+			Log(info[32], null, Verbosity.Error);
 		}
 	}
 }

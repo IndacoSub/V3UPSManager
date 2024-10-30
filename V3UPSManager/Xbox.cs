@@ -9,14 +9,33 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
-	// Xbox = Microsoft Store "Anniversary Edition" version
+
 	private bool CheckXboxConfiguration()
 	{
+		switch (CurrentGame.GameID)
+		{
+			case Game.DanganronpaV3:
+				return CheckDRV3XboxConfiguration();
+			case Game.AITheSomniumFiles:
+				// The Steam and Xbox versions of AI are very similar (but not the same)
+				// The main differences are the presence of the Movie folder inside StreamingAssets and PathID changes
+				// But they are "similar enough" that we can get away with only checking once
+				return false;
+			default:
+				return false;
+		}
+	}
+
+	// Xbox = Microsoft Store "Anniversary Edition" version
+	private bool CheckDRV3XboxConfiguration()
+	{
 		// Xbox version?
-		string exe = Path.Combine(installation_folder, ANNIVERSARY_EXE_NAME);
+		string exe = Path.Combine(installation_folder, CurrentGame.ANNIVERSARY_EXE_NAME);
 		if (!File.Exists(exe))
 		{
-			DisplayInfo.Print(info[37]);
+			Log(info[37], new Dictionary<string, string>(){
+				{ "VAR_ANNIVERSARY_EXE_NAME", CurrentGame.ANNIVERSARY_EXE_NAME },
+			});
 			return false;
 		}
 
@@ -26,7 +45,7 @@ public partial class MainWindow : Form
 		windata = Path.Combine(windata, "WIN");
 		if (!Directory.Exists(windata))
 		{
-			DisplayInfo.Print(info[4]);
+			Log(info[4], null, Verbosity.Error);
 			return false;
 		}
 
@@ -41,7 +60,7 @@ public partial class MainWindow : Form
 		bool cpk_03_en_exists = File.Exists(cpk_03_en);
 		if (cpk_01_en_exists || cpk_02_en_exists || cpk_03_en_exists)
 		{
-			DisplayInfo.Print(info[39]);
+			Log(info[39], null, Verbosity.Error);
 			return false;
 		}
 
@@ -58,7 +77,7 @@ public partial class MainWindow : Form
 		bool arc_05_exists = File.Exists(arc_05);
 		if (arc_01_exists || arc_02_exists || arc_03_exists)
 		{
-			DisplayInfo.Print(info[40]);
+			Log(info[40], null, Verbosity.Error);
 			return false;
 		}
 
@@ -69,7 +88,7 @@ public partial class MainWindow : Form
 		string reshade_ini = Path.Combine(installation_folder, "ReShade.ini");
 		if (File.Exists(reshade_ini))
 		{
-			var proceed = DisplayInfo.Ask(info[9]);
+			var proceed = Log(info[9], null, Verbosity.Info, LogType.Ask);
 			if (proceed == DialogResult.No || proceed == DialogResult.Cancel)
 			{
 				return false;
