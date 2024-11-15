@@ -34,13 +34,20 @@ public partial class MainWindow : Form
                 extensions_to_uninstall.Add(".awb");
                 break;
             case Game.AITheSomniumFiles:
-                extensions_to_uninstall.Add("*");
+				extensions_to_uninstall.Add(".assets");
+				extensions_to_uninstall.Add(".exe");
+				extensions_to_uninstall.Add("*");
                 break;
             default:
                 break;
         }
 
         int count_uninstalled = 0;
+
+        if(extensions_to_uninstall.Count <= 0)
+        {
+            Log("🤔", null, Verbosity.Info, LogType.ConsoleOnly);
+        }
 
         foreach (string extension in extensions_to_uninstall)
 		{
@@ -51,10 +58,9 @@ public partial class MainWindow : Form
             // Probably because it's *much* easier to uninstall mods on Switch/Emulators (just delete the mod folder)
             string[] lowercase_files = Directory.GetFiles(verified_installation_folder, "*" + (extension == "*" ? "" : extension.ToLowerInvariant()) + "_bak", SearchOption.AllDirectories);
             string[] uppercase_files = Directory.GetFiles(verified_installation_folder, "*" + (extension == "*" ? "" : extension.ToUpperInvariant()) + "_bak", SearchOption.AllDirectories);
-            if (lowercase_files == null || uppercase_files == null ||lowercase_files.Length == 0 || uppercase_files.Length == 0)
+            if (lowercase_files == null || uppercase_files == null || lowercase_files.Length == 0 || uppercase_files.Length == 0)
             {
-                Log(info[32]);
-                return;
+                continue;
             }
 
             // Add lowercase files to the list
@@ -89,18 +95,26 @@ public partial class MainWindow : Form
                     continue;
                 }
 
-                // Delete the "normal" extension (ex. spc) file
-                File.Delete(normal_file);
-
-                // Copy the backup file (ex. spc_bak) file to the "normal" file (a.k.a. restore backup)
-                // (ex. spc_bak -> spc)
-                File.Move(actual_file, normal_file, true);
-
-                // If for some reason it still exists even after being moved
-                if (File.Exists(actual_file))
+                try
                 {
-                    // Delete the .bak file
-                    File.Delete(actual_file);
+
+                    // Delete the "normal" extension (ex. spc) file
+                    File.Delete(normal_file);
+
+                    // Copy the backup file (ex. spc_bak) file to the "normal" file (a.k.a. restore backup)
+                    // (ex. spc_bak -> spc)
+                    File.Move(actual_file, normal_file, true);
+
+                    // If for some reason it still exists even after being moved
+                    if (File.Exists(actual_file))
+                    {
+                        // Delete the .bak file
+                        File.Delete(actual_file);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log(e.Message, null, Verbosity.Error, LogType.ConsoleOnly);
                 }
 
                 //DisplayInfo.Print("Normal: " + normal_file + ", actual: " + actual_file + "...");

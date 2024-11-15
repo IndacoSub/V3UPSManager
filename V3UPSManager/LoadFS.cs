@@ -249,7 +249,7 @@ public partial class MainWindow : Form
 
 		List<string> actual_ups_files = new List<string>();
 
-		// Look for any ups file
+		// Look for any ups/xdelta file
 		// that is not a folder (obviously) which contains "_patch.ups" ("patch specific" string)
 		// TODO: Why? Because the user might have random non-patch .ups files in the patch folder?
 		foreach (string file in files)
@@ -282,12 +282,44 @@ public partial class MainWindow : Form
 		// TODO: Explain this better
 		GetToApply(files);
 
-		foreach (string file in couldnt_be_found)
+		if(to_be_applied.Count > 0)
 		{
-			Log(info[47], new Dictionary<string, string>()
+			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
+			foreach (string file in to_be_applied)
 			{
-				{ "VAR_SOME_FILE", file },
-			});
+				Log("OK ( ⮜ ): VAR_SOME_FILE", new Dictionary<string, string>()
+				{
+					{ "VAR_SOME_FILE", file },
+				}, Verbosity.Info, LogType.ConsoleOnly);
+			}
+			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
+		}
+		
+
+		if (to_apply.Count > 0)
+		{
+			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
+			foreach (string file in to_apply)
+			{
+				Log("OK ( ⮞ ): VAR_SOME_FILE", new Dictionary<string, string>()
+				{
+					{ "VAR_SOME_FILE", file },
+				}, Verbosity.Info, LogType.ConsoleOnly);
+			}
+			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
+		}
+
+		if (couldnt_be_found.Count > 0)
+		{
+			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
+			foreach (string file in couldnt_be_found)
+			{
+				Log(info[47], new Dictionary<string, string>()
+				{
+					{ "VAR_SOME_FILE", file },
+				}, Verbosity.Info, LogType.ConsoleOnly);
+			}
+			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
 		}
 
 		Log(info[23]);
@@ -312,6 +344,7 @@ public partial class MainWindow : Form
 
 		// WHY were those all different functions?
 
+		// REMEMBER TO UPDATE BELOW AS WELL
 		switch(CurrentGame.GameID) {
 			case Game.DanganronpaV3:
 				TryToApplyFiles(ups_files, ".spc");
@@ -326,6 +359,8 @@ public partial class MainWindow : Form
 				break;
 			case Game.AITheSomniumFiles:
 				TryToApplyFiles(ups_files, "");
+				TryToApplyFiles(ups_files, ".assets");
+				TryToApplyFiles(ups_files, ".exe");
 				break;
 			default:
 				break;
@@ -352,6 +387,8 @@ public partial class MainWindow : Form
 
 			// All "possible" extensions, backups and UPS included
 
+			// REMEMBER TO UPDATE ABOVE AS WELL
+
 			List<string> all_installable_extensions = new List<string>();
 
 			List<string> DRV3_all_installable_extensions = new List<string>()
@@ -367,12 +404,17 @@ public partial class MainWindow : Form
 
 				// Patch
 				".ups",
+
+				// EXE
+				".exe",
 			};
+
+			// REMEMBER TO UPDATE ABOVE AS WELL
 
 			List<string> AITSF_all_installable_extensions = new List<string>()
 			{
-				"*",
-				
+				"",
+
 				// Unity
 				".ab",
 				".pb",
@@ -380,6 +422,9 @@ public partial class MainWindow : Form
 				
 				// Patch
 				".xdelta",
+
+				// EXE
+				".exe",
 			};
 
 			switch(CurrentGame.GameID)
@@ -424,8 +469,10 @@ public partial class MainWindow : Form
 
 		foreach (string file in ups_files)
 		{
+			string file_noext = Path.GetFileName(file);
+
 			// We don't want duplicates
-			if (to_apply.Contains(file))
+			if (to_apply.Contains(file) || to_apply.Contains(file_noext))
 			{
 				continue;
 			}
@@ -498,77 +545,154 @@ public partial class MainWindow : Form
 
 			if (extension.Length > 0)
 			{
-
-				string try_approximate_ext_lower = approximate_spc + (extension.ToLowerInvariant());
-				string try_approximate_ext_upper = approximate_spc + (extension.ToUpperInvariant());
-
-				string og_no_bak = try_approximate_ext_lower;
-
-				bool exists_lower = FileExistsCaseSensitive(try_approximate_ext_lower);
-				bool exists_upper = FileExistsCaseSensitive(try_approximate_ext_upper);
-				if (!exists_lower && !exists_upper)
+				if(!approximate_spc.Contains(extension))
 				{
-					// try to see if the _bak exists
-					try_approximate_ext_lower = try_approximate_ext_lower + "_bak";
-					try_approximate_ext_upper = try_approximate_ext_upper + "_bak";
+					continue;
+				}
 
-					// and, if so, which one exists
-					exists_lower = FileExistsCaseSensitive(try_approximate_ext_lower);
-					exists_upper = FileExistsCaseSensitive(try_approximate_ext_upper);
+				/*
+				Log("\"VAR_EXT\" - Approximate file: VAR_SOME_FILE", new Dictionary<string, string>()
+				{
+					{ "VAR_EXT", extension },
+					{ "VAR_SOME_FILE", approximate_spc },
+				}, Verbosity.Debug, LogType.ConsoleOnly);
+				*/
 
+				bool approx_has_extension = Path.HasExtension(approximate_spc) && extension == Path.GetExtension(approximate_spc);
+				if (approx_has_extension)
+				{
+					/*
+					Log("Approximate SPC has extension: VAR_VALUE", new Dictionary<string, string>()
+					{
+						{ "VAR_VALUE", approx_has_extension.ToString() },
+					});
+					*/
+				}
+
+				/*
+				Log("\"VAR_EXT\" - File Exists: VAR_SOME_FILE - VAR_RESULT", new Dictionary<string, string>()
+				{
+					{ "VAR_EXT", extension },
+					{ "VAR_SOME_FILE", approximate_spc },
+					{ "VAR_RESULT", File.Exists(approximate_spc).ToString() },
+				}, Verbosity.Debug, LogType.ConsoleOnly);
+				*/
+
+				if (!approx_has_extension)
+				{
+
+					string try_approximate_ext_lower = approximate_spc + (extension.ToLowerInvariant());
+					string try_approximate_ext_upper = approximate_spc + (extension.ToUpperInvariant());
+
+					string og_no_bak = try_approximate_ext_lower;
+
+					bool exists_lower = FileExistsCaseSensitive(try_approximate_ext_lower);
+					bool exists_upper = FileExistsCaseSensitive(try_approximate_ext_upper);
 					if (!exists_lower && !exists_upper)
 					{
-						// None exists
-						if (!to_apply.Contains(og_no_bak) &&
-							!couldnt_be_found.Contains(og_no_bak.ToLowerInvariant()))
+						// try to see if the _bak exists
+						try_approximate_ext_lower = try_approximate_ext_lower + "_bak";
+						try_approximate_ext_upper = try_approximate_ext_upper + "_bak";
+
+						// and, if so, which one exists
+						exists_lower = FileExistsCaseSensitive(try_approximate_ext_lower);
+						exists_upper = FileExistsCaseSensitive(try_approximate_ext_upper);
+
+						if (!exists_lower && !exists_upper)
 						{
-							couldnt_be_found.Add(og_no_bak.ToLowerInvariant());
+							// None exists
+							if (!to_apply.Contains(og_no_bak) &&
+								!couldnt_be_found.Contains(og_no_bak.ToLowerInvariant()))
+							{
+								// DEBUG
+								/*
+								Log("Situation 1 for VAR_SOME_FILE", new Dictionary<string, string>()
+								{
+									{ "VAR_SOME_FILE", og_no_bak },
+								});
+								*/
+								couldnt_be_found.Add(og_no_bak.ToLowerInvariant());
+							}
+
+							continue;
 						}
 
-						continue;
+						// One has to exist, if we're here
+						// Lower checked first as that's the rule, not the exception
+						if (exists_lower)
+						{
+							// Lower exists
+							// Restore bak to extension (ex. bak -> spc)
+							string nobak = try_approximate_ext_lower.Substring(0, try_approximate_ext_lower.Length - extension.Length);
+							File.Copy(try_approximate_ext_lower, nobak, true);
+							try_approximate_ext_lower = nobak;
+						}
+						else
+						{
+							// Upper exists
+							// Restore bak to extension (ex. bak -> spc)
+							string nobak = try_approximate_ext_upper.Substring(0, try_approximate_ext_upper.Length - extension.Length);
+							File.Copy(try_approximate_ext_upper, nobak, true);
+							try_approximate_ext_upper = nobak;
+						}
+
 					}
 
-					// One has to exist, if we're here
-					// Lower checked first as that's the rule, not the exception
+					// Add the right version to to_apply
 					if (exists_lower)
 					{
-						// Lower exists
-						// Restore bak to extension (ex. bak -> spc)
-						string nobak = try_approximate_ext_lower.Substring(0, try_approximate_ext_lower.Length - extension.Length);
-						File.Copy(try_approximate_ext_lower, nobak, true);
-						try_approximate_ext_lower = nobak;
+						to_apply.Add(try_approximate_ext_lower);
 					}
 					else
 					{
-						// Upper exists
-						// Restore bak to extension (ex. bak -> spc)
-						string nobak = try_approximate_ext_upper.Substring(0, try_approximate_ext_upper.Length - extension.Length);
-						File.Copy(try_approximate_ext_upper, nobak, true);
-						try_approximate_ext_upper = nobak;
+						to_apply.Add(try_approximate_ext_upper);
 					}
-				}
 
-				// Add the right version to to_apply
-				if (exists_lower)
-				{
-					to_apply.Add(try_approximate_ext_lower);
-				}
-				else
-				{
-					to_apply.Add(try_approximate_ext_upper);
-				}
+					// Add the relative path to the list of paths we already checked
+					already_checked.Add(second_half.ToLowerInvariant());
 
-				// Add the relative path to the list of paths we already checked
-				already_checked.Add(second_half.ToLowerInvariant());
-
-				// If we found it, then it's not "not found"
-				if (to_apply.Contains(try_approximate_ext_lower))
+					// If we found it, then it's not "not found"
+					if (to_apply.Contains(try_approximate_ext_lower))
+					{
+						couldnt_be_found.Remove(try_approximate_ext_lower.ToLowerInvariant());
+						couldnt_be_found.Remove(og_no_bak.ToLowerInvariant());
+					}
+				} else
 				{
-					couldnt_be_found.Remove(try_approximate_ext_lower.ToLowerInvariant());
-					couldnt_be_found.Remove(og_no_bak.ToLowerInvariant());
+					// Attempt at fixing a bug regarding Launcher EXE files
+					// Please don't break anything...
+					bool exists_asis = FileExistsCaseSensitive(approximate_spc);
+					if(!exists_asis)
+					{
+						// TODO: Implement (???)
+						continue;
+					}
+
+					if (to_apply.Contains(approximate_spc))
+					{
+						couldnt_be_found.Remove(approximate_spc.ToLowerInvariant());
+						continue;
+					}
+
+					to_apply.Add(approximate_spc);
+					already_checked.Add(second_half.ToLowerInvariant());
+					// If we found it, then it's not "not found"
+					if (to_apply.Contains(approximate_spc))
+					{
+						couldnt_be_found.Remove(approximate_spc.ToLowerInvariant());
+					}
 				}
 			} else
 			{
+				if(to_apply.Contains(approximate_spc))
+				{
+					couldnt_be_found.Remove(approximate_spc.ToLowerInvariant());
+					continue;
+				}
+
+				// Examples of file without extension:
+				// pretty much all AI: The Somnium Files... files
+
 				string backup = file + "_bak";
 				if (File.Exists(backup))
 				{
@@ -577,6 +701,13 @@ public partial class MainWindow : Form
 
 				if(!File.Exists(approximate_spc))
 				{
+					// DEBUG
+					/*
+					Log("Situation 2 for VAR_SOME_FILE", new Dictionary<string, string>()
+					{
+						{ "VAR_SOME_FILE", approximate_spc },
+					});
+					*/
 					couldnt_be_found.Add(approximate_spc);
 				} else
 				{

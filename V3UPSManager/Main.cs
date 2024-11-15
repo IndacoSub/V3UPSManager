@@ -139,7 +139,9 @@ public partial class MainWindow : Form
 		*/
 
 		BackupChanges(false);
+		Log("", null, Verbosity.Debug, LogType.ConsoleOnly);
 		Install();
+		Log("", null, Verbosity.Debug, LogType.ConsoleOnly);
 		BackupChanges(true);
 		DisplayStatus();
 	}

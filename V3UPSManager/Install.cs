@@ -132,21 +132,53 @@ public partial class MainWindow : Form
 
 		// Apply the patches
 
-		string logFile = "patch_log.txt";
+		string logFile = Path.Combine(Directory.GetCurrentDirectory(), "patch_log.txt");
 		if (File.Exists(logFile))
 		{
 			File.Delete(logFile);
 		}
 
+		string logFileApply = "to_apply.txt";
+		string logFileToBeApplied = "to_be_applied.txt";
+		string bak_files_log = "bak_files.txt";
+		if (File.Exists(logFileApply))
+		{
+			File.Delete(logFileApply);
+		}
+		if (File.Exists(logFileToBeApplied))
+		{
+			File.Delete(logFileToBeApplied);
+		}
+		if(File.Exists(bak_files_log))
+		{
+			File.Delete(bak_files_log);
+		}
+
+
+		if (to_apply.Count != to_be_applied.Count)
+		{
+			Log("🥶", null, Verbosity.Error, LogType.ConsoleOnly);
+			// Oh my God
+			File.WriteAllLines(logFileApply, to_apply);
+			File.WriteAllLines(logFileToBeApplied, to_be_applied);
+			return;
+		}
+
+		if(to_apply.Count <= 0 || to_be_applied.Count <= 0)
+		{
+			Log("👺", null, Verbosity.Error, LogType.ConsoleOnly);
+			return;
+		}
+
 		for (int j = 0; j < to_apply.Count(); j++)
 		{
-			if (to_apply[j] == null)
+			if (to_apply.Count <= j || to_apply[j] == null)
 			{
 				Log(info[28], null, Verbosity.Error);
 				return;
 			}
 
-			if (to_be_applied[j] == null)
+			if (to_be_applied.Count <= j || to_be_applied[j] == null)
 			{
 				Log(info[29], null, Verbosity.Error);
 				return;
@@ -195,6 +227,7 @@ public partial class MainWindow : Form
 				Log(patch_tool_exe + " used: " + command);
 				Clipboard.SetText(patch_tool_exe + " " + command);
 			}
+			//Log(patch_tool_exe + " " + command + Environment.NewLine, null, Verbosity.Info, LogType.ConsoleOnly);
 			File.AppendAllText(logFile, patch_tool_exe + " " + command + Environment.NewLine);
 
 			p.Start();
