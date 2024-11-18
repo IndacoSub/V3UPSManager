@@ -244,7 +244,7 @@ public partial class MainWindow : Form
 
 			if (error.Length > 0)
 			{
-				Log("Error:\n" + error, null, Verbosity.Error);
+				Log("Error while installing " + after + " to " + outfile + ":\n" + error, null, Verbosity.Error);
 			}
 
 			// WHY IS THIS AFTER INSTALLING? (October 2024)

@@ -1,4 +1,7 @@
 ﻿
+using Microsoft.VisualBasic.ApplicationServices;
+using System.Windows.Forms;
+
 namespace V3UPSManager;
 
 public partial class MainWindow : Form
@@ -276,6 +279,10 @@ public partial class MainWindow : Form
 				{ "VAR_PATCH_SPECIFIC_STRING", CurrentGame.PatchSpecificString },
 			});
 			return;
+		} else if(actual_ups_files.Count <= 0)
+		{
+			Log("😐", null, Verbosity.Error, LogType.ConsoleOnly);
+			return;
 		}
 
 		// Prepare... something???
@@ -293,6 +300,9 @@ public partial class MainWindow : Form
 				}, Verbosity.Info, LogType.ConsoleOnly);
 			}
 			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
+		} else
+		{
+			Log("to_be_applied: 0", null, Verbosity.Error, LogType.ConsoleOnly);
 		}
 		
 
@@ -307,6 +317,10 @@ public partial class MainWindow : Form
 				}, Verbosity.Info, LogType.ConsoleOnly);
 			}
 			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
+		}
+		else
+		{
+			Log("to_apply: 0", null, Verbosity.Error, LogType.ConsoleOnly);
 		}
 
 		if (couldnt_be_found.Count > 0)
@@ -490,6 +504,9 @@ public partial class MainWindow : Form
 				continue;
 			}
 
+			// DEBUG
+			//Log("File: " + file, null, Verbosity.Debug, LogType.ConsoleOnly);
+
 			// Remove the part before (and) the UPS folder
 			// ...So, like,
 			// ex. C:\Patch\data\win\game_resident\game_resident_US_patch.ups
@@ -540,15 +557,17 @@ public partial class MainWindow : Form
 				continue;
 			}
 
+			// DEBUG
+			//Log("Approximate_SPC: " + approximate_spc, null, Verbosity.Debug, LogType.ConsoleOnly);
+
 			// The objective is now to find the (extension, ex. .spc) file
 			// Try to see if the (extension, ex. .spc) file exists
 
 			if (extension.Length > 0)
 			{
-				if(!approximate_spc.Contains(extension))
-				{
-					continue;
-				}
+
+				// DEBUG
+				//Log("Approximate_SPC contains " + extension, null, Verbosity.Debug, LogType.ConsoleOnly);
 
 				/*
 				Log("\"VAR_EXT\" - Approximate file: VAR_SOME_FILE", new Dictionary<string, string>()
