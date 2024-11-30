@@ -62,6 +62,16 @@ namespace V3UPSManager
 				AITSF,
 			};
 
+			while(folder.EndsWith("\\") || folder.EndsWith("/"))
+			{
+				folder = folder.Substring(0, folder.Length - 1);
+			}
+
+			if(folder.Length <= 0)
+			{
+				return Game.None;
+			}
+
 			foreach (GameBase game in games)
 			{
 				List<string> folders = game.FolderIdentifiers;
