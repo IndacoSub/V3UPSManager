@@ -37,6 +37,7 @@
 			ChooseLanguageLabel = new Label();
 			UninstallButton = new Button();
 			LogConsole = new RichTextBox();
+			ShouldMakeBackupsCheckbox = new CheckBox();
 			SuspendLayout();
 			// 
 			// InstallationPathPreviewTextbox
@@ -123,11 +124,24 @@
 			LogConsole.TabIndex = 8;
 			LogConsole.Text = "";
 			// 
+			// ShouldMakeBackupsCheckbox
+			// 
+			ShouldMakeBackupsCheckbox.AutoSize = true;
+			ShouldMakeBackupsCheckbox.Checked = true;
+			ShouldMakeBackupsCheckbox.CheckState = CheckState.Checked;
+			ShouldMakeBackupsCheckbox.Location = new Point(551, 13);
+			ShouldMakeBackupsCheckbox.Name = "ShouldMakeBackupsCheckbox";
+			ShouldMakeBackupsCheckbox.Size = new Size(133, 19);
+			ShouldMakeBackupsCheckbox.TabIndex = 9;
+			ShouldMakeBackupsCheckbox.Text = "Backup (default: on)";
+			ShouldMakeBackupsCheckbox.UseVisualStyleBackColor = true;
+			// 
 			// MainWindow
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(800, 411);
+			Controls.Add(ShouldMakeBackupsCheckbox);
 			Controls.Add(LogConsole);
 			Controls.Add(UninstallButton);
 			Controls.Add(ChooseLanguageLabel);
@@ -156,5 +170,6 @@
 		private Label ChooseLanguageLabel;
 		private Button UninstallButton;
 		public RichTextBox LogConsole;
+		private CheckBox ShouldMakeBackupsCheckbox;
 	}
 }

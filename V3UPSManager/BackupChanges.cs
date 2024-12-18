@@ -30,6 +30,11 @@ public partial class MainWindow : Form
 	private void BackupChanges(bool use_mod_folder)
 	{
 
+		if(!ShouldMakeBackupsCheckbox.Checked)
+		{
+			return;
+		}
+
 		string backupdir = use_mod_folder ? GetModFolder() : GetBackupFolder();
 
 		// Delete the current backups, recursively (TODO: why?)
