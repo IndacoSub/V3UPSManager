@@ -104,6 +104,11 @@ public partial class MainWindow : Form
 		// Foreach in to_apply (patch files?)
 		foreach (string file in to_apply)
 		{
+			if (file.EndsWith(".exe") && !CanAccessExe)
+			{
+				continue;
+			}
+
 			// Ignore bak files in to_apply
 			if (to_apply.Contains("_bak"))
 			{
@@ -127,6 +132,7 @@ public partial class MainWindow : Form
 
 			// October 2024:
 			// Copy the _bak to the file
+
 			File.Copy(file + "_bak", file, true);
 		}
 
@@ -155,7 +161,7 @@ public partial class MainWindow : Form
 		}
 
 
-		if (to_apply.Count != to_be_applied.Count)
+		if (to_apply.Count != to_be_applied.Count || false)
 		{
 			Log("🥶", null, Verbosity.Error, LogType.ConsoleOnly);
 			// Oh my God
@@ -186,6 +192,11 @@ public partial class MainWindow : Form
 
 			// Output .spc/.awb/.pb/.ab/.assets file
 			string outfile = to_apply[j];
+
+			if(outfile.EndsWith(".exe") && !CanAccessExe)
+			{
+				continue;
+			}
 
 			// Base .spc/.awb/.pb/.ab/.assets file
 			string before = outfile + "_bak";
@@ -256,6 +267,11 @@ public partial class MainWindow : Form
 					{ "VAR_OUTPUT_FILE", outfile },
 				});
 				// Then copy the backup
+
+				if (outfile.EndsWith(".exe") && !CanAccessExe)
+				{
+					continue;
+				}
 				File.Copy(before, outfile, false);
 			}
 		}

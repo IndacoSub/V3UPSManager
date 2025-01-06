@@ -95,6 +95,8 @@ public partial class MainWindow : Form
 			}
 		}
 
+		CanAccessExe = false;
+
 		return true;
 	}
 }

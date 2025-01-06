@@ -39,6 +39,8 @@ public partial class MainWindow : Form
 		LogConsole.ScrollToCaret();
 	}
 
+	private static readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+
 	internal DialogResult Log(string str, Dictionary<string, string> args = null, Verbosity verbosity = Verbosity.Info, LogType logtype = LogType.Print)
 	{
 		if (args != null && args.Count > 0)
@@ -47,11 +49,33 @@ public partial class MainWindow : Form
 			{
 				if (!arg.Key.StartsWith("VAR_") || arg.Value.StartsWith("VAR_"))
 				{
-					// ???
 					continue;
 				}
 				str = str.Replace(arg.Key, arg.Value);
 			}
+		}
+
+		try
+		{
+			semaphore.Wait();
+
+			using (FileStream fs = new FileStream("all_log.txt", FileMode.Append, FileAccess.Write, FileShare.None))
+			{
+				using (StreamWriter sw = new StreamWriter(fs, System.Text.Encoding.Default))
+				{
+					sw.WriteLine(str.Replace("\\", "/"));
+					sw.Flush();
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			// Log or handle the exception
+			Console.WriteLine(ex.Message);
+		}
+		finally
+		{
+			semaphore.Release();
 		}
 
 		Color logcolor = verbosity == Verbosity.Error ? Color.Red : Color.Black;
@@ -82,4 +106,5 @@ public partial class MainWindow : Form
 
 		return ret;
 	}
+
 }

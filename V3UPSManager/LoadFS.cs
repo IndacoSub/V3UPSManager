@@ -11,6 +11,7 @@ public partial class MainWindow : Form
 	private bool IsLegacy;
 	private bool IsUnity;
 	private string TitleID = "";
+	public bool CanAccessExe = true;
 
 	private void LoadInstallationFolder()
 	{
@@ -132,6 +133,8 @@ public partial class MainWindow : Form
 			IsUnity = false;
 		}
 
+		Log("data_folder: " + data_folder, null, Verbosity.Info, LogType.ConsoleOnly);
+
 		if (!CheckInstall(data_folder))
 		{
 			return;
@@ -233,6 +236,8 @@ public partial class MainWindow : Form
 			upsfolder = ups_folder;
 		}
 
+		Log("Before getting files", null, Verbosity.Debug, LogType.ConsoleOnly);
+
 		// Count and get all .ups files inside the patch folder
 		// and do it recursively
 		// TODO: Does this also count the patch files?
@@ -246,6 +251,8 @@ public partial class MainWindow : Form
 			}, Verbosity.Error);
 			return;
 		}
+
+		Log("Patch files: OK", null, Verbosity.Debug, LogType.ConsoleOnly);
 
 		// Clear (or "reset") the to_be_applied list
 		to_be_applied = new List<string>();
@@ -346,13 +353,31 @@ public partial class MainWindow : Form
 		// Remove a file? from the list of files? that could not be found
 		// ...Because apparently they were just found???
 
-		while (couldnt_be_found.IndexOf(str) >= 0) couldnt_be_found.RemoveAt(couldnt_be_found.IndexOf(str));
-		while (couldnt_be_found.Any(str.Contains)) couldnt_be_found.Remove(str);
-		couldnt_be_found.RemoveAll(x => x == str);
+		if (string.IsNullOrEmpty(str))
+		{
+			Log("RFML: Invalid input", null, Verbosity.Debug, LogType.ConsoleOnly);
+			return;
+		}
+
+		Log("RFML: " + str, null, Verbosity.Debug, LogType.ConsoleOnly);
+
+		couldnt_be_found.RemoveAll(x => x == str || str.Contains(x));
 	}
 
 	private void GetToApply(string[] ups_files)
 	{
+
+		Log("GetToApply() called", null, Verbosity.Info, LogType.ConsoleOnly);
+
+		if(ups_files.Length == 0)
+		{
+			Log("ups_files.Length == 0", null, Verbosity.Error, LogType.ConsoleOnly);
+			return;
+		} else
+		{
+			Log("ups_files.Length: " + ups_files.Length, null, Verbosity.Error, LogType.ConsoleOnly);
+		}
+
 		to_apply = new List<string>();
 		already_checked = new List<string>();
 
@@ -374,7 +399,10 @@ public partial class MainWindow : Form
 			case Game.AITheSomniumFiles:
 				TryToApplyFiles(ups_files, "");
 				TryToApplyFiles(ups_files, ".assets");
-				TryToApplyFiles(ups_files, ".exe");
+				if (CanAccessExe)
+				{
+					TryToApplyFiles(ups_files, ".exe");
+				}
 				break;
 			default:
 				break;
@@ -461,6 +489,13 @@ public partial class MainWindow : Form
 
 			foreach (string extension in all_installable_extensions)
 			{
+				if(extension.EndsWith("exe"))
+				{
+					if(!CanAccessExe)
+					{
+						continue;
+					}
+				}
 				string file = no_ext + extension;
 				string filebak = no_ext + extension + bak;
 				RemoveFromMissingList(file);
@@ -481,8 +516,11 @@ public partial class MainWindow : Form
 		// the solution would be
 		// ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US.spc
 
+		Log("TryToApplyFiles with ext: " + extension, null, Verbosity.Info, LogType.ConsoleOnly);
+
 		foreach (string file in ups_files)
 		{
+			Log("TTAF file: " + file, null, Verbosity.Debug, LogType.ConsoleOnly);
 			string file_noext = Path.GetFileName(file);
 
 			// We don't want duplicates
@@ -556,6 +594,8 @@ public partial class MainWindow : Form
 			{
 				continue;
 			}
+
+			Log("Success", null, Verbosity.Debug, LogType.ConsoleOnly);
 
 			// DEBUG
 			//Log("Approximate_SPC: " + approximate_spc, null, Verbosity.Debug, LogType.ConsoleOnly);
@@ -660,10 +700,12 @@ public partial class MainWindow : Form
 					// Add the right version to to_apply
 					if (exists_lower)
 					{
+						Log("(Method 1) Adding " + try_approximate_ext_lower + " to to_apply", null, Verbosity.Debug, LogType.ConsoleOnly);
 						to_apply.Add(try_approximate_ext_lower);
 					}
 					else
 					{
+						Log("(Method 2) Adding " + try_approximate_ext_lower + " to to_apply", null, Verbosity.Debug, LogType.ConsoleOnly);
 						to_apply.Add(try_approximate_ext_upper);
 					}
 
@@ -693,6 +735,7 @@ public partial class MainWindow : Form
 						continue;
 					}
 
+					Log("(Method 3) Adding " + approximate_spc + " to to_apply", null, Verbosity.Debug, LogType.ConsoleOnly);
 					to_apply.Add(approximate_spc);
 					already_checked.Add(second_half.ToLowerInvariant());
 					// If we found it, then it's not "not found"
@@ -730,9 +773,12 @@ public partial class MainWindow : Form
 					couldnt_be_found.Add(approximate_spc);
 				} else
 				{
+					Log("(Method 4) Adding " + approximate_spc + " to to_apply", null, Verbosity.Debug, LogType.ConsoleOnly);
 					to_apply.Add(approximate_spc);
 				}
 			}
 		}
+
+		Log("TTAF done.", null, Verbosity.Debug, LogType.ConsoleOnly);
 	}
 }

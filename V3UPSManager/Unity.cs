@@ -54,7 +54,7 @@ public partial class MainWindow : Form
 			return false;
 		}
 
-		string movie = Path.Combine(installation_folder, "Movie");
+		string movie = Path.Combine(unity_find, "Movie");
 		bool is_xbox = Directory.Exists(movie);
 
 		unity_find = Path.Combine(unity_find, "AssetBundles");
@@ -91,6 +91,9 @@ public partial class MainWindow : Form
 			Log(info[31], null, Verbosity.Error);
 			return false;
 		}
+
+		Log("XboxPath: " + movie, null, Verbosity.Debug, LogType.ConsoleOnly);
+		Log("Xbox: " + is_xbox, null, Verbosity.Debug, LogType.ConsoleOnly);
 
 		if (!is_xbox)
 		{
@@ -130,6 +133,9 @@ public partial class MainWindow : Form
 					return false;
 				}
 			}
+		} else
+		{
+			CanAccessExe = false;
 		}
 
 		// Check if ReShade ( https://reshade.me/ ) is present

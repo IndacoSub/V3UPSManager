@@ -105,7 +105,11 @@ public partial class MainWindow : Form
 					{ "VAR_BEFORE", file },
 					{ "VAR_AFTER", newpath },
 				}, Verbosity.Info, LogType.ConsoleOnly);
-				File.Copy(file, newpath);
+
+				if(!file.EndsWith(".exe") || CanAccessExe)
+				{
+					File.Copy(file, newpath);
+				}
 			}
 		}
 	}
