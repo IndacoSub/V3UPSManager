@@ -13,16 +13,23 @@ public partial class MainWindow : Form
 	private string TitleID = "";
 	public bool CanAccessExe = true;
 
-	private void LoadInstallationFolder()
+	private bool LoadInstallationFolder()
 	{
-		// Let the user select the folder manually
-		using (var fold = new FolderBrowserDialog())
+		verified_installation_folder = "";
+		bool bak = SelectInstallationFolderButton.Enabled;
+		SelectInstallationFolderButton.Enabled = false;
+		UninstallButton.Enabled = false;
+		if (!manually_selected_install)
 		{
-			DialogResult res = fold.ShowDialog();
-
-			if (res == DialogResult.OK && !string.IsNullOrWhiteSpace(fold.SelectedPath))
+			// Let the user select the folder manually
+			using (var fold = new FolderBrowserDialog())
 			{
-				installation_folder = fold.SelectedPath;
+				DialogResult res = fold.ShowDialog();
+
+				if (res == DialogResult.OK && !string.IsNullOrWhiteSpace(fold.SelectedPath))
+				{
+					installation_folder = fold.SelectedPath;
+				}
 			}
 		}
 
@@ -30,32 +37,36 @@ public partial class MainWindow : Form
 		{
 			// Maybe they deleted it?
 			Log(info[0], null, Verbosity.Error);
-			return;
+			return false;
 		}
 
 		string data_folder = installation_folder;
 
-		Game CurrentGameID = GetGameByFolder(installation_folder);
-
-		if(CurrentGameID == Game.None)
+		if (!manually_selected_game)
 		{
-			Log(info[45], null, Verbosity.Error);
+			Game CurrentGameID = GetGameByFolder(installation_folder);
 
-			return;
+			if (CurrentGameID == Game.None)
+			{
+				Log(info[45], null, Verbosity.Error);
+
+				return false;
+			}
+
+			CurrentGame = SpawnGameByID(CurrentGameID);
+
+			if (CurrentGame == null || CurrentGame.GameID == Game.None)
+			{
+				Log(info[46], null, Verbosity.Error);
+
+				return false;
+			}
+
+
+			Log("Game recognized: " + CurrentGameID.ToString(), null, Verbosity.Info, LogType.ConsoleOnly);
+
+			this.Text = "V3 UPS Manager" + " - " + CurrentGameID.ToString();
 		}
-
-		CurrentGame = SpawnGameByID(CurrentGameID);
-
-		if(CurrentGame == null || CurrentGame.GameID == Game.None)
-		{
-			Log(info[46], null, Verbosity.Error);
-
-			return;
-		}
-
-		Log("Game recognized: " + CurrentGameID.ToString(), null, Verbosity.Info, LogType.ConsoleOnly);
-
-		this.Text = "V3 UPS Manager" + " - " + CurrentGameID.ToString();
 
 		// Detect game edition/platform
 		if (!CheckLegacyConfiguration())
@@ -70,7 +81,7 @@ public partial class MainWindow : Form
 					// So... Android/iOS/PS4/PSVita?
 					// We currently don't have any plans to support any other ports
 
-					return;
+					return false;
 				}
 
 				// Xbox (Microsoft Store, AE) version:
@@ -137,33 +148,41 @@ public partial class MainWindow : Form
 
 		if (!CheckInstall(data_folder))
 		{
-			return;
+			return false;
 		}
 
 		Log(info[18]);
 		verified_installation_folder = installation_folder;
 		InstallationPathPreviewTextbox.Text = verified_installation_folder;
+		SelectInstallationFolderButton.Enabled = bak;
+		UninstallButton.Enabled = true;
+		return true;
 	}
 
-	private void LoadPatchFolder()
+	private bool LoadPatchFolder()
 	{
+		SelectPatchFolderButton.Enabled = false;
+		InstallButton.Enabled = false;
 		// No installation folder? Go back
 		if (!Directory.Exists(verified_installation_folder) || verified_installation_folder == null ||
 			verified_installation_folder.Length == 0)
 		{
 			// Maybe they deleted it?
 			Log(info[19], null, Verbosity.Error);
-			return;
+			return false;
 		}
 
-		// Let the user select the patch (ups) folder manually
-		using (var fold = new FolderBrowserDialog())
+		if (!manually_selected_patch)
 		{
-			DialogResult res = fold.ShowDialog();
-
-			if (res == DialogResult.OK && !string.IsNullOrWhiteSpace(fold.SelectedPath))
+			// Let the user select the patch (ups) folder manually
+			using (var fold = new FolderBrowserDialog())
 			{
-				ups_folder = fold.SelectedPath;
+				DialogResult res = fold.ShowDialog();
+
+				if (res == DialogResult.OK && !string.IsNullOrWhiteSpace(fold.SelectedPath))
+				{
+					ups_folder = fold.SelectedPath;
+				}
 			}
 		}
 
@@ -172,7 +191,7 @@ public partial class MainWindow : Form
 		{
 			// Maybe they deleted it?
 			Log(info[20], null, Verbosity.Error);
-			return;
+			return false;
 		}
 
 		string upsfolder = "";
@@ -205,7 +224,7 @@ public partial class MainWindow : Form
 					if (!Directory.Exists(upswindata))
 					{
 						Log(info[21], null, Verbosity.Error);
-						return;
+						return false;
 					}
 
 					// Safe to assume that the /data/win/ folder exists
@@ -230,7 +249,7 @@ public partial class MainWindow : Form
 			if (!Directory.Exists(upsdatasa))
 			{
 				Log(info[35], null, Verbosity.Error);
-				return;
+				return false;
 			}
 
 			upsfolder = ups_folder;
@@ -249,7 +268,7 @@ public partial class MainWindow : Form
 			{
 				{ "VAR_PATCH_FORMAT_EXTENSION", CurrentGame.PatchFormatExtension },
 			}, Verbosity.Error);
-			return;
+			return false;
 		}
 
 		Log("Patch files: OK", null, Verbosity.Debug, LogType.ConsoleOnly);
@@ -285,11 +304,11 @@ public partial class MainWindow : Form
 				{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
 				{ "VAR_PATCH_SPECIFIC_STRING", CurrentGame.PatchSpecificString },
 			});
-			return;
+			return false;
 		} else if(actual_ups_files.Count <= 0)
 		{
 			Log("😐", null, Verbosity.Error, LogType.ConsoleOnly);
-			return;
+			return false;
 		}
 
 		// Prepare... something???
@@ -346,6 +365,13 @@ public partial class MainWindow : Form
 		Log(info[23]);
 
 		PatchPathPreviewTextbox.Text = ups_folder;
+		SelectInstallationFolderButton.Enabled = true;
+		SelectPatchFolderButton.Enabled = true;
+		if(verified_installation_folder.Length > 0)
+		{
+			InstallButton.Enabled = true;
+		}
+		return true;
 	}
 
 	private void RemoveFromMissingList(string str)

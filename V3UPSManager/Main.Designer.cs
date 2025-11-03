@@ -78,6 +78,7 @@
 			// 
 			// InstallButton
 			// 
+			InstallButton.Enabled = false;
 			InstallButton.Location = new Point(12, 179);
 			InstallButton.Name = "InstallButton";
 			InstallButton.Size = new Size(383, 79);
@@ -107,6 +108,7 @@
 			// 
 			// UninstallButton
 			// 
+			UninstallButton.Enabled = false;
 			UninstallButton.Location = new Point(401, 179);
 			UninstallButton.Name = "UninstallButton";
 			UninstallButton.Size = new Size(387, 79);

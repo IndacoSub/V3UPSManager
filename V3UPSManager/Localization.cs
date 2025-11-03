@@ -107,7 +107,7 @@ public partial class MainWindow : Form
 			"The patch folder doesn't exist!",
 			"The \"data\" and/or \"data\\win\" folders couldn't be found!",
 			"Couldn't find any VAR_PATCH_FORMAT_EXTENSION file(s)!",
-			"File information loaded! Ready to apply!",
+			"File information loaded! Ready to install / update!",
 			"\"VAR_PATCH_FORMAT_INSTALLER_EXE\" not found!\\nRead the instructions in the README file!",
 			"The installation folder and/or the patch folder couldn't be loaded!",
 			"No SPC file info found!",
