@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+
 
 namespace V3UPSManager;
 
@@ -15,7 +17,22 @@ public partial class MainWindow : Form
 		string cur = Directory.GetCurrentDirectory();
 		string current_dir = Path.GetFullPath(cur);
 
-		string patch_tool_exe = CurrentGame.PatchFormatInstaller + ".exe";
+		string patch_tool_exe;
+
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+		{
+			patch_tool_exe = CurrentGame.PatchFormatInstaller + ".exe";
+		}
+		else
+		{
+			patch_tool_exe = CurrentGame.PatchFormatInstaller + "_linux";
+		}
+
+		if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+		{
+			Process.Start("chmod", $"+x \"{patch_tool_exe}\"")?.WaitForExit();
+		}
+
 
 		string ups = Path.Combine(current_dir, patch_tool_exe);
 		if (!File.Exists(ups))
