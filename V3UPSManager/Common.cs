@@ -11,6 +11,9 @@ public partial class MainWindow : Form
 			case Game.AITheSomniumFiles:
 				// TODO: Implement
 				return true;
+			case Game.TokyoPsychodemic:
+				// TODO: Implement
+				return true;
 			default:
 				return false;
 		}

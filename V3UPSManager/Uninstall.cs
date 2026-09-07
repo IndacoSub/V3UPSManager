@@ -38,7 +38,11 @@ public partial class MainWindow : Form
 				extensions_to_uninstall.Add(".exe");
 				extensions_to_uninstall.Add("*");
                 break;
-            default:
+			case Game.TokyoPsychodemic:
+				extensions_to_uninstall.Add(".assets");
+				extensions_to_uninstall.Add("*");
+                break;
+			default:
                 break;
         }
 

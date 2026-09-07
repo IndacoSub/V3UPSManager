@@ -7,6 +7,7 @@ namespace V3UPSManager
 		None,
 		DanganronpaV3,
 		AITheSomniumFiles,
+		TokyoPsychodemic,
 	}
 
 	public enum FormatType
@@ -41,6 +42,11 @@ namespace V3UPSManager
 		public virtual string UNITY_EXE_NAME { get; } = "DefaultUnityExe.exe";
 
 		public virtual List<string> FolderIdentifiers { get; } = new List<string>();
+
+		public virtual string GetUnityDataFolder()
+		{
+			return UnityDataFolder;
+		}
 	}
 
 	public class NoneGame : GameBase
@@ -54,12 +60,14 @@ namespace V3UPSManager
 		{
 			GameBase DRV3 = new DRV3();
 			GameBase AITSF = new AITSF();
+			GameBase TokyoPsychodemic = new TokyoPsychodemic();
 
 			// List of all games (outside of None)
 			List<GameBase> games = new List<GameBase>()
 			{
 				DRV3,
 				AITSF,
+				TokyoPsychodemic,
 			};
 
 			while(folder.EndsWith("\\") || folder.EndsWith("/"))
@@ -93,6 +101,8 @@ namespace V3UPSManager
 					return new DRV3();
 				case Game.AITheSomniumFiles:
 					return new AITSF();
+				case Game.TokyoPsychodemic:
+					return new TokyoPsychodemic();
 				default:
 					break;
 			}

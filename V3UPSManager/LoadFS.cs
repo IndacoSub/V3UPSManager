@@ -102,6 +102,7 @@ public partial class MainWindow : Form
 				IsUnity = false;
 			} else
 			{
+				Log("Unity OK");
 				// This wasn't an else, before October 30th 2024
 				// This was right after the Xbox version checks, which means data_folder would get overwritten
 
@@ -109,15 +110,34 @@ public partial class MainWindow : Form
 				// Just like most Unity games, V3 AE's Switch port also has the "Data" and "StreamingAssets" folders
 
 				data_folder = Path.Combine(installation_folder, CurrentGame.UnityDataFolder);
-				if (!File.Exists(data_folder))
+				if (!Directory.Exists(data_folder))
 				{
+					Log("Data folder does not exist?: " + data_folder);
 					// TODO: Implement
 				}
-				data_folder = Path.Combine(data_folder, "StreamingAssets");
+
 				string platform = GetUnityPlatformByExclusion(data_folder);
-				if (platform != null && !string.IsNullOrWhiteSpace(platform) && platform.Length > 0)
+
+				switch (CurrentGame.GameID)
 				{
-					data_folder = Path.Combine(installation_folder, platform);
+					case Game.DanganronpaV3:
+						data_folder = Path.Combine(data_folder, "StreamingAssets");
+						if (platform != null && !string.IsNullOrWhiteSpace(platform) && platform.Length > 0)
+						{
+							data_folder = Path.Combine(installation_folder, platform);
+						}
+						break;
+					case Game.AITheSomniumFiles:
+						data_folder = Path.Combine(data_folder, "StreamingAssets");
+						if (platform != null && !string.IsNullOrWhiteSpace(platform) && platform.Length > 0)
+						{
+							data_folder = Path.Combine(installation_folder, platform);
+						}
+						break;
+					case Game.TokyoPsychodemic:
+						break;
+					default:
+						break;
 				}
 
 				IsLegacy = false;
@@ -148,6 +168,7 @@ public partial class MainWindow : Form
 
 		if (!CheckInstall(data_folder))
 		{
+			Log("Data folder is not good");
 			return false;
 		}
 
@@ -430,6 +451,10 @@ public partial class MainWindow : Form
 					TryToApplyFiles(ups_files, ".exe");
 				}
 				break;
+			case Game.TokyoPsychodemic:
+				TryToApplyFiles(ups_files, "");
+				TryToApplyFiles(ups_files, ".assets");
+				break;
 			default:
 				break;
 		}
@@ -495,13 +520,32 @@ public partial class MainWindow : Form
 				".exe",
 			};
 
-			switch(CurrentGame.GameID)
+			// REMEMBER TO UPDATE ABOVE AS WELL
+
+			List<string> TokyoPsychodemic_all_installable_extensions = new List<string>()
+			{
+				"",
+
+				// Unity
+				".assets",
+				
+				// Patch
+				".xdelta",
+
+				// EXE
+				".exe",
+			};
+
+			switch (CurrentGame.GameID)
 			{
 				case Game.DanganronpaV3:
 					all_installable_extensions = DRV3_all_installable_extensions;
 					break;
 				case Game.AITheSomniumFiles:
 					all_installable_extensions = AITSF_all_installable_extensions;
+					break;
+				case Game.TokyoPsychodemic:
+					all_installable_extensions = TokyoPsychodemic_all_installable_extensions;
 					break;
 				default:
 					break;

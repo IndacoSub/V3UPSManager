@@ -78,6 +78,9 @@ public partial class MainWindow : Form
 				case Game.AITheSomniumFiles:
 					// TODO: Implement
 					break;
+				case Game.TokyoPsychodemic:
+					// TODO: Implement
+					break;
 				default:
 					break;
 			}

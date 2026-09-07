@@ -14,6 +14,10 @@ public partial class MainWindow : Form
 			case Game.AITheSomniumFiles:
 				// AI only has a Unity version
 				return false;
+			case Game.TokyoPsychodemic:
+				// Tokyo Psychodemic only has a Unity version
+				return false;
+				break;
 			default:
 				return false;
 		}

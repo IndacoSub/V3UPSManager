@@ -15,6 +15,8 @@ public partial class MainWindow : Form
 				return CheckDRV3UnityConfiguration();
 			case Game.AITheSomniumFiles:
 				return CheckAITSFUnityConfiguration();
+			case Game.TokyoPsychodemic:
+				return CheckTokyoPsychodemicUnityConfiguration();
 			default:
 				return false;
 		}
@@ -191,7 +193,107 @@ public partial class MainWindow : Form
 		return true;
 	}
 
-    private bool CheckDRV3UnityConfiguration()
+	private bool CheckTokyoPsychodemicUnityConfiguration()
+	{
+
+		// Check if TOKYO_PSYCHODEMIC.exe exists
+		string exe = Path.Combine(installation_folder, CurrentGame.UNITY_EXE_NAME);
+		if (!File.Exists(exe))
+		{
+			// Maybe the user deleted it?
+			Log(info[48], new Dictionary<string, string>(){
+				{ "VAR_UNITY_EXE_NAME", CurrentGame.UNITY_EXE_NAME },
+			});
+			return false;
+		}
+
+		string unity_root = CurrentGame.UnityDataFolder;
+
+		string unity_find = Path.Combine(installation_folder, unity_root);
+
+		if (!Directory.Exists(unity_find))
+		{
+			Log(info[31], null, Verbosity.Error);
+			return false;
+		}
+
+		// Check if the "StreamingAssets" folder exists
+		unity_find = Path.Combine(unity_find, "StreamingAssets");
+		if (!Directory.Exists(unity_find))
+		{
+			Log(info[31], null, Verbosity.Error);
+			return false;
+		}
+
+		unity_find = Path.Combine(unity_find, "AssetBundles");
+		if (!Directory.Exists(unity_find))
+		{
+			Log(info[31], null, Verbosity.Error);
+			return false;
+		}
+
+		// Calculate MD5 hash of the executable
+		string exe_md5 = "";
+		using (var md5 = MD5.Create())
+		{
+			using (var stream = File.OpenRead(exe))
+			{
+				var hash = md5.ComputeHash(stream);
+				if (hash != null)
+				{
+					exe_md5 = ToHex(hash, false);
+				}
+			}
+		}
+
+		// Check if the MD5 hash is valid
+		if (exe_md5.Length == 0 || string.IsNullOrWhiteSpace(exe_md5))
+		{
+			Log(info[7], new Dictionary<string, string>(){
+				{ "VAR_LEGACY_EXE_NAME", CurrentGame.LEGACY_EXE_NAME },
+			});
+			return false;
+		}
+
+		Log("EXE MD5: " + exe_md5.ToLower(), null, Verbosity.Debug, LogType.ConsoleOnly);
+
+		// Check if the calculated hash corresponds to the expected hash
+		const string expected_hash = "5786d34a424f5f731dd3751b7bd480f0";
+		if (exe_md5.ToLower() != expected_hash.ToLower()) // Added tolower to the hash just in case
+		{
+			var proceed = Log(info[8], null, Verbosity.Info, LogType.Ask);
+			if (proceed == DialogResult.No || proceed == DialogResult.Cancel)
+			{
+				return false;
+			}
+		}
+
+		// Check if ReShade ( https://reshade.me/ ) is present
+		string reshade_ini = Path.Combine(installation_folder, "ReShade.ini");
+		if (File.Exists(reshade_ini))
+		{
+			var proceed = Log(info[9], null, Verbosity.Info, LogType.Ask);
+			if (proceed == DialogResult.No || proceed == DialogResult.Cancel)
+			{
+				return false;
+			}
+		}
+
+		// Check if Special-K ( https://github.com/SpecialKO/SpecialK ) or Reloaded-II (https://github.com/Sewer56/CriFs.V2.Hook.ReloadedII) are present
+		string dinput_ini = Path.Combine(installation_folder, "dinput8.ini");
+		if (File.Exists(dinput_ini))
+		{
+			var proceed = Log(info[49], null, Verbosity.Info, LogType.Ask);
+			if (proceed == DialogResult.No || proceed == DialogResult.Cancel)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private bool CheckDRV3UnityConfiguration()
 	{
 		// We already established that it's not the Legacy (Steam) PC version, at this point
 
