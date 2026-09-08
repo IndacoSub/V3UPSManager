@@ -12,6 +12,14 @@ Note: this program will NOT handle conflicts between files!
 
 For example, if two mods need to edit the same file, then that file might get overwritten, and the mod(s) might not work correctly!
 
+# Supported games
+
+- Danganronpa V3: Killing Harmony
+
+- AI: The Somnium Files
+
+- Tokyo Psychodemic
+
 ## Localization ##
 
 Feel free to localize this tool into your preferred language!
@@ -40,6 +48,7 @@ Those tools are only needed at runtime and are, therefore, only included and red
 
      “DANGANRONPA” is a registered trademark of Spike Chunsoft Co., Ltd., Too Kyo Games, LLC and/or NIS America Inc.
 	 "AI: THE SOMNIUM FILES" is a registered trademark of Spike Chunsoft Co., Ltd., Too Kyo Games and/or NIS America Inc.
+	 "TOKYO PSYCHODEMIC" is a registered trademark of Gravity Co., Ltd and GRAVITY GAME ARISE Co., Ltd.
      We are not in any way affiliated or associated with them.
      
      Thanks to rameshvarun for the UPS command line tools, "UPS Tools" (https://github.com/rameshvarun/ups)

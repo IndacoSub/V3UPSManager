@@ -121,6 +121,7 @@ public partial class MainWindow : Form
 		if (files != null && files.Length > 0 && files.Length == to_apply.Count)
 		{
 			Log(info[30]);
+			InstallButton.Enabled = false;
 		}
 		else
 		{

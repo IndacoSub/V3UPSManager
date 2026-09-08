@@ -9,7 +9,11 @@ public partial class MainWindow : Form
 	private string ups_folder = "";
 	private string verified_installation_folder = "";
 
-	public MainWindow()
+	private bool manually_selected_game = false;
+	private bool manually_selected_install = false;
+	private bool manually_selected_patch = false;
+
+	public MainWindow(string[] args)
 	{
 		InitializeComponent();
 		if (LanguageComboBox != null)
@@ -25,6 +29,64 @@ public partial class MainWindow : Form
 		if (info_it.Count != info_en.Count)
 		{
 			Log(ui_messages[7]);
+		}
+
+		if(args.Length > 0)
+		{
+			// Simple manual parsing
+			for (int i = 0; i < args.Length; i++)
+			{
+				switch (args[i])
+				{
+					case "--game":
+						if (i + 1 < args.Length)
+						{
+							if (Enum.TryParse<Game>(args[++i], true, out var parsedGame))
+							{
+								var gameInstance = SpawnGameByID(parsedGame);
+								CurrentGame = gameInstance;
+								manually_selected_game = true;
+								this.Text = "V3 UPS Manager" + " - " + CurrentGame.GameID.ToString();
+							}
+							else
+							{
+								//MessageBox.Show($"Unknown game: {args[i]}");
+								manually_selected_game = false;
+							}
+						}
+						break;
+					case "--install-dir":
+						installation_folder = args[++i];
+						manually_selected_install = true;
+						if(LoadInstallationFolder())
+						{
+							InstallationPathPreviewTextbox.Text = installation_folder;
+							SelectInstallationFolderButton.Enabled = false;
+						} else
+						{
+							verified_installation_folder = "";
+							installation_folder = "";
+							manually_selected_install = false;
+						}
+						break;
+					case "--patch-folder":
+						if(verified_installation_folder.Length > 0)
+						{
+							ups_folder = args[++i];
+							manually_selected_patch = true;
+							if (LoadPatchFolder())
+							{
+								PatchPathPreviewTextbox.Text = ups_folder;
+								SelectPatchFolderButton.Enabled = false;
+							} else
+							{
+								manually_selected_patch = false;
+								ups_folder = "";
+							}
+						}
+						break;
+				}
+			}
 		}
 	}
 
@@ -115,7 +177,7 @@ public partial class MainWindow : Form
 
 			LanguageComboBox.SelectedIndexChanged += LanguageComboBox_SelectedIndexChanged;
 
-			LanguageComboBox.SelectedIndex = 0;
+			LanguageComboBox.SelectedIndex = 1;
 		}
 	}
 

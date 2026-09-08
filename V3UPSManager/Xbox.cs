@@ -21,6 +21,9 @@ public partial class MainWindow : Form
 				// The main differences are the presence of the Movie folder inside StreamingAssets and PathID changes
 				// But they are "similar enough" that we can get away with only checking once
 				return false;
+			case Game.TokyoPsychodemic:
+				// No Xbox version as of yet
+				return false;
 			default:
 				return false;
 		}
