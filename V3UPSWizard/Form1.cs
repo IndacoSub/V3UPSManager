@@ -64,6 +64,13 @@ namespace V3UPSWizard
 		public Form1()
 		{
 			InitializeComponent();
+			string targetExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "V3UPSManager.exe");
+
+			if (!File.Exists(targetExe))
+			{
+				MessageBox.Show("Executable not found: " + targetExe + ". The execution of this program cannot proceed.", "V3UPSWizard");
+				return;
+			}
 			BuildPages();
 			ShowPage(0);
 		}
@@ -315,10 +322,10 @@ You acknowledge and agree that Team DAIX bears no responsibility or liability fo
 			{
 				string targetExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "V3UPSManager.exe");
 
-				if(!File.Exists(targetExe))
+				if (!File.Exists(targetExe))
 				{
-					MessageBox.Show("Executable not found: " + targetExe);
-					this.Close();
+					MessageBox.Show("Executable not found: " + targetExe + ". The execution of this program cannot proceed.", "V3UPSWizard");
+					return;
 				}
 
 				// Build arguments dynamically

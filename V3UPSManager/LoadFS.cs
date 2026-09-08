@@ -454,6 +454,7 @@ public partial class MainWindow : Form
 			case Game.TokyoPsychodemic:
 				TryToApplyFiles(ups_files, "");
 				TryToApplyFiles(ups_files, ".assets");
+				TryToApplyFiles(ups_files, ".dll");
 				break;
 			default:
 				break;
@@ -534,6 +535,8 @@ public partial class MainWindow : Form
 
 				// EXE
 				".exe",
+				// DLL
+				".dll",
 			};
 
 			switch (CurrentGame.GameID)
