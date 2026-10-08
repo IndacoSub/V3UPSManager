@@ -1,142 +1,407 @@
-﻿namespace V3UPSManager;
+namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
-
 	private string GetBackupFolder()
 	{
-
-        // Get the current directory
-        // ex. C:\V3UPSManager\
-        string cur = Directory.GetCurrentDirectory();
-
-        // Get the backup directory
-        // ex. C:\V3UPSManager\Backup
-        string backupdir = Path.Combine(cur, "Backup");
-
-		return backupdir;
-    }
+		// Always keep application-owned backups next to the executable.
+		// The current working directory can be changed by launchers or other
+		// processes and is therefore not a reliable application root.
+		return Path.Combine(AppContext.BaseDirectory, "Backup");
+	}
 
 	private string GetModFolder()
 	{
-		// See GetBackupFolder for comments
-
-		string cur = Directory.GetCurrentDirectory();
-		string moddir = Path.Combine(cur, "ModdedFiles");
-
-		return moddir;
+		return Path.Combine(AppContext.BaseDirectory, "ModdedFiles");
 	}
 
-	private void BackupChanges(bool use_mod_folder)
+	private bool BackupChanges(bool use_mod_folder)
 	{
-
-		if(!ShouldMakeBackupsCheckbox.Checked)
+		if (!ShouldMakeBackupsCheckbox.Checked)
 		{
-			return;
+			return true;
 		}
 
-		string backupdir = use_mod_folder ? GetModFolder() : GetBackupFolder();
-
-		// Delete the current backups, recursively (TODO: why?)
-		// Answer (maybe): because then you may include files that might not be needed anymore in a later patch?
-		if (Directory.Exists(backupdir))
+		if (string.IsNullOrWhiteSpace(verified_installation_folder) ||
+			!Directory.Exists(verified_installation_folder))
 		{
-			Directory.Delete(backupdir, true);
-		}
-		else
-		{
-			// TODO: Why is this in an "else"?
-			Directory.CreateDirectory(backupdir);
+			Log(info[82], null, Verbosity.Error, LogType.ConsoleOnly);
+			RefreshLogConsole();
+			Log(info[25], null, Verbosity.Error);
+			return false;
 		}
 
-		// If the platform is detected as Switch (or emulator on PC?):
-		if (TitleID.Length > 0)
+		if (to_apply == null || to_apply.Count == 0)
 		{
-			// Note: consoles often use a unique "ProductID" or a "TitleID" to differentiate between games, apps etc.
-			// since using their names -- or internal names -- might be "unreliable" and slower
-			// And that TitleID/ProductID is obviously different between games/apps
-			// A Nintendo Switch TitleID is composed of sixteen (16) alphanumerical characters
-			// often starting with "0100"
-			// A possible mod installation folder for the Switch version is
-			// ex. E:\Atmosphere\contents\TITLEID\romfs\ where "romfs" indicates that the mod
-			// is accessing the assets' section of the game, not the code itself
-			// Another possible mod installation folder for the Switch version, ONLY when using an emulator, is
-			// ex. C:\MySwitchEmulator\SomeFolders\TITLEID\MODNAME\romfs\
-			// So, ONLY when using emulators, you should also include the "mod name" as well
-			// TODO: Why is this not implemented?
-
-			backupdir = Path.Combine(backupdir, TitleID);
-			backupdir = Path.Combine(backupdir, "romfs");
+			Log(info[84], null, Verbosity.Error, LogType.ConsoleOnly);
+			RefreshLogConsole();
+			Log(info[34], null, Verbosity.Error);
+			return false;
 		}
 
-		foreach (string file in to_apply)
+		// Snapshot the operation inputs so later UI/state changes cannot mutate
+		// the collection while the backup transaction is iterating it.
+		List<string> filesToBackup = new List<string>(to_apply);
+		string installationRoot = Path.GetFullPath(verified_installation_folder);
+		string backupDirectory = use_mod_folder
+			? GetModFolder()
+			: GetBackupFolder();
+
+		// Unique staging names prevent stale files from a crashed run from ever
+		// colliding with the current transaction. The install mutex prevents two
+		// V3UPSManager processes from publishing the same final directory at once.
+		string operationId = Guid.NewGuid().ToString("N");
+		string temporaryDirectory = backupDirectory + ".tmp." + operationId;
+		string oldDirectory = backupDirectory + ".old." + operationId;
+		string currentSourceFile = string.Empty;
+
+		try
 		{
-			// Get the relative path of the file compared to the installation folder
-			// ex. C:\Games\DanganronpaV3\data\win\game_resident\game_resident_US.spc
-			// would return \data\win\game_resident\game_resident_US.spc
+			Log(
+				info[71],
+				new Dictionary<string, string>()
+				{
+					{ "VAR_BACKUP_DIRECTORY", backupDirectory },
+				},
+				Verbosity.Info,
+				LogType.ConsoleOnly);
+			RefreshLogConsole();
 
-			string after_installdir = file.Substring(verified_installation_folder.Length + 1);
-
-			// Combine the backup path and the relative path
-			// ex. backup: C:\V3UPSManager\Backup
-			// ex. relative path: \data\win\game_resident\game_resident_US.spc
-			// would return
-			// ex. C:\V3UPSManager\Backup\data\win\game_resident\game_resident_US.spc
-			string newpath = Path.Combine(backupdir, after_installdir);
-			if (newpath == null || newpath.Length <= 0)
+			// Build a complete snapshot in a temporary directory first. If any
+			// copy fails, the previous valid snapshot remains untouched.
+			if (Directory.Exists(temporaryDirectory))
 			{
-				continue;
+				Directory.Delete(temporaryDirectory, true);
 			}
 
-			// Get the parent directory
-			// ex. \data\win\game_resident\game_resident_US.spc
-			// would return \data\win\game_resident\
-			string directory = Path.GetDirectoryName(newpath);
+			Directory.CreateDirectory(temporaryDirectory);
 
-			// Create the directory if it doesn't already exist
-			// TODO: Check if it already exists?
-			Directory.CreateDirectory(directory);
+			string actualBackupRoot = temporaryDirectory;
 
-			// Back up the file by copying it to the desired backup folder
-			if (!File.Exists(newpath))
+			// Switch/emulator installations keep their content below TitleID/romfs.
+			if (!string.IsNullOrEmpty(TitleID))
 			{
-				Log("📋 VAR_BEFORE ⮞ VAR_AFTER", new Dictionary<string, string>()
-				{
-					{ "VAR_BEFORE", file },
-					{ "VAR_AFTER", newpath },
-				}, Verbosity.Info, LogType.ConsoleOnly);
+				actualBackupRoot = Path.Combine(
+					actualBackupRoot,
+					TitleID,
+					"romfs");
 
-				if(!file.EndsWith(".exe") || CanAccessExe)
+				Directory.CreateDirectory(actualBackupRoot);
+			}
+
+			foreach (string file in filesToBackup)
+			{
+				currentSourceFile = file ?? string.Empty;
+
+				if (string.IsNullOrWhiteSpace(file))
 				{
-					File.Copy(file, newpath);
+					Log(info[76], null, Verbosity.Error, LogType.ConsoleOnly);
+					RefreshLogConsole();
+					return false;
+				}
+
+				bool isExe = string.Equals(
+					Path.GetExtension(file),
+					".exe",
+					StringComparison.OrdinalIgnoreCase);
+
+				if (isExe && !CanAccessExe)
+				{
+					continue;
+				}
+
+				string sourceFile = file;
+				string backupFile = file + "_bak";
+
+				// A previous installation may have removed the live file while
+				// retaining its backup. In that case the backup is still the
+				// correct clean source for the snapshot.
+				if (!File.Exists(sourceFile) && File.Exists(backupFile))
+				{
+					sourceFile = backupFile;
+
+					Log(
+						info[59],
+						new Dictionary<string, string>()
+						{
+							{ "VAR_BACKUP_FILE", backupFile },
+						},
+						Verbosity.Info,
+						LogType.ConsoleOnly);
+					RefreshLogConsole();
+				}
+
+				if (!File.Exists(sourceFile))
+				{
+					Log(
+						info[77],
+						new Dictionary<string, string>()
+						{
+							{ "VAR_SOURCE_FILE", sourceFile },
+						},
+						Verbosity.Error,
+						LogType.ConsoleOnly);
+					RefreshLogConsole();
+					return false;
+				}
+
+				string fullSource = Path.GetFullPath(sourceFile);
+				string relativePath = Path.GetRelativePath(
+					installationRoot,
+					fullSource);
+
+				// Refuse to copy anything outside the verified installation
+				// folder, even if a malformed path somehow enters to_apply.
+				if (relativePath == ".." ||
+					relativePath.StartsWith(
+						".." + Path.DirectorySeparatorChar,
+						StringComparison.Ordinal) ||
+					Path.IsPathRooted(relativePath))
+				{
+					Log(
+						info[78],
+						new Dictionary<string, string>()
+						{
+							{ "VAR_SOURCE_FILE", sourceFile },
+						},
+						Verbosity.Error,
+						LogType.ConsoleOnly);
+					RefreshLogConsole();
+					return false;
+				}
+
+				string destinationFile = Path.Combine(
+					actualBackupRoot,
+					relativePath);
+
+				string? destinationDirectory =
+					Path.GetDirectoryName(destinationFile);
+
+				if (string.IsNullOrWhiteSpace(destinationDirectory))
+				{
+					Log(
+						info[79],
+						new Dictionary<string, string>()
+						{
+							{ "VAR_SOURCE_FILE", sourceFile },
+						},
+						Verbosity.Error,
+						LogType.ConsoleOnly);
+					RefreshLogConsole();
+					return false;
+				}
+
+				Directory.CreateDirectory(destinationDirectory);
+
+				// Do not overwrite inside the temporary snapshot: each target
+				// is expected to be unique and duplicates indicate a bug upstream.
+				if (File.Exists(destinationFile))
+				{
+					Log(
+						info[80],
+						new Dictionary<string, string>()
+						{
+							{ "VAR_BACKUP_FILE", destinationFile },
+						},
+						Verbosity.Error,
+						LogType.ConsoleOnly);
+					RefreshLogConsole();
+					return false;
+				}
+
+				File.Copy(sourceFile, destinationFile, false);
+
+				// Report every successfully created backup immediately. The displayed path
+				// is the final Backup/ModdedFiles path, not the temporary staging directory.
+				// This keeps the console useful while the backup operation is still running.
+				string finalBackupFile = Path.Combine(
+					backupDirectory,
+					relativePath);
+
+				Log(
+					info[55],
+					new Dictionary<string, string>()
+					{
+						{ "VAR_BACKUP_FILE", finalBackupFile },
+					},
+					Verbosity.Info,
+					LogType.ConsoleOnly);
+
+				// BackupChanges is synchronous, so give WinForms an opportunity to
+				// repaint the console before copying the next file.
+				RefreshLogConsole();
+			}
+
+			// Replace the previous snapshot only after the temporary snapshot is
+			// complete. The .old directory is kept until the new one is in place.
+			if (Directory.Exists(oldDirectory))
+			{
+				Directory.Delete(oldDirectory, true);
+			}
+
+			bool hadPrevious = Directory.Exists(backupDirectory);
+
+			if (hadPrevious)
+			{
+				Directory.Move(backupDirectory, oldDirectory);
+			}
+
+			try
+			{
+				Directory.Move(temporaryDirectory, backupDirectory);
+			}
+			catch
+			{
+				if (hadPrevious &&
+					!Directory.Exists(backupDirectory) &&
+					Directory.Exists(oldDirectory))
+				{
+					Directory.Move(oldDirectory, backupDirectory);
+				}
+
+				throw;
+			}
+
+			try
+			{
+				if (Directory.Exists(oldDirectory))
+				{
+					Directory.Delete(oldDirectory, true);
 				}
 			}
+			catch
+			{
+				// The new snapshot is already in place. Failure to remove the stale
+				// temporary previous snapshot must not invalidate a successful backup.
+			}
+
+			Log(
+				info[72],
+				new Dictionary<string, string>()
+				{
+					{ "VAR_BACKUP_DIRECTORY", backupDirectory },
+				},
+				Verbosity.Info,
+				LogType.ConsoleOnly);
+			RefreshLogConsole();
+
+			return true;
+		}
+		catch (Exception ex)
+		{
+			try
+			{
+				if (Directory.Exists(temporaryDirectory))
+				{
+					Directory.Delete(temporaryDirectory, true);
+				}
+			}
+			catch
+			{
+				// A failed cleanup must not hide the original backup failure.
+			}
+
+			Log(
+				info[70],
+				new Dictionary<string, string>()
+				{
+					{ "VAR_OUTPUT_FILE", currentSourceFile },
+					{ "VAR_EXCEPTION", ex.Message },
+				},
+				Verbosity.Error,
+				LogType.ConsoleOnly);
+			RefreshLogConsole();
+
+			// Keep a phase-specific failure message as well as the exception so the
+			// console makes it obvious that this happened while publishing the snapshot.
+			Log(
+				info[81],
+				new Dictionary<string, string>()
+				{
+					{ "VAR_BACKUP_DIRECTORY", backupDirectory },
+				},
+				Verbosity.Error,
+				LogType.ConsoleOnly);
+			RefreshLogConsole();
+
+			Log(info[34], null, Verbosity.Error);
+			return false;
 		}
 	}
 
 	private void DisplayStatus()
 	{
-		// Count backup (containing "_bak") files in the installation folder
-		string[] files = Directory.GetFiles(installation_folder, "*_bak", SearchOption.AllDirectories);
-		if (files != null && files.Length > 0 && files.Length == to_apply.Count)
+		if (to_apply == null || to_apply.Count == 0)
+		{
+			Log(info[34], null, Verbosity.Error);
+			return;
+		}
+
+		int expectedFiles = 0;
+		int successfulFiles = 0;
+		List<string> missingBackups = new List<string>();
+
+		foreach (string file in to_apply)
+		{
+			if (string.Equals(
+				Path.GetExtension(file),
+				".exe",
+				StringComparison.OrdinalIgnoreCase) &&
+				!CanAccessExe)
+			{
+				// Executable patching is intentionally disabled for editions where the
+				// executable cannot be safely accessed. It must not count as a failed
+				// backup in the final verification.
+				continue;
+			}
+
+			expectedFiles++;
+
+			if (File.Exists(file) && File.Exists(file + "_bak"))
+			{
+				successfulFiles++;
+			}
+			else
+			{
+				missingBackups.Add(file);
+			}
+		}
+
+		if (expectedFiles > 0 && successfulFiles == expectedFiles)
 		{
 			Log(info[30]);
 			InstallButton.Enabled = false;
+			return;
 		}
-		else
+
+		Log(info[34], null, Verbosity.Error);
+
+		// Keep useful diagnostic lists next to the executable instead of in an
+		// arbitrary current working directory.
+		try
 		{
-			Log(info[34], null, Verbosity.Error);
-			string apply_file = "to_apply.txt";
-			string bak_files = "bak_files.txt";
-			if (File.Exists(bak_files))
-			{
-				File.Delete(bak_files);
-			}
-			File.WriteAllText(bak_files, string.Join('\n', files));
-			if (!File.Exists(apply_file))
-			{
-				File.WriteAllText(apply_file, string.Join('\n', to_apply));
-			}
+			string applyFile = Path.Combine(
+				AppContext.BaseDirectory,
+				"to_apply.txt");
+
+			string backupFiles = Path.Combine(
+				AppContext.BaseDirectory,
+				"bak_files.txt");
+
+			File.WriteAllLines(
+				applyFile,
+				to_apply,
+				System.Text.Encoding.UTF8);
+
+			File.WriteAllLines(
+				backupFiles,
+				missingBackups,
+				System.Text.Encoding.UTF8);
+		}
+		catch
+		{
+			// Diagnostics are optional and must never turn a completed operation
+			// into a crash.
 		}
 	}
 }

@@ -9,10 +9,17 @@ public partial class MainWindow : Form
 			case Game.DanganronpaV3:
 				return CheckInstallV3(data_folder);
 			case Game.AITheSomniumFiles:
-				// TODO: Implement
-				return true;
 			case Game.TokyoPsychodemic:
-				// TODO: Implement
+				// Unity-specific validation is performed by CheckUnityConfiguration().
+				// This final check makes sure the folder selected for patching still
+				// exists before the installation is considered valid.
+				if (string.IsNullOrWhiteSpace(data_folder) ||
+					!Directory.Exists(data_folder))
+				{
+					Log(info[25], null, Verbosity.Error);
+					return false;
+				}
+
 				return true;
 			default:
 				return false;

@@ -1,13 +1,13 @@
-﻿
-using Microsoft.VisualBasic.ApplicationServices;
-using System.Windows.Forms;
-
 namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
-	private List<string> already_checked = new();
-	private readonly List<string> couldnt_be_found = new();
+	private readonly HashSet<string> already_checked =
+		new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+	private readonly HashSet<string> couldnt_be_found =
+		new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
 	private bool IsLegacy;
 	private bool IsUnity;
 	private string TitleID = "";
@@ -15,843 +15,776 @@ public partial class MainWindow : Form
 
 	private bool LoadInstallationFolder()
 	{
+		string previousInstallationFolder = installation_folder;
+		string previousVerifiedFolder = verified_installation_folder;
+		bool previousManuallySelectedInstall = manually_selected_install;
+		bool previousSelectButtonEnabled = SelectInstallationFolderButton.Enabled;
+		bool previousUninstallButtonEnabled = UninstallButton.Enabled;
+		bool previousCanAccessExe = CanAccessExe;
+		bool previousIsLegacy = IsLegacy;
+		bool previousIsUnity = IsUnity;
+		string previousTitleID = TitleID;
+		GameBase previousGame = CurrentGame;
+		string previousWindowTitle = Text;
+
 		verified_installation_folder = "";
-		bool bak = SelectInstallationFolderButton.Enabled;
+		CanAccessExe = true;
+		TitleID = "";
+		IsLegacy = false;
+		IsUnity = false;
+
 		SelectInstallationFolderButton.Enabled = false;
 		UninstallButton.Enabled = false;
-		if (!manually_selected_install)
-		{
-			// Let the user select the folder manually
-			using (var fold = new FolderBrowserDialog())
-			{
-				DialogResult res = fold.ShowDialog();
 
-				if (res == DialogResult.OK && !string.IsNullOrWhiteSpace(fold.SelectedPath))
+		try
+		{
+			if (!manually_selected_install)
+			{
+				using FolderBrowserDialog dialog = new FolderBrowserDialog();
+
+				DialogResult result = ShowFolderBrowserDialogWithHiddenFiles(dialog);
+
+				if (result != DialogResult.OK ||
+					string.IsNullOrWhiteSpace(dialog.SelectedPath))
 				{
-					installation_folder = fold.SelectedPath;
-				}
-			}
-		}
-
-		if (!Directory.Exists(installation_folder) || installation_folder == null)
-		{
-			// Maybe they deleted it?
-			Log(info[0], null, Verbosity.Error);
-			return false;
-		}
-
-		string data_folder = installation_folder;
-
-		if (!manually_selected_game)
-		{
-			Game CurrentGameID = GetGameByFolder(installation_folder);
-
-			if (CurrentGameID == Game.None)
-			{
-				Log(info[45], null, Verbosity.Error);
-
-				return false;
-			}
-
-			CurrentGame = SpawnGameByID(CurrentGameID);
-
-			if (CurrentGame == null || CurrentGame.GameID == Game.None)
-			{
-				Log(info[46], null, Verbosity.Error);
-
-				return false;
-			}
-
-
-			Log("Game recognized: " + CurrentGameID.ToString(), null, Verbosity.Info, LogType.ConsoleOnly);
-
-			this.Text = "V3 UPS Manager" + " - " + CurrentGameID.ToString();
-		}
-
-		// Detect game edition/platform
-		if (!CheckLegacyConfiguration())
-		{
-			// At this point: not Legacy (Steam)
-			if (!CheckUnityConfiguration())
-			{
-				// At this point: not Legacy (Steam) or Unity (Switch, Anniversary Edition)
-				if (!CheckXboxConfiguration())
-				{
-					// At this point: not Legacy (Steam), Unity (Switch, Anniversary Edition) or Xbox (Microsoft Store, Anniversary Edition)
-					// So... Android/iOS/PS4/PSVita?
-					// We currently don't have any plans to support any other ports
-
+					// Cancellation is not an error. Restore the complete previous state,
+					// including the detected game/platform information.
+					installation_folder = previousInstallationFolder;
+					verified_installation_folder = previousVerifiedFolder;
+					manually_selected_install = previousManuallySelectedInstall;
+					CanAccessExe = previousCanAccessExe;
+					IsLegacy = previousIsLegacy;
+					IsUnity = previousIsUnity;
+					TitleID = previousTitleID;
+					CurrentGame = previousGame;
+					Text = previousWindowTitle;
+					SelectInstallationFolderButton.Enabled = previousSelectButtonEnabled;
+					UninstallButton.Enabled = previousUninstallButtonEnabled;
 					return false;
 				}
 
-				// Xbox (Microsoft Store, AE) version:
-				// Yes, the "WIN" is in uppercase
+				installation_folder = dialog.SelectedPath;
+			}
 
-				switch(CurrentGame.GameID)
-				{
-					case Game.DanganronpaV3:
-						data_folder = Path.Combine(installation_folder, "data");
-						data_folder = Path.Combine(data_folder, "WIN");
-						break;
-					default:
-						break;
-				}
-				
-
-				IsLegacy = false;
-				IsUnity = false;
-			} else
+			if (string.IsNullOrWhiteSpace(installation_folder) ||
+				!Directory.Exists(installation_folder))
 			{
-				Log("Unity OK");
-				// This wasn't an else, before October 30th 2024
-				// This was right after the Xbox version checks, which means data_folder would get overwritten
+				Log(info[0], null, Verbosity.Error);
+				return false;
+			}
 
-				// Unity (Switch, AE) version:
-				// Just like most Unity games, V3 AE's Switch port also has the "Data" and "StreamingAssets" folders
+			installation_folder = Path.GetFullPath(installation_folder);
 
-				data_folder = Path.Combine(installation_folder, CurrentGame.UnityDataFolder);
-				if (!Directory.Exists(data_folder))
+			string dataFolder = installation_folder;
+
+			if (!manually_selected_game)
+			{
+				Game currentGameID = GetGameByFolder(installation_folder);
+
+				if (currentGameID == Game.None)
 				{
-					Log("Data folder does not exist?: " + data_folder);
-					// TODO: Implement
+					Log(info[45], null, Verbosity.Error);
+					return false;
 				}
 
-				string platform = GetUnityPlatformByExclusion(data_folder);
+				CurrentGame = SpawnGameByID(currentGameID);
 
+				if (CurrentGame == null || CurrentGame.GameID == Game.None)
+				{
+					Log(info[46], null, Verbosity.Error);
+					return false;
+				}
+
+				Text = "V3 UPS Manager" + " - " + CurrentGame.GameID.ToString();
+			}
+			else if (CurrentGame == null || CurrentGame.GameID == Game.None)
+			{
+				Log(info[46], null, Verbosity.Error);
+				return false;
+			}
+
+			// Detect the game edition/platform.
+			if (CheckLegacyConfiguration())
+			{
 				switch (CurrentGame.GameID)
 				{
 					case Game.DanganronpaV3:
-						data_folder = Path.Combine(data_folder, "StreamingAssets");
-						if (platform != null && !string.IsNullOrWhiteSpace(platform) && platform.Length > 0)
-						{
-							data_folder = Path.Combine(installation_folder, platform);
-						}
+						dataFolder = Path.Combine(
+							installation_folder,
+							"data",
+							"win");
 						break;
+				}
+
+				IsLegacy = true;
+				IsUnity = false;
+			}
+			else if (CheckUnityConfiguration())
+			{
+				switch (CurrentGame.GameID)
+				{
+					case Game.DanganronpaV3:
 					case Game.AITheSomniumFiles:
-						data_folder = Path.Combine(data_folder, "StreamingAssets");
-						if (platform != null && !string.IsNullOrWhiteSpace(platform) && platform.Length > 0)
+						string unityDataFolder = Path.Combine(
+							installation_folder,
+							CurrentGame.UnityDataFolder);
+
+						string streamingAssetsFolder = Path.Combine(
+							unityDataFolder,
+							"StreamingAssets");
+
+						// The platform directory is selected by exclusion inside
+						// StreamingAssets. The helper returns only the directory name.
+						string platform = GetUnityPlatformByExclusion(streamingAssetsFolder);
+
+						dataFolder = streamingAssetsFolder;
+
+						if (!string.IsNullOrWhiteSpace(platform))
 						{
-							data_folder = Path.Combine(installation_folder, platform);
+							dataFolder = Path.Combine(
+								dataFolder,
+								platform);
 						}
+
 						break;
+
 					case Game.TokyoPsychodemic:
-						break;
-					default:
+						dataFolder = Path.Combine(
+							installation_folder,
+							CurrentGame.UnityDataFolder,
+							"StreamingAssets",
+							"AssetBundles");
 						break;
 				}
 
 				IsLegacy = false;
 				IsUnity = true;
 			}
-		}
-		else
-		{
-
-			switch(CurrentGame.GameID)
+			else if (CheckXboxConfiguration())
 			{
-				case Game.DanganronpaV3:
-					// Legacy (Steam) version:
-					// Yes, the "win" is in lowercase
+				switch (CurrentGame.GameID)
+				{
+					case Game.DanganronpaV3:
+						dataFolder = Path.Combine(
+							installation_folder,
+							"data",
+							"WIN");
+						break;
+				}
 
-					data_folder = Path.Combine(installation_folder, "data");
-					data_folder = Path.Combine(data_folder, "win");
-					break;
-				default:
-					break;
+				IsLegacy = false;
+				IsUnity = false;
+			}
+			else
+			{
+				return false;
 			}
 
-			IsLegacy = true;
-			IsUnity = false;
+			if (!CheckInstall(dataFolder))
+			{
+				return false;
+			}
+
+			Log(info[18], null, Verbosity.Info, LogType.Print);
+
+			verified_installation_folder = installation_folder;
+			InstallationPathPreviewTextbox.Text =
+				verified_installation_folder;
+
+			SelectInstallationFolderButton.Enabled =
+				previousSelectButtonEnabled;
+
+			UninstallButton.Enabled = true;
+
+			return true;
 		}
-
-		Log("data_folder: " + data_folder, null, Verbosity.Info, LogType.ConsoleOnly);
-
-		if (!CheckInstall(data_folder))
+		catch
 		{
-			Log("Data folder is not good");
+			// Configuration checks and filesystem enumeration can fail for
+			// inaccessible, corrupt or disappearing files. Do not crash the GUI.
+			installation_folder = "";
+			verified_installation_folder = "";
+			manually_selected_install = false;
+			CanAccessExe = true;
+			IsLegacy = false;
+			IsUnity = false;
+			TitleID = "";
+			CurrentGame = previousGame;
+			Text = previousWindowTitle;
+
+			Log(info[25], null, Verbosity.Error);
 			return false;
 		}
+		finally
+		{
+			if (string.IsNullOrWhiteSpace(verified_installation_folder))
+			{
+				// Any failed validation must not leave partially detected game/platform
+				// state behind. Preserve only the UI state belonging to a previous
+				// verified installation.
+				CurrentGame = previousGame;
+				Text = previousWindowTitle;
+				CanAccessExe = previousCanAccessExe;
+				IsLegacy = previousIsLegacy;
+				IsUnity = previousIsUnity;
+				TitleID = previousTitleID;
 
-		Log(info[18]);
-		verified_installation_folder = installation_folder;
-		InstallationPathPreviewTextbox.Text = verified_installation_folder;
-		SelectInstallationFolderButton.Enabled = bak;
-		UninstallButton.Enabled = true;
-		return true;
+				SelectInstallationFolderButton.Enabled = previousSelectButtonEnabled;
+				UninstallButton.Enabled = false;
+			}
+		}
 	}
 
 	private bool LoadPatchFolder()
 	{
+		string previousPatchFolder = ups_folder;
+		bool previousManuallySelectedPatch = manually_selected_patch;
+		bool previousSelectButtonEnabled = SelectPatchFolderButton.Enabled;
+		bool previousInstallButtonEnabled = InstallButton.Enabled;
+		List<string> previousToApply = new List<string>(to_apply);
+		List<string> previousToBeApplied = new List<string>(to_be_applied);
+		HashSet<string> previousMissingFiles = new HashSet<string>(
+			couldnt_be_found,
+			StringComparer.OrdinalIgnoreCase);
+		bool operationCancelled = false;
+
 		SelectPatchFolderButton.Enabled = false;
 		InstallButton.Enabled = false;
-		// No installation folder? Go back
-		if (!Directory.Exists(verified_installation_folder) || verified_installation_folder == null ||
-			verified_installation_folder.Length == 0)
-		{
-			// Maybe they deleted it?
-			Log(info[19], null, Verbosity.Error);
-			return false;
-		}
 
-		if (!manually_selected_patch)
+		try
 		{
-			// Let the user select the patch (ups) folder manually
-			using (var fold = new FolderBrowserDialog())
+			if (string.IsNullOrWhiteSpace(verified_installation_folder) ||
+				!Directory.Exists(verified_installation_folder))
 			{
-				DialogResult res = fold.ShowDialog();
-
-				if (res == DialogResult.OK && !string.IsNullOrWhiteSpace(fold.SelectedPath))
-				{
-					ups_folder = fold.SelectedPath;
-				}
-			}
-		}
-
-		// No patch folder? Go back
-		if (!Directory.Exists(ups_folder) || ups_folder.Length == 0)
-		{
-			// Maybe they deleted it?
-			Log(info[20], null, Verbosity.Error);
-			return false;
-		}
-
-		string upsfolder = "";
-
-		if (!IsUnity)
-		{
-			switch(CurrentGame.GameID)
-			{
-				case Game.DanganronpaV3:
-					// If you're here: NOT Unity!
-					// It could be Legacy (Steam) or Xbox (Microsoft Store, AE)
-					// ...or weird versions which we won't support (such as mobile or PS4/Vita)
-
-					string upswindata = Path.Combine(ups_folder, "data");
-
-					// Check if /data/win/ exists in the patch folder
-					// AKA: Find out if the user is actually installing the patch for the Legacy or Xbox version(s)
-					// (yes, with most certainty)
-					// You never know, less "techy" users might have downloaded the wrong version of the mod
-
-					if (IsLegacy)
-					{
-						upswindata = Path.Combine(upswindata, "win");
-					}
-					else
-					{
-						upswindata = Path.Combine(upswindata, "WIN");
-					}
-
-					if (!Directory.Exists(upswindata))
-					{
-						Log(info[21], null, Verbosity.Error);
-						return false;
-					}
-
-					// Safe to assume that the /data/win/ folder exists
-					// They are empty, outside of the CPKs/ARCs, so we can just "skip" them
-					upsfolder = upswindata;
-					break;
-				default:
-					break;
-			}
-		}
-		else
-		{
-			// If you're here: this is Unity! Good luck with debugging
-
-			// Check if CurrentUnityDataFolder/StreamingAssets exists in the patch folder
-			// AKA: Find out if the user is actually installing the patch for a Unity version
-			// (yes, with most certainty)
-			// You never know, less "techy" users might have downloaded the wrong version of the mod
-
-			string upsdatasa = Path.Combine(ups_folder, CurrentGame.UnityDataFolder);
-			upsdatasa = Path.Combine(upsdatasa, "StreamingAssets");
-			if (!Directory.Exists(upsdatasa))
-			{
-				Log(info[35], null, Verbosity.Error);
+				Log(info[19], null, Verbosity.Error);
 				return false;
 			}
 
-			upsfolder = ups_folder;
-		}
-
-		Log("Before getting files", null, Verbosity.Debug, LogType.ConsoleOnly);
-
-		// Count and get all .ups files inside the patch folder
-		// and do it recursively
-		// TODO: Does this also count the patch files?
-		string patch_format = CurrentGame.PatchFormatExtension;
-		string[] files = Directory.GetFiles(upsfolder, "*" + patch_format, SearchOption.AllDirectories);
-		if (files == null || files.Length == 0)
-		{
-			Log(info[22], new Dictionary<string, string>()
+			if (!manually_selected_patch)
 			{
-				{ "VAR_PATCH_FORMAT_EXTENSION", CurrentGame.PatchFormatExtension },
-			}, Verbosity.Error);
-			return false;
-		}
+				using FolderBrowserDialog dialog = new FolderBrowserDialog();
 
-		Log("Patch files: OK", null, Verbosity.Debug, LogType.ConsoleOnly);
+				DialogResult result = ShowFolderBrowserDialogWithHiddenFiles(dialog);
 
-		// Clear (or "reset") the to_be_applied list
-		to_be_applied = new List<string>();
-
-		List<string> actual_ups_files = new List<string>();
-
-		// Look for any ups/xdelta file
-		// that is not a folder (obviously) which contains "_patch.ups" ("patch specific" string)
-		// TODO: Why? Because the user might have random non-patch .ups files in the patch folder?
-		foreach (string file in files)
-		{
-			if (IsDirectory(file))
-			{
-				continue;
-			}
-
-			actual_ups_files.Add(file);
-
-			if (!file.Contains(CurrentGame.PatchSpecificString))
-			{
-				continue;
-			}
-
-			to_be_applied.Add(file);
-		}
-
-		if(to_be_applied.Count <= 0 && actual_ups_files.Count > 0)
-		{
-			Log(info[44], new Dictionary<string, string>(){
-				{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
-				{ "VAR_PATCH_SPECIFIC_STRING", CurrentGame.PatchSpecificString },
-			});
-			return false;
-		} else if(actual_ups_files.Count <= 0)
-		{
-			Log("😐", null, Verbosity.Error, LogType.ConsoleOnly);
-			return false;
-		}
-
-		// Prepare... something???
-		// TODO: Explain this better
-		GetToApply(files);
-
-		if(to_be_applied.Count > 0)
-		{
-			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
-			foreach (string file in to_be_applied)
-			{
-				Log("OK ( ⮜ ): VAR_SOME_FILE", new Dictionary<string, string>()
+				if (result != DialogResult.OK ||
+					string.IsNullOrWhiteSpace(dialog.SelectedPath))
 				{
-					{ "VAR_SOME_FILE", file },
-				}, Verbosity.Info, LogType.ConsoleOnly);
-			}
-			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
-		} else
-		{
-			Log("to_be_applied: 0", null, Verbosity.Error, LogType.ConsoleOnly);
-		}
-		
+					// Cancellation is not an error. Restore the previous patch selection
+					// and leave the current install button state intact.
+					ups_folder = previousPatchFolder;
+					manually_selected_patch = previousManuallySelectedPatch;
 
-		if (to_apply.Count > 0)
-		{
-			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
-			foreach (string file in to_apply)
-			{
-				Log("OK ( ⮞ ): VAR_SOME_FILE", new Dictionary<string, string>()
-				{
-					{ "VAR_SOME_FILE", file },
-				}, Verbosity.Info, LogType.ConsoleOnly);
-			}
-			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
-		}
-		else
-		{
-			Log("to_apply: 0", null, Verbosity.Error, LogType.ConsoleOnly);
-		}
+					to_apply = previousToApply;
+					to_be_applied = previousToBeApplied;
 
-		if (couldnt_be_found.Count > 0)
-		{
-			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
-			foreach (string file in couldnt_be_found)
-			{
-				Log(info[47], new Dictionary<string, string>()
-				{
-					{ "VAR_SOME_FILE", file },
-				}, Verbosity.Info, LogType.ConsoleOnly);
-			}
-			Log("", null, Verbosity.Info, LogType.ConsoleOnly);
-		}
+					already_checked.Clear();
+					couldnt_be_found.Clear();
 
-		Log(info[23]);
-
-		PatchPathPreviewTextbox.Text = ups_folder;
-		SelectInstallationFolderButton.Enabled = true;
-		SelectPatchFolderButton.Enabled = true;
-		if(verified_installation_folder.Length > 0)
-		{
-			InstallButton.Enabled = true;
-		}
-		return true;
-	}
-
-	private void RemoveFromMissingList(string str)
-	{
-		// Remove a file? from the list of files? that could not be found
-		// ...Because apparently they were just found???
-
-		if (string.IsNullOrEmpty(str))
-		{
-			Log("RFML: Invalid input", null, Verbosity.Debug, LogType.ConsoleOnly);
-			return;
-		}
-
-		Log("RFML: " + str, null, Verbosity.Debug, LogType.ConsoleOnly);
-
-		couldnt_be_found.RemoveAll(x => x == str || str.Contains(x));
-	}
-
-	private void GetToApply(string[] ups_files)
-	{
-
-		Log("GetToApply() called", null, Verbosity.Info, LogType.ConsoleOnly);
-
-		if(ups_files.Length == 0)
-		{
-			Log("ups_files.Length == 0", null, Verbosity.Error, LogType.ConsoleOnly);
-			return;
-		} else
-		{
-			Log("ups_files.Length: " + ups_files.Length, null, Verbosity.Error, LogType.ConsoleOnly);
-		}
-
-		to_apply = new List<string>();
-		already_checked = new List<string>();
-
-		// WHY were those all different functions?
-
-		// REMEMBER TO UPDATE BELOW AS WELL
-		switch(CurrentGame.GameID) {
-			case Game.DanganronpaV3:
-				TryToApplyFiles(ups_files, ".spc");
-				TryToApplyFiles(ups_files, ".awb");
-				if (IsUnity)
-				{
-					// .ab, .pb e .asset files are only in the Unity version(s?)
-					TryToApplyFiles(ups_files, ".pb");
-					TryToApplyFiles(ups_files, ".ab");
-					TryToApplyFiles(ups_files, ".assets");
-				}
-				break;
-			case Game.AITheSomniumFiles:
-				TryToApplyFiles(ups_files, "");
-				TryToApplyFiles(ups_files, ".assets");
-				if (CanAccessExe)
-				{
-					TryToApplyFiles(ups_files, ".exe");
-				}
-				break;
-			case Game.TokyoPsychodemic:
-				TryToApplyFiles(ups_files, "");
-				TryToApplyFiles(ups_files, ".assets");
-				TryToApplyFiles(ups_files, ".dll");
-				break;
-			default:
-				break;
-		}
-
-		foreach (string f in to_apply)
-		{
-			switch (CurrentGame.GameID)
-			{
-				case Game.DanganronpaV3:
-					if (!Path.HasExtension(f))
+					foreach (string file in previousMissingFiles)
 					{
-						// If it doesn't have an extension, we don't care about this file
-						continue;
+						couldnt_be_found.Add(file);
 					}
-					break;
-				default:
-					break;
-			}
 
-			// Remove the extension
-
-			string no_ext = f.Substring(0, f.Length - Path.GetExtension(f).Length);
-
-			// All "possible" extensions, backups and UPS included
-
-			// REMEMBER TO UPDATE ABOVE AS WELL
-
-			List<string> all_installable_extensions = new List<string>();
-
-			List<string> DRV3_all_installable_extensions = new List<string>()
-			{
-				// Legacy and Xbox
-				".spc",
-				".awb",
-
-				// Unity
-				".ab",
-				".pb",
-				".assets",
-
-				// Patch
-				".ups",
-
-				// EXE
-				".exe",
-			};
-
-			// REMEMBER TO UPDATE ABOVE AS WELL
-
-			List<string> AITSF_all_installable_extensions = new List<string>()
-			{
-				"",
-
-				// Unity
-				".ab",
-				".pb",
-				".assets",
-				
-				// Patch
-				".xdelta",
-
-				// EXE
-				".exe",
-			};
-
-			// REMEMBER TO UPDATE ABOVE AS WELL
-
-			List<string> TokyoPsychodemic_all_installable_extensions = new List<string>()
-			{
-				"",
-
-				// Unity
-				".assets",
-				
-				// Patch
-				".xdelta",
-
-				// EXE
-				".exe",
-				// DLL
-				".dll",
-			};
-
-			switch (CurrentGame.GameID)
-			{
-				case Game.DanganronpaV3:
-					all_installable_extensions = DRV3_all_installable_extensions;
-					break;
-				case Game.AITheSomniumFiles:
-					all_installable_extensions = AITSF_all_installable_extensions;
-					break;
-				case Game.TokyoPsychodemic:
-					all_installable_extensions = TokyoPsychodemic_all_installable_extensions;
-					break;
-				default:
-					break;
-			}
-
-			string bak = "_bak";
-
-			// Remove all extension versions of the file from the "could not find" list
-			// TODO: Any scenario where this is actually useful?
-			// There must be some, or otherwise these functions below wouldn't be there, but which ones?
-
-			foreach (string extension in all_installable_extensions)
-			{
-				if(extension.EndsWith("exe"))
-				{
-					if(!CanAccessExe)
-					{
-						continue;
-					}
+					SelectPatchFolderButton.Enabled = previousSelectButtonEnabled;
+					InstallButton.Enabled = previousInstallButtonEnabled;
+					operationCancelled = true;
+					return false;
 				}
-				string file = no_ext + extension;
-				string filebak = no_ext + extension + bak;
-				RemoveFromMissingList(file);
-				RemoveFromMissingList(filebak);
-			}
-            RemoveFromMissingList(no_ext.ToLowerInvariant());
-            RemoveFromMissingList(no_ext + bak.ToLowerInvariant());
-        }
-	}
 
-	private void TryToApplyFiles(string[] ups_files, string extension)
-	{
-		// Calculate which (extension, ex. SPC) files correspond to the UPS files
-		// and add them to a vector
-
-		// Find out which file corresponds to
-		// ex. C:\Patch\data\win\game_resident\game_resident_US.spc
-		// the solution would be
-		// ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US.spc
-
-		Log("TryToApplyFiles with ext: " + extension, null, Verbosity.Info, LogType.ConsoleOnly);
-
-		foreach (string file in ups_files)
-		{
-			Log("TTAF file: " + file, null, Verbosity.Debug, LogType.ConsoleOnly);
-			string file_noext = Path.GetFileName(file);
-
-			// We don't want duplicates
-			if (to_apply.Contains(file) || to_apply.Contains(file_noext))
-			{
-				continue;
+				ups_folder = dialog.SelectedPath;
 			}
 
-			// We don't want folders
-			if (IsDirectory(file))
+			if (string.IsNullOrWhiteSpace(ups_folder) ||
+				!Directory.Exists(ups_folder))
 			{
-				continue;
+				Log(info[20], null, Verbosity.Error);
+				return false;
 			}
 
-			// If it doesn't contain the patch-specific string, then it's a random .ups file?
-			// We don't care about it
-			if (!file.Contains(CurrentGame.PatchSpecificString))
+			// The previous state has already been preserved at this point, so a
+			// real new scan can safely discard its old pair/missing-file data.
+			already_checked.Clear();
+			couldnt_be_found.Clear();
+			to_apply = new List<string>();
+			to_be_applied = new List<string>();
+
+			ups_folder = Path.GetFullPath(ups_folder);
+
+			string patchRoot = GetPatchRoot(ups_folder);
+
+			if (string.IsNullOrWhiteSpace(patchRoot) ||
+				!Directory.Exists(patchRoot))
 			{
-				continue;
+				Log(info[21], null, Verbosity.Error);
+				return false;
 			}
 
-			// DEBUG
-			//Log("File: " + file, null, Verbosity.Debug, LogType.ConsoleOnly);
+			string patchFormat = CurrentGame.PatchFormatExtension;
 
-			// Remove the part before (and) the UPS folder
-			// ...So, like,
-			// ex. C:\Patch\data\win\game_resident\game_resident_US_patch.ups
-			// would become
-			// ex. data\win\game_resident\game_resident_US_patch.ups
-			// right?
-			string second_half = file.Substring(ups_folder.Length + 1);
+			string[] files = Directory.EnumerateFiles(
+				patchRoot,
+				"*",
+				SearchOption.AllDirectories)
+			.Where(file =>
+				file.EndsWith(
+					patchFormat,
+					StringComparison.OrdinalIgnoreCase))
+			.ToArray();
 
-			// If it's already in the "already_checked" vector, we already checked it(?)
-			if (already_checked.Contains(second_half.ToLowerInvariant()))
+			if (files.Length == 0)
 			{
-				continue;
+				Log(info[22], new Dictionary<string, string>()
+				{
+					{ "VAR_PATCH_FORMAT_EXTENSION", patchFormat },
+				}, Verbosity.Error);
+
+				return false;
 			}
 
-			// Get the "approximate" (extension, ex. .spc) path
-			// By combining the installation folder and the relative path of the .ups file
-			// ex. data\win\game_resident\game_resident_US_patch.ups
-			// would become
-			// ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US_patch.ups
-			string approximate_spc = Path.Combine(verified_installation_folder, second_half);
+			List<string> actualPatchFiles = new List<string>();
 
-            // If it's a directory, ...which it most certainly isn't
-            // UPDATE (September 2023)
-            // Some users complained that files would not install
-            // if there was a folder name that had the same name as the file
-            // So let's just ask the user what they want to do, in this case
-            if (IsDirectory(approximate_spc))
+			foreach (string file in files)
 			{
-				var res = MessageBox.Show(approximate_spc + ": " + ui_messages[1], ui_messages[0], MessageBoxButtons.YesNo);
-				if (res != DialogResult.Yes)
+				if (IsDirectory(file))
+				{
+					continue;
+				}
+
+				actualPatchFiles.Add(file);
+
+				// PatchSpecificString identifies files which belong to this
+				// patch package. Use a case-insensitive comparison so the same
+				// package behaves consistently across filesystems.
+				if (!file.EndsWith(
+					CurrentGame.PatchSpecificString,
+					StringComparison.OrdinalIgnoreCase))
 				{
 					continue;
 				}
 			}
 
-			// Remove the patch-specific string from the file
-			// PatchSpecificString is, currently at least, "_patch.ups" (length: 10)
-			// So,
-			// ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US_patch.ups
-			// would become
-			// // ex. C:\SomeFolders\V3Folder\data\win\game_resident\game_resident_US
+			if (actualPatchFiles.Count == 0)
+			{
+				Log(info[22], new Dictionary<string, string>()
+				{
+					{ "VAR_PATCH_FORMAT_EXTENSION", patchFormat },
+				}, Verbosity.Error);
 
-			approximate_spc = approximate_spc.Substring(0, approximate_spc.Length - CurrentGame.PatchSpecificString.Length);
+				return false;
+			}
 
-			// If the string is now empty, because apparently it was literally just the patch-specific string?
-			if (approximate_spc.Length <= 0)
+			List<string> patchCandidates = actualPatchFiles
+				.Where(file =>
+					file.EndsWith(
+						CurrentGame.PatchSpecificString,
+						StringComparison.OrdinalIgnoreCase))
+				.ToList();
+
+			if (patchCandidates.Count == 0)
+			{
+				Log(info[44], new Dictionary<string, string>()
+				{
+					{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
+					{ "VAR_PATCH_SPECIFIC_STRING", CurrentGame.PatchSpecificString },
+				}, Verbosity.Error);
+
+				return false;
+			}
+
+			// GetToApply produces two aligned lists: each entry at index N in
+			// to_apply belongs to the patch at index N in to_be_applied.
+			GetToApply(patchCandidates.ToArray());
+
+			Log(
+				info[74],
+				new Dictionary<string, string>()
+				{
+					{ "VAR_PATCH_COUNT", patchCandidates.Count.ToString() },
+					{ "VAR_MATCHED_COUNT", to_apply.Count.ToString() },
+				},
+				Verbosity.Info,
+				LogType.ConsoleOnly);
+			RefreshLogConsole();
+
+			if (to_be_applied.Count != patchCandidates.Count)
+			{
+				WriteDiagnosticFiles();
+				Log(info[53], null, Verbosity.Error);
+				return false;
+			}
+
+			if (to_apply.Count == 0)
+			{
+				Log(info[27], new Dictionary<string, string>()
+				{
+					{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
+				}, Verbosity.Error);
+
+				return false;
+			}
+
+			if (couldnt_be_found.Count > 0)
+			{
+				foreach (string file in couldnt_be_found)
+				{
+					Log(info[47], new Dictionary<string, string>()
+					{
+						{ "VAR_SOME_FILE", file },
+					}, Verbosity.Info, LogType.ConsoleOnly);
+				}
+
+				WriteDiagnosticFiles();
+				Log(info[53], null, Verbosity.Error);
+				return false;
+			}
+
+			Log(info[23]);
+
+			PatchPathPreviewTextbox.Text = ups_folder;
+			SelectInstallationFolderButton.Enabled = true;
+			SelectPatchFolderButton.Enabled = previousSelectButtonEnabled;
+
+			if (!string.IsNullOrWhiteSpace(verified_installation_folder))
+			{
+				InstallButton.Enabled = true;
+			}
+
+			return true;
+		}
+		catch
+		{
+			ups_folder = "";
+			manually_selected_patch = false;
+
+			Log(info[20], null, Verbosity.Error);
+			return false;
+		}
+		finally
+		{
+			if (operationCancelled)
+			{
+				InstallButton.Enabled = previousInstallButtonEnabled;
+			}
+			else if (to_apply.Count == 0)
+			{
+				InstallButton.Enabled = false;
+			}
+		}
+	}
+
+	private string GetPatchRoot(string patchFolder)
+	{
+		if (CurrentGame == null)
+		{
+			return "";
+		}
+
+		if (!IsUnity)
+		{
+			switch (CurrentGame.GameID)
+			{
+				case Game.DanganronpaV3:
+					string dataFolder = Path.Combine(patchFolder, "data");
+					string winFolder = Path.Combine(
+						dataFolder,
+						IsLegacy ? "win" : "WIN");
+
+					if (!Directory.Exists(winFolder))
+					{
+						return "";
+					}
+
+					return winFolder;
+
+				default:
+					return patchFolder;
+			}
+		}
+
+		// Unity patch packages keep their files below the game's Unity
+		// Data/StreamingAssets tree.
+		string unityStreamingAssets = Path.Combine(
+			patchFolder,
+			CurrentGame.UnityDataFolder,
+			"StreamingAssets");
+
+		if (!Directory.Exists(unityStreamingAssets))
+		{
+			return "";
+		}
+
+		return patchFolder;
+	}
+
+	private void RemoveFromMissingList(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+		{
+			return;
+		}
+
+		couldnt_be_found.Remove(path);
+	}
+
+	private void GetToApply(string[] upsFiles)
+	{
+		to_apply = new List<string>();
+		to_be_applied = new List<string>();
+		already_checked.Clear();
+		couldnt_be_found.Clear();
+
+		if (upsFiles == null || upsFiles.Length == 0)
+		{
+			return;
+		}
+
+		IEnumerable<string> extensions;
+
+		switch (CurrentGame.GameID)
+		{
+			case Game.DanganronpaV3:
+				extensions = IsUnity
+					? new[] { ".spc", ".awb", ".pb", ".ab", ".assets" }
+					: new[] { ".spc", ".awb" };
+				break;
+
+			case Game.AITheSomniumFiles:
+				extensions = CanAccessExe
+					? new[] { "", ".assets", ".exe" }
+					: new[] { "", ".assets" };
+				break;
+
+			case Game.TokyoPsychodemic:
+				extensions = new[] { "", ".assets", ".dll" };
+				break;
+
+			default:
+				extensions = Array.Empty<string>();
+				break;
+		}
+
+		foreach (string extension in extensions)
+		{
+			TryToApplyFiles(upsFiles, extension);
+		}
+	}
+
+	private void TryToApplyFiles(string[] upsFiles, string extension)
+	{
+		foreach (string file in upsFiles)
+		{
+			if (string.IsNullOrWhiteSpace(file) ||
+				!file.EndsWith(
+					CurrentGame.PatchSpecificString,
+					StringComparison.OrdinalIgnoreCase))
 			{
 				continue;
 			}
 
-			Log("Success", null, Verbosity.Debug, LogType.ConsoleOnly);
+			string secondHalf;
 
-			// DEBUG
-			//Log("Approximate_SPC: " + approximate_spc, null, Verbosity.Debug, LogType.ConsoleOnly);
+			try
+			{
+				secondHalf = Path.GetRelativePath(
+					ups_folder,
+					file);
+			}
+			catch
+			{
+				continue;
+			}
 
-			// The objective is now to find the (extension, ex. .spc) file
-			// Try to see if the (extension, ex. .spc) file exists
+			if (string.IsNullOrWhiteSpace(secondHalf) ||
+				secondHalf == "." ||
+				secondHalf.StartsWith(
+					"..",
+					StringComparison.Ordinal))
+			{
+				continue;
+			}
+
+			string normalizedRelativePath =
+				secondHalf.Replace(
+					Path.AltDirectorySeparatorChar,
+					Path.DirectorySeparatorChar);
+
+			if (already_checked.Contains(normalizedRelativePath))
+			{
+				continue;
+			}
+
+			string approximateFile;
+
+			try
+			{
+				string fileWithoutPatchSuffix = normalizedRelativePath
+					.Substring(
+						0,
+						normalizedRelativePath.Length -
+						CurrentGame.PatchSpecificString.Length);
+
+				if (string.IsNullOrWhiteSpace(fileWithoutPatchSuffix))
+				{
+					continue;
+				}
+
+				approximateFile = Path.Combine(
+					verified_installation_folder,
+					fileWithoutPatchSuffix);
+			}
+			catch
+			{
+				continue;
+			}
+
+			if (IsDirectory(approximateFile))
+			{
+				DialogResult result = Log(
+					ui_messages[1],
+					null,
+					Verbosity.Info,
+					LogType.Ask);
+
+				if (result != DialogResult.Yes)
+				{
+					continue;
+				}
+			}
 
 			if (extension.Length > 0)
 			{
+				string existingExtension = Path.GetExtension(approximateFile);
 
-				// DEBUG
-				//Log("Approximate_SPC contains " + extension, null, Verbosity.Debug, LogType.ConsoleOnly);
-
-				/*
-				Log("\"VAR_EXT\" - Approximate file: VAR_SOME_FILE", new Dictionary<string, string>()
+				if (string.Equals(
+					existingExtension,
+					extension,
+					StringComparison.OrdinalIgnoreCase))
 				{
-					{ "VAR_EXT", extension },
-					{ "VAR_SOME_FILE", approximate_spc },
-				}, Verbosity.Debug, LogType.ConsoleOnly);
-				*/
-
-				bool approx_has_extension = Path.HasExtension(approximate_spc) && extension == Path.GetExtension(approximate_spc);
-				if (approx_has_extension)
-				{
-					/*
-					Log("Approximate SPC has extension: VAR_VALUE", new Dictionary<string, string>()
+					// If the patch name already contains the target extension,
+					// accept either the live file or an existing backup. Install()
+					// can reconstruct a missing live file from that backup.
+					if (!FileExistsCaseSensitive(approximateFile) &&
+						!File.Exists(approximateFile) &&
+						!File.Exists(approximateFile + "_bak"))
 					{
-						{ "VAR_VALUE", approx_has_extension.ToString() },
-					});
-					*/
-				}
-
-				/*
-				Log("\"VAR_EXT\" - File Exists: VAR_SOME_FILE - VAR_RESULT", new Dictionary<string, string>()
-				{
-					{ "VAR_EXT", extension },
-					{ "VAR_SOME_FILE", approximate_spc },
-					{ "VAR_RESULT", File.Exists(approximate_spc).ToString() },
-				}, Verbosity.Debug, LogType.ConsoleOnly);
-				*/
-
-				if (!approx_has_extension)
-				{
-
-					string try_approximate_ext_lower = approximate_spc + (extension.ToLowerInvariant());
-					string try_approximate_ext_upper = approximate_spc + (extension.ToUpperInvariant());
-
-					string og_no_bak = try_approximate_ext_lower;
-
-					bool exists_lower = FileExistsCaseSensitive(try_approximate_ext_lower);
-					bool exists_upper = FileExistsCaseSensitive(try_approximate_ext_upper);
-					if (!exists_lower && !exists_upper)
-					{
-						// try to see if the _bak exists
-						try_approximate_ext_lower = try_approximate_ext_lower + "_bak";
-						try_approximate_ext_upper = try_approximate_ext_upper + "_bak";
-
-						// and, if so, which one exists
-						exists_lower = FileExistsCaseSensitive(try_approximate_ext_lower);
-						exists_upper = FileExistsCaseSensitive(try_approximate_ext_upper);
-
-						if (!exists_lower && !exists_upper)
-						{
-							// None exists
-							if (!to_apply.Contains(og_no_bak) &&
-								!couldnt_be_found.Contains(og_no_bak.ToLowerInvariant()))
-							{
-								// DEBUG
-								/*
-								Log("Situation 1 for VAR_SOME_FILE", new Dictionary<string, string>()
-								{
-									{ "VAR_SOME_FILE", og_no_bak },
-								});
-								*/
-								couldnt_be_found.Add(og_no_bak.ToLowerInvariant());
-							}
-
-							continue;
-						}
-
-						// One has to exist, if we're here
-						// Lower checked first as that's the rule, not the exception
-						if (exists_lower)
-						{
-							// Lower exists
-							// Restore bak to extension (ex. bak -> spc)
-							string nobak = try_approximate_ext_lower.Substring(0, try_approximate_ext_lower.Length - extension.Length);
-							File.Copy(try_approximate_ext_lower, nobak, true);
-							try_approximate_ext_lower = nobak;
-						}
-						else
-						{
-							// Upper exists
-							// Restore bak to extension (ex. bak -> spc)
-							string nobak = try_approximate_ext_upper.Substring(0, try_approximate_ext_upper.Length - extension.Length);
-							File.Copy(try_approximate_ext_upper, nobak, true);
-							try_approximate_ext_upper = nobak;
-						}
-
-					}
-
-					// Add the right version to to_apply
-					if (exists_lower)
-					{
-						Log("(Method 1) Adding " + try_approximate_ext_lower + " to to_apply", null, Verbosity.Debug, LogType.ConsoleOnly);
-						to_apply.Add(try_approximate_ext_lower);
-					}
-					else
-					{
-						Log("(Method 2) Adding " + try_approximate_ext_lower + " to to_apply", null, Verbosity.Debug, LogType.ConsoleOnly);
-						to_apply.Add(try_approximate_ext_upper);
-					}
-
-					// Add the relative path to the list of paths we already checked
-					already_checked.Add(second_half.ToLowerInvariant());
-
-					// If we found it, then it's not "not found"
-					if (to_apply.Contains(try_approximate_ext_lower))
-					{
-						couldnt_be_found.Remove(try_approximate_ext_lower.ToLowerInvariant());
-						couldnt_be_found.Remove(og_no_bak.ToLowerInvariant());
-					}
-				} else
-				{
-					// Attempt at fixing a bug regarding Launcher EXE files
-					// Please don't break anything...
-					bool exists_asis = FileExistsCaseSensitive(approximate_spc);
-					if(!exists_asis)
-					{
-						// TODO: Implement (???)
+						couldnt_be_found.Add(approximateFile);
 						continue;
 					}
 
-					if (to_apply.Contains(approximate_spc))
-					{
-						couldnt_be_found.Remove(approximate_spc.ToLowerInvariant());
-						continue;
-					}
+					AddPatchPair(
+						approximateFile,
+						file,
+						normalizedRelativePath);
 
-					Log("(Method 3) Adding " + approximate_spc + " to to_apply", null, Verbosity.Debug, LogType.ConsoleOnly);
-					to_apply.Add(approximate_spc);
-					already_checked.Add(second_half.ToLowerInvariant());
-					// If we found it, then it's not "not found"
-					if (to_apply.Contains(approximate_spc))
-					{
-						couldnt_be_found.Remove(approximate_spc.ToLowerInvariant());
-					}
-				}
-			} else
-			{
-				if(to_apply.Contains(approximate_spc))
-				{
-					couldnt_be_found.Remove(approximate_spc.ToLowerInvariant());
 					continue;
 				}
 
-				// Examples of file without extension:
-				// pretty much all AI: The Somnium Files... files
+				string lowercaseCandidate =
+					approximateFile + extension.ToLowerInvariant();
 
-				string backup = file + "_bak";
-				if (File.Exists(backup))
+				string uppercaseCandidate =
+					approximateFile + extension.ToUpperInvariant();
+
+				string? targetFile = null;
+
+				if (FileExistsCaseSensitive(lowercaseCandidate))
 				{
-					File.Copy(backup, approximate_spc, true);
+					targetFile = lowercaseCandidate;
+				}
+				else if (FileExistsCaseSensitive(uppercaseCandidate))
+				{
+					targetFile = uppercaseCandidate;
+				}
+				else if (File.Exists(lowercaseCandidate))
+				{
+					// On a case-insensitive filesystem the exact-case helper can
+					// legitimately return false even though the target exists.
+					// Prefer the lowercase candidate because it matches the
+					// normal naming convention used by these game files.
+					targetFile = lowercaseCandidate;
+				}
+				else if (File.Exists(uppercaseCandidate))
+				{
+					targetFile = uppercaseCandidate;
+				}
+				else if (File.Exists(lowercaseCandidate + "_bak"))
+				{
+					targetFile = lowercaseCandidate;
+				}
+				else if (File.Exists(uppercaseCandidate + "_bak"))
+				{
+					targetFile = uppercaseCandidate;
 				}
 
-				if(!File.Exists(approximate_spc))
+				if (targetFile == null)
 				{
-					// DEBUG
-					/*
-					Log("Situation 2 for VAR_SOME_FILE", new Dictionary<string, string>()
-					{
-						{ "VAR_SOME_FILE", approximate_spc },
-					});
-					*/
-					couldnt_be_found.Add(approximate_spc);
-				} else
-				{
-					Log("(Method 4) Adding " + approximate_spc + " to to_apply", null, Verbosity.Debug, LogType.ConsoleOnly);
-					to_apply.Add(approximate_spc);
+					couldnt_be_found.Add(
+						lowercaseCandidate);
+
+					continue;
 				}
+
+				AddPatchPair(
+					targetFile,
+					file,
+					normalizedRelativePath);
+			}
+			else
+			{
+				// Files without an extension are valid for some Unity titles.
+				// Do not modify the installation during discovery: Install()
+				// will restore an existing _bak only when it is actually needed.
+				if (!File.Exists(approximateFile) &&
+					!File.Exists(approximateFile + "_bak"))
+				{
+					couldnt_be_found.Add(approximateFile);
+					continue;
+				}
+
+				AddPatchPair(
+					approximateFile,
+					file,
+					normalizedRelativePath);
 			}
 		}
+	}
 
-		Log("TTAF done.", null, Verbosity.Debug, LogType.ConsoleOnly);
+	private void AddPatchPair(
+		string targetFile,
+		string patchFile,
+		string relativePatchPath)
+	{
+		if (string.IsNullOrWhiteSpace(targetFile) ||
+			string.IsNullOrWhiteSpace(patchFile) ||
+			already_checked.Contains(relativePatchPath))
+		{
+			return;
+		}
+
+		if (to_apply.Contains(targetFile, StringComparer.OrdinalIgnoreCase))
+		{
+			return;
+		}
+
+		to_apply.Add(targetFile);
+		to_be_applied.Add(patchFile);
+		already_checked.Add(relativePatchPath);
+
+		// Record the exact patch-to-target association during discovery. This
+		// makes it possible to see what the installer intends to modify before
+		// the external patch tool is launched.
+		Log(
+			info[73],
+			new Dictionary<string, string>()
+			{
+				{ "VAR_PATCH_FILE", patchFile },
+				{ "VAR_OUTPUT_FILE", targetFile },
+			},
+			Verbosity.Info,
+			LogType.ConsoleOnly);
+		RefreshLogConsole();
+
+		RemoveFromMissingList(targetFile);
+		RemoveFromMissingList(targetFile.ToLowerInvariant());
 	}
 }

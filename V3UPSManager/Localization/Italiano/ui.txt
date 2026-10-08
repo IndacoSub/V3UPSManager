@@ -1,0 +1,8 @@
+ATTENZIONE
+Sembra esserci una cartella con lo stesso nome del file. Procedere con l'installazione?
+Seleziona cartella di installazione
+Seleziona cartella patch
+Installa / Aggiorna
+Disinstalla
+POST-INSTALL - File inesistente: VAR_OUTPUT_FILE, lo creo manualmente dal backup... (segnala l'errore)
+Qualcuno non ha aggiornato le traduzioni IT o EN 👀 (segnala l'errore)

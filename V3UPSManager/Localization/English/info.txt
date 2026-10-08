@@ -1,0 +1,100 @@
+The installation folder doesn't exist!
+The executable ("VAR_LEGACY_EXE_NAME") couldn't be found (normal for Unity-version or Xbox (Anniversary) installations)!
+The file "language.txt" couldn't be found!\nPlease boot the game at least once\n(and make sure it's working).
+Your game language is not set to English.\nPlease uninstall and reinstall the game\nwith the English language instead.
+The "data" and/or "win" (or "WIN") folders couldn't be found!
+CPK file(s) found in "data\win"!\nYou were supposed to extract them\nand move them elsewhere.
+Non-English CPK file(s) found in "data\win"!\nPlease uninstall and reinstall the game\nwith the English language instead.
+Couldn't compute MD5 hash for "VAR_LEGACY_EXE_NAME"! (Did a new update come out?)
+You aren't using the latest version of the game,\nmaybe you chose the Demo version folder,\nor you might be using a pirated copy.\nPlease note that we don't support piracy and you won't\nreceive support for this installation, if so.\nThings might not work as expected while using an older version of the game.\nProceed anyway?
+A ReShade installation was found.\nThings might not work as expected while using ReShade.\nProceed anyway?
+VAR_GAME_FIX was found.\nThings might not work as expected while using VAR_GAME_FIX.\nProceed anyway?
+The "data\win\boot" folder couldn't be found!
+The "data\win\flash" folder couldn't be found!
+The "data\win\game_resident" folder couldn't be found!
+The "data\win\minigame" folder couldn't be found!
+The "data\win\trial_font" folder couldn't be found!
+The "data\win\wrd_data" folder couldn't be found!
+The "data\win\wrd_script" folder couldn't be found!
+No problems found with your installation!\nHooray!
+The installation folder is not valid!
+The patch folder doesn't exist!
+The "data" and/or "data\win" folders couldn't be found!
+Couldn't find any VAR_PATCH_FORMAT_EXTENSION file(s)!
+File information loaded! Ready to install / update!
+"VAR_PATCH_FORMAT_INSTALLER_EXE" not found!\nRead the instructions in the README file!
+The installation folder and/or the patch folder couldn't be loaded!
+No SPC file info found!
+No VAR_PATCH_FORMAT file info found!
+Something is wrong with the SPC files!
+Something is wrong with the VAR_PATCH_FORMAT files!
+Done! Have fun!
+Unknown/Unsupported game version.
+No file to be uninstalled was found.
+Done uninstalling!
+Some files couldn't be installed...
+The "Data" and/or "Data\StreamingAssets" folders couldn't be found!
+No SPC/AB/Assets file info found!
+The executable ("VAR_ANNIVERSARY_EXE_NAME") couldn't be found (normal for Switch and "Legacy" (Steam) installations)!
+The game's folder ("Legacy" (Steam) version) contains files from the Anniversary Edition.
+The game's folder ("Anniversary Edition") contains files from the "Legacy" (Steam) version.
+ARC file(s) found in "data\win"!\nYou were supposed to extract them\nand move them elsewhere.\n(At this time we can't extract them, unfortunately...)
+The "Uninstall" button only works with the Legacy (Steam) and Xbox versions!\nIt's much easier to uninstall mods on Switch/Emulators, you just need to delete the mod folder(s)!
+Switch version (Anniversary Edition) recognized!
+No file(s) in the installation folder are ready to be patched\nThe installation cannot proceed, make sure you selected the right folder (ex. not "win" or "data" in the case of Danganronpa V3)
+VAR_PATCH_FORMAT files were found, but they aren't "VAR_PATCH_SPECIFIC_STRING" files, as they should instead be (rename them manually?)\nAlso, they must NOT contain two extensions (for example, "myfile.SPCVAR_PATCH_SPECIFIC_STRING" is not a valid name), only "VAR_PATCH_SPECIFIC_STRING" (correct example: "myfileVAR_PATCH_SPECIFIC_STRING")
+Couldn't identify the game (please report this)
+Couldn't create an instance for the game (please report this)
+Couldn't find VAR_SOME_FILE
+The executable ("VAR_UNITY_EXE_NAME") couldn't be found (normal for non-Unity installations)!
+SpecialK or Reloaded-II were found.\nThings might not work as expected.\nProceed anyway?
+The installation command is empty (please report this)
+Missing value for --install-dir.
+Missing value for --patch-folder.
+Could not associate every patch file with its corresponding installation file.
+A file was not installed correctly. The installation was cancelled and modified files were restored.
+Backup created: VAR_BACKUP_FILE
+Installation started. Files to process: VAR_FILE_COUNT.
+Processing file VAR_FILE_INDEX/VAR_FILE_COUNT: VAR_OUTPUT_FILE
+Executable skipped: VAR_OUTPUT_FILE (EXE access is disabled).
+Original backup already exists: VAR_BACKUP_FILE
+Original backup created: VAR_BACKUP_FILE
+Applying patch: VAR_PATCH_FILE -> VAR_OUTPUT_FILE
+Patch command: VAR_COMMAND
+Patch tool finished with exit code VAR_EXIT_CODE for VAR_OUTPUT_FILE.
+Patch tool output: VAR_TOOL_OUTPUT
+Patch tool stderr: VAR_TOOL_ERROR
+Patched file successfully: VAR_OUTPUT_FILE
+Verifying file VAR_FILE_INDEX/VAR_FILE_COUNT: VAR_OUTPUT_FILE
+Installation completed successfully. Files modified: VAR_MODIFIED_COUNT/VAR_FILE_COUNT.
+Restoring file: VAR_OUTPUT_FILE
+Operation failed for VAR_OUTPUT_FILE: VAR_EXCEPTION
+Creating backup snapshot: VAR_BACKUP_DIRECTORY
+Backup snapshot completed: VAR_BACKUP_DIRECTORY
+Patch association: VAR_PATCH_FILE -> VAR_OUTPUT_FILE
+Found VAR_PATCH_COUNT patch files; associated VAR_MATCHED_COUNT files with the installation.
+Patch summary ready. Files to install: VAR_FILE_COUNT.
+Backup failed: an empty file path was found in the installation list.
+Backup failed: source file was not found: VAR_SOURCE_FILE
+Backup failed: a file outside the verified installation was requested: VAR_SOURCE_FILE
+Backup failed: the destination path could not be determined for VAR_SOURCE_FILE
+Backup failed: duplicate backup destination: VAR_BACKUP_FILE
+Backup snapshot could not be published: VAR_BACKUP_DIRECTORY
+Installation could not start: the verified installation folder is invalid.
+Installation could not start: the patch folder is invalid.
+Installation could not start: no files are ready to be patched.
+Installation could not start: patch/file count mismatch. Patches: VAR_PATCH_COUNT; files: VAR_FILE_COUNT.
+Installation could not start: patch tool was not found: VAR_PATCH_TOOL
+Installation aborted: an empty target file path was found.
+Installation aborted: target file was not found: VAR_OUTPUT_FILE
+Installation aborted: patch file was not found: VAR_PATCH_FILE
+Installation aborted: patch tool reported success but produced no output file: VAR_OUTPUT_FILE
+Installation aborted: the patch tool could not be started.
+Installation aborted: unsupported patch format.
+Installation verification failed: target file or original backup is missing: VAR_OUTPUT_FILE
+Preparing original-file backups before starting the patch tool.
+Install/update requested.
+Pre-installation backup failed. The patch tool was not started.
+Installation phase failed. The post-installation snapshot was not created.
+Post-installation snapshot failed. The patched game files remain installed.
+An install/update/uninstall operation is already in progress. Wait for it to finish before starting another one.

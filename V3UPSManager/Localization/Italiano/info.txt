@@ -1,0 +1,100 @@
+La cartella di installazione non esiste!
+L'eseguibile ("VAR_LEGACY_EXE_NAME") non è stato trovato (normale per installazioni versione Unity o Xbox (Anniversary))!
+Il file "language.txt" non è stato trovato!\nPer favore avvia il gioco almeno una volta\n(e controlla che funzioni).
+Il gioco non è in inglese.\nPer favore disinstalla e installa nuovamente il gioco\ncon la lingua inglese.
+La/e cartella/e "data" e "win" (o "WIN") non sono state trovate!
+Sono stati trovati dei file CPK in "data\win"!\nAvresti dovuto estrarli e spostarli altrove.
+Sono stati trovati dei file CPK non-inglesi in "data\win"!\nPer favore disinstalla e installa nuovamente il gioco\ncon la lingua inglese.
+Non è stato possibile calcolare l'hash MD5 per "VAR_LEGACY_EXE_NAME"! (È uscito un nuovo aggiornamento?)
+Non hai l'ultima versione del gioco,\nhai selezionato la versione demo, oppure\nstai usando una copia pirata del gioco.\nNota: noi non supportiamo la pirateria e non\nriceverai supporto/aiuti per l'installazione, nel caso.\nIl gioco potrebbe non funzionare a dovere usando una versione vecchia del gioco.\nProcedere comunque?
+È stata trovata un'installazione di ReShade.\nIl gioco potrebbe non funzionare a dovere con ReShade attivo.\nProcedere comunque?
+È stato trovato VAR_GAME_FIX.\nIl gioco potrebbe non funzionare a dovere con VAR_GAME_FIX attivo.\nProcedere comunque?
+La cartella "data\win\boot" non è stata trovata!
+La cartella "data\win\flash" non è stata trovata!
+La cartella "data\win\game_resident" non è stata trovata!
+La cartella "data\win\minigame" non è stata trovata!
+La cartella "data\win\trial_font" non è stata trovata!
+La cartella "data\win\wrd_data" non è stata trovata!
+La cartella "data\win\wrd_script" non è stata trovata!
+Non è stato trovato alcun problema!\nEvviva!
+La cartella di installazione non è valida!
+La cartella contenente le patch non è valida!
+La/e cartella/e "data" e/o "data\win" non sono state trovate!
+Non è stato trovato alcun file VAR_PATCH_FORMAT_EXTENSION!
+Informazioni sui file caricate! Ci siamo!
+"VAR_PATCH_FORMAT_INSTALLER_EXE" non trovato!\nLeggi le istruzioni nel file README!
+Impossibile caricare la cartella di installazione o la cartella delle patch!
+Non sono state trovate informazioni sui file SPC!
+Non sono state trovate informazioni sui file VAR_PATCH_FORMAT!
+Qualcosa non quadra coi file SPC!
+Qualcosa non quadra coi file VAR_PATCH_FORMAT!
+Fatto! Buon divertimento!
+Versione del gioco sconosciuta/non supportata.
+Non è stato trovato alcun file da disinstallare.
+Disinstallazione completata!
+Non è stato possibile installare alcuni file...
+La/e cartella/e "Data" e/o "Data\StreamingAssets" non sono state trovate!
+Non sono state trovate informazioni sui file SPC/AB/Assets!
+Non è stato trovato l'eseguibile ("VAR_ANNIVERSARY_EXE_NAME") (normale per installazioni versione Switch o "Legacy" (Steam))!
+La cartella del gioco (versione "Legacy" (Steam)) contiene dei file ARC provenienti dalla versione Xbox (Anniversary).
+La cartella del gioco ("Anniversary Edition") contiene dei file provenienti dalla versione "Legacy" (Steam).
+Sono stati trovati dei file ARC in "data\WIN"!\nAvresti dovuto estrarli e spostarli altrove.\n(Al momento non siamo in grado di estrarli, sfortunatamente...)
+Il pulsante "Disinstalla" funziona solamente con le versioni Legacy (Steam) e Xbox!\nÈ molto facile disinstallare una mod per Switch/Emulatori, basta eliminare la cartella della mod!
+Versione Switch (Anniversary Edition) riconosciuta!
+Non sono stati trovati file a cui applicare la patch nella cartella di installazione?\nL'installazione non può procedere, assicurati che sia la cartella giusta (es. non "win" o "data" nel caso di Danganronpa V3)
+Sono stati trovati dei file VAR_PATCH_FORMAT, ma non contengono "VAR_PATCH_SPECIFIC_STRING" come invece dovrebbero (rinominali manualmente?)\nInoltre, non devono contenere due estensioni (ad esempio "myfile.SPCVAR_PATCH_SPECIFIC_STRING" non va bene), ma "VAR_PATCH_SPECIFIC_STRING" (esempio corretto: "myfileVAR_PATCH_SPECIFIC_STRING")
+Non è stato possibile identificare il gioco (segnala l'errore)
+Non è stato possibile creare un'istanza per il gioco (segnala l'errore)
+Non è stato possibile trovare VAR_SOME_FILE
+Non è stato trovato l'eseguibile ("VAR_UNITY_EXE_NAME") (normale per installazioni versioni non-Unity)!
+Sono stati trovati SpecialK o Reloaded-II.\nIl gioco potrebbe non funzionare a dovere.\nProcedere comunque?
+Il comando dell'installazione è vuoto (segnala l'errore)
+Manca il valore per --install-dir.
+Manca il valore per --patch-folder.
+Non è stato possibile associare tutti i file della patch ai file dell'installazione.
+Un file non è stato installato correttamente. L'installazione è stata annullata e i file modificati sono stati ripristinati.
+Backup creato: VAR_BACKUP_FILE
+Installazione avviata. File da elaborare: VAR_FILE_COUNT.
+Elaborazione file VAR_FILE_INDEX/VAR_FILE_COUNT: VAR_OUTPUT_FILE
+Eseguibile saltato: VAR_OUTPUT_FILE (accesso agli EXE disabilitato).
+Backup originale già presente: VAR_BACKUP_FILE
+Backup originale creato: VAR_BACKUP_FILE
+Applicazione patch: VAR_PATCH_FILE -> VAR_OUTPUT_FILE
+Comando patch: VAR_COMMAND
+Tool patch terminato con codice VAR_EXIT_CODE per VAR_OUTPUT_FILE.
+Output del tool patch: VAR_TOOL_OUTPUT
+Errore/output stderr del tool patch: VAR_TOOL_ERROR
+File patchato correttamente: VAR_OUTPUT_FILE
+Verifica file VAR_FILE_INDEX/VAR_FILE_COUNT: VAR_OUTPUT_FILE
+Installazione completata correttamente. File modificati: VAR_MODIFIED_COUNT/VAR_FILE_COUNT.
+Ripristino file: VAR_OUTPUT_FILE
+Operazione fallita su VAR_OUTPUT_FILE: VAR_EXCEPTION
+Creazione snapshot backup: VAR_BACKUP_DIRECTORY
+Snapshot backup completato: VAR_BACKUP_DIRECTORY
+Associazione patch: VAR_PATCH_FILE -> VAR_OUTPUT_FILE
+Trovati VAR_PATCH_COUNT file patch; associati VAR_MATCHED_COUNT file all'installazione.
+Riepilogo patch pronto. File da installare: VAR_FILE_COUNT.
+Backup fallito: è stato trovato un percorso file vuoto nell'elenco di installazione.
+Backup fallito: file sorgente non trovato: VAR_SOURCE_FILE
+Backup fallito: è stato richiesto un file esterno all'installazione verificata: VAR_SOURCE_FILE
+Backup fallito: impossibile determinare il percorso di destinazione per VAR_SOURCE_FILE
+Backup fallito: destinazione backup duplicata: VAR_BACKUP_FILE
+Snapshot backup non pubblicabile: VAR_BACKUP_DIRECTORY
+Installazione impossibile da avviare: la cartella di installazione verificata non è valida.
+Installazione impossibile da avviare: la cartella delle patch non è valida.
+Installazione impossibile da avviare: nessun file è pronto per essere patchato.
+Installazione impossibile da avviare: numero di patch/file non corrispondente. Patch: VAR_PATCH_COUNT; file: VAR_FILE_COUNT.
+Installazione impossibile da avviare: patch tool non trovato: VAR_PATCH_TOOL
+Installazione annullata: è stato trovato un percorso file di destinazione vuoto.
+Installazione annullata: file di destinazione non trovato: VAR_OUTPUT_FILE
+Installazione annullata: file patch non trovato: VAR_PATCH_FILE
+Installazione annullata: il patch tool ha segnalato successo ma non ha prodotto il file di output: VAR_OUTPUT_FILE
+Installazione annullata: impossibile avviare il patch tool.
+Installazione annullata: formato patch non supportato.
+Verifica installazione fallita: manca il file di destinazione o il backup originale: VAR_OUTPUT_FILE
+Preparazione dei backup originali prima dell'avvio del patch tool.
+Richiesta installazione/aggiornamento.
+Backup pre-installazione fallito. Il patch tool non è stato avviato.
+Fase di installazione fallita. Lo snapshot post-installazione non è stato creato.
+Snapshot post-installazione fallito. I file patchati del gioco rimangono installati.
+Un'operazione di installazione/aggiornamento/disinstallazione è già in corso. Attendi che termini prima di avviarne un'altra.

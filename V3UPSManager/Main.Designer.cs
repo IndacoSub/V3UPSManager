@@ -91,7 +91,10 @@
 			// 
 			LanguageComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
 			LanguageComboBox.FormattingEnabled = true;
-			LanguageComboBox.Location = new Point(234, 11);
+
+			// Spostata più a destra per lasciare sempre spazio al testo del label,
+			// anche con i diversi font/metri di Windows 11 e con traduzioni più lunghe.
+			LanguageComboBox.Location = new Point(300, 11);
 			LanguageComboBox.Name = "LanguageComboBox";
 			LanguageComboBox.Size = new Size(120, 23);
 			LanguageComboBox.TabIndex = 5;
@@ -99,12 +102,16 @@
 			// 
 			// ChooseLanguageLabel
 			// 
-			ChooseLanguageLabel.AutoSize = true;
-			ChooseLanguageLabel.Location = new Point(12, 14);
+			ChooseLanguageLabel.AutoSize = false;
+
+			// Dimensione fissa: impedisce al label di espandersi e sovrapporsi
+			// alla ComboBox quando Windows misura il testo con metriche differenti.
+			ChooseLanguageLabel.Location = new Point(12, 11);
 			ChooseLanguageLabel.Name = "ChooseLanguageLabel";
-			ChooseLanguageLabel.Size = new Size(216, 15);
+			ChooseLanguageLabel.Size = new Size(270, 23);
 			ChooseLanguageLabel.TabIndex = 6;
 			ChooseLanguageLabel.Text = "Choose your language / Scegli la lingua";
+			ChooseLanguageLabel.TextAlign = ContentAlignment.MiddleLeft;
 			// 
 			// UninstallButton
 			// 

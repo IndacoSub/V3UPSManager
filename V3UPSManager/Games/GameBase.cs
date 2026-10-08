@@ -1,4 +1,4 @@
-﻿// Game base
+// Game base
 
 namespace V3UPSManager
 {
@@ -30,7 +30,6 @@ namespace V3UPSManager
 		// https://github.com/rameshvarun/ups/LICENSE
 
 		// Patch-file-specific string
-		// AKA: All .ups patch files have "_patch" in common, or any custom string really (as long as they actually contain it in their name)
 		public virtual string PatchSpecificString { get; } = "_patch.ups";
 
 		// UNITY-SPECIFIC
@@ -51,42 +50,71 @@ namespace V3UPSManager
 
 	public class NoneGame : GameBase
 	{
-
 	};
 
 	public partial class MainWindow : Form
 	{
 		public static Game GetGameByFolder(string folder)
 		{
-			GameBase DRV3 = new DRV3();
-			GameBase AITSF = new AITSF();
-			GameBase TokyoPsychodemic = new TokyoPsychodemic();
-
-			// List of all games (outside of None)
-			List<GameBase> games = new List<GameBase>()
+			if (string.IsNullOrWhiteSpace(folder))
 			{
-				DRV3,
-				AITSF,
-				TokyoPsychodemic,
-			};
-
-			while(folder.EndsWith("\\") || folder.EndsWith("/"))
-			{
-				folder = folder.Substring(0, folder.Length - 1);
+				return Game.None;
 			}
 
-			if(folder.Length <= 0)
+			GameBase[] games =
+			{
+				new DRV3(),
+				new AITSF(),
+				new TokyoPsychodemic(),
+			};
+
+			string normalizedFolder;
+
+			try
+			{
+				normalizedFolder = Path.GetFullPath(folder)
+					.TrimEnd(
+						Path.DirectorySeparatorChar,
+						Path.AltDirectorySeparatorChar)
+					.Replace('\\', '/');
+			}
+			catch
+			{
+				return Game.None;
+			}
+
+			if (normalizedFolder.Length == 0)
 			{
 				return Game.None;
 			}
 
 			foreach (GameBase game in games)
 			{
-				List<string> folders = game.FolderIdentifiers;
-				// Contains or EndsWith?
-				if(folders.Any(x => folder.Replace("\\", "/").EndsWith(x.Replace("\\", "/"))))
+				foreach (string identifier in game.FolderIdentifiers)
 				{
-					return game.GameID;
+					if (string.IsNullOrWhiteSpace(identifier))
+					{
+						continue;
+					}
+
+					string normalizedIdentifier = identifier
+						.Trim()
+						.Trim('/')
+						.Replace('\\', '/');
+
+					// Require either an exact path match or a path-segment
+					// boundary before the identifier. This avoids false positives
+					// from unrelated folders whose names merely end the same way.
+					if (string.Equals(
+						normalizedFolder,
+						normalizedIdentifier,
+						StringComparison.OrdinalIgnoreCase) ||
+						normalizedFolder.EndsWith(
+							"/" + normalizedIdentifier,
+							StringComparison.OrdinalIgnoreCase))
+					{
+						return game.GameID;
+					}
 				}
 			}
 
@@ -104,9 +132,8 @@ namespace V3UPSManager
 				case Game.TokyoPsychodemic:
 					return new TokyoPsychodemic();
 				default:
-					break;
+					return new NoneGame();
 			}
-			return new NoneGame();
 		}
 	}
 }

@@ -1,32 +1,33 @@
-﻿using System.Media;
-
 namespace V3UPSManager;
 
-// https://stackoverflow.com/questions/1926264/color-different-parts-of-a-richtextbox-string
 public static class RichTextBoxExtensions
 {
 	public static void AppendText(this RichTextBox box, string text, Color color)
 	{
+		if (box == null || box.IsDisposed)
+		{
+			return;
+		}
+
 		box.SelectionStart = box.TextLength;
 		box.SelectionLength = 0;
-
 		box.SelectionColor = color;
-		box.AppendText(text);
+		box.AppendText(text ?? string.Empty);
 		box.SelectionColor = box.ForeColor;
 	}
 }
 
 public partial class MainWindow : Form
 {
-
-	internal enum Verbosity {
+	internal enum Verbosity
+	{
 		Debug,
 		Info,
 		Error,
 	};
 
-	internal enum LogType {
-		
+	internal enum LogType
+	{
 		ConsoleOnly,
 		MessageBoxOnly,
 		Print,
@@ -35,76 +36,144 @@ public partial class MainWindow : Form
 
 	internal void AddConsoleLogLine(string str, Color c)
 	{
+		if (LogConsole == null || LogConsole.IsDisposed)
+		{
+			return;
+		}
+
 		LogConsole.AppendText(str + Environment.NewLine, c);
 		LogConsole.ScrollToCaret();
 	}
 
+	internal void RefreshLogConsole()
+	{
+		if (LogConsole == null || LogConsole.IsDisposed)
+		{
+			return;
+		}
+
+		// Refresh repaints the control synchronously without pumping the WinForms
+		// message queue. This keeps progress visible while preventing re-entrant
+		// button clicks and other handlers from running in the middle of an install.
+		LogConsole.Refresh();
+	}
+
 	private static readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
-	internal DialogResult Log(string str, Dictionary<string, string> args = null, Verbosity verbosity = Verbosity.Info, LogType logtype = LogType.Print)
+	internal DialogResult Log(
+		string str,
+		Dictionary<string, string>? args = null,
+		Verbosity verbosity = Verbosity.Info,
+		LogType logtype = LogType.Print)
 	{
+		str ??= string.Empty;
+
 		if (args != null && args.Count > 0)
 		{
-			foreach (var arg in args)
+			foreach (KeyValuePair<string, string> arg in args)
 			{
-				if (!arg.Key.StartsWith("VAR_") || arg.Value.StartsWith("VAR_"))
+				if (string.IsNullOrEmpty(arg.Key) ||
+					!arg.Key.StartsWith("VAR_", StringComparison.Ordinal) ||
+					string.IsNullOrEmpty(arg.Value) ||
+					arg.Value.StartsWith("VAR_", StringComparison.Ordinal))
 				{
 					continue;
 				}
-				str = str.Replace(arg.Key, arg.Value);
+
+				str = str.Replace(arg.Key, arg.Value, StringComparison.Ordinal);
 			}
 		}
+		str = str.Replace("\\n", "\n", StringComparison.OrdinalIgnoreCase);
+
+		bool lockTaken = false;
 
 		try
 		{
 			semaphore.Wait();
+			lockTaken = true;
 
-			using (FileStream fs = new FileStream("all_log.txt", FileMode.Append, FileAccess.Write, FileShare.None))
-			{
-				using (StreamWriter sw = new StreamWriter(fs, System.Text.Encoding.Default))
-				{
-					sw.WriteLine(str.Replace("\\", "/"));
-					sw.Flush();
-				}
-			}
+			string logPath = Path.Combine(
+				AppContext.BaseDirectory,
+				"all_log.txt");
+
+			using FileStream fs = new FileStream(
+				logPath,
+				FileMode.Append,
+				FileAccess.Write,
+				FileShare.Read);
+
+			using StreamWriter sw = new StreamWriter(
+				fs,
+				new System.Text.UTF8Encoding(
+					encoderShouldEmitUTF8Identifier: false));
+
+			sw.WriteLine(str.Replace('\\', '/'));
 		}
-		catch (Exception ex)
+		catch
 		{
-			// Log or handle the exception
-			Console.WriteLine(ex.Message);
+			// Logging must never be able to crash the application.
 		}
 		finally
 		{
-			semaphore.Release();
+			if (lockTaken)
+			{
+				semaphore.Release();
+			}
 		}
 
-		Color logcolor = verbosity == Verbosity.Error ? Color.Red : Color.Black;
+		Color logColor = verbosity == Verbosity.Error
+			? Color.Red
+			: Color.Black;
 
-		DialogResult ret = DialogResult.OK;
+		DialogResult result = DialogResult.OK;
 
 		switch (logtype)
 		{
 			case LogType.ConsoleOnly:
-				AddConsoleLogLine(str, logcolor);
-				return DialogResult.OK;
+				AddConsoleLogLine(str, logColor);
+				break;
+
 			case LogType.MessageBoxOnly:
+				result = MessageBox.Show(
+					str,
+					GetMessageBoxTitle(),
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Asterisk);
+				break;
+
 			case LogType.Print:
-				MessageBoxButtons btn = new MessageBoxButtons();
-				ret = MessageBox.Show(str, "Prompt", btn, MessageBoxIcon.Asterisk);
+				result = MessageBox.Show(
+					str,
+					GetMessageBoxTitle(),
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Asterisk);
+				AddConsoleLogLine(str, logColor);
 				break;
+
 			case LogType.Ask:
-				ret = MessageBox.Show(str, "Prompt", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
-				break;
-			default:
+				result = MessageBox.Show(
+					str,
+					GetMessageBoxTitle(),
+					MessageBoxButtons.YesNo,
+					MessageBoxIcon.Asterisk);
+				AddConsoleLogLine(str, logColor);
 				break;
 		}
 
-		if (logtype != LogType.MessageBoxOnly)
-		{
-			AddConsoleLogLine(str, logcolor);
-		}
-
-		return ret;
+		return result;
 	}
 
+	private string GetMessageBoxTitle()
+	{
+		// The localization table already owns the warning/title text, so
+		// dialogs do not need another hard-coded translated string.
+		if (ui_messages != null &&
+			ui_messages.Count > 0 &&
+			!string.IsNullOrWhiteSpace(ui_messages[0]))
+		{
+			return ui_messages[0];
+		}
+
+		return Text ?? string.Empty;
+	}
 }

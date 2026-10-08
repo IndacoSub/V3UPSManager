@@ -1,0 +1,100 @@
+Der Installationsordner existiert nicht!
+Die ausführbare Datei ("VAR_LEGACY_EXE_NAME") konnte nicht gefunden werden (normal bei Installation für die Unity-Version oder Xbox-Version)!
+Die Datei "language.txt" konnte nicht gefunden werden!\nBitte starte das Spiel vorab einmal\n(und geh sicher, dass alles funktioniert).
+Die Sprache von deinem Spiel ist nicht auf Englisch eingestellt.\nBitte installiere das Spiel neu auf Englisch.
+Der "data" und/oder "win" (oder "WIN") Ordner konnte nicht gefunden werden! 
+CPK-Datei(en) in "data\win" gefunden!\nDiese Dateien müssen zuerst extrahiert und\nwoanders hingeschoben werden.
+Nicht-englische CPK-Datei(en) in "data\win" gefunden!\nBitte installiere das Spiel neu auf Englisch.
+MD5-Hash für "VAR_LEGACY_EXE_NAME" konnte nicht verarbeitet werden! (Ist ein neues Update erschienen?)
+Du benutzt nicht die neueste Version vom Spiel.\nVielleicht hast du den Ordner für die Demo-Version\nausgewählt oder du benutzt eine illegale Kopie.\nBitte beachte, dass wir Raubkopien nicht unterstützen\nund du keine Hilfe für diese Art von Installation erhältst.\nWenn du eine ältere Version vom Spiel benutzt,\nkönnte einiges nicht wie erwartet funktionieren.\nTrotzdem fortfahren?
+Eine ReShade-Installation wurde gefunden.\nWenn du ReShade benutzt, könnte einiges nicht wie erwartet funktionieren.\nTrotzdem fortfahren?
+VAR_GAME_FIX wurde gefunden.\nWenn du VAR_GAME_FIX benutzt, könnte einiges nicht wie erwartet funktionieren.\nTrotzdem fortfahren?
+Der "data\win\boot" Ordner konnte nicht gefunden werden!
+Der "data\win\flash" Ordner konnte nicht gefunden werden!
+Der "data\win\game_resident" Ordner konnte nicht gefunden werden!
+Der "data\win\minigame" Ordner konnte nicht gefunden werden!
+Der "data\win\trial_font" Ordner konnte nicht gefunden werden!
+Der "data\win\wrd_data" Ordner konnte nicht gefunden werden!
+Der "data\win\wrd_script" Ordner konnte nicht gefunden werden!
+Keine Probleme mit der Installation gefunden!
+Der Installationsordner ist ungültig!
+Der Patch-Ordner existiert nicht!
+Der "data" und/oder "data\win" Ordner konnte nicht gefunden werden!
+Keine VAR_PATCH_FORMAT_EXTENSION Datei(en) konnte(n) gefunden werden!
+Datei-Information geladen! Bereit anzuwenden!
+"VAR_PATCH_FORMAT_INSTALLER_EXE" nicht gefunden!\nLies die Anweisungen in der README-Datei durch!
+Der Installationsordner und/oder Patch-Ordner konnte nicht geladen werden!
+Keine SPC Datei-Information gefunden!
+Keine VAR_PATCH_FORMAT Datei-Information gefunden!
+Ein Fehler bei den SPC-Dateien ist aufgetreten!
+Ein Fehler bei den VAR_PATCH_FORMAT Dateien ist aufgetreten!
+Installation beendet!
+Unbekannte/nicht unterstützte Spielversion.
+Keine Datei, die deinstalliert werden soll, gefunden.
+Deinstallation beendet!
+Einige Dateien konnten nicht installiert werden...
+Der "Data" und/oder "Data\StreamingAssets" Ordner konnte nicht gefunden werden!
+Keine SPC/AB/Assets-Datei-Information gefunden!
+Die ausführbare Datei ("VAR_ANNIVERSARY_EXE_NAME") konnte nicht gefunden werden (normal bei Installation für die Switch-Version und Steam-Version)!
+Der Spielordner (Steam-Version) enthält Dateien aus der Anniversary-Edition.
+Der Spielordner (Anniversary-Edition) enthält Dateien aus der Steam-Version.
+ARC-Datei(en) in "data\win" gefunden!\nDiese Dateien müssen zuerst extrahiert und\nwoanders hingeschoben werden.\n(Momentan können sie leider nicht extrahiert werden...)
+Deinstallation funktioniert nur bei der Steam-Version und Xbox-Version!\nEs ist viel leichter, Mods für Switch/Emulatoren zu deinstallieren, dafür\nmusst du nur den Mod-Ordner löschen!
+Switch-Version (Anniversary-Edition) erkannt!
+Keine Dateien im Installationsordner sind bereit, gepatched zu werden.\nDie Installation kann nicht fortgesetzt werden. Geh sicher, dass du den richtigen Ordner\nausgewählt hast (z.B. bei DanganronpaV3 nicht "win" oder "data").
+VAR_PATCH_FORMAT Dateien wurden gefunden, aber dort sollten stattdessen "VAR_PATCH_FORMAT" Dateien sein (manuell umbenennen hilft).\nSie dürfen auch NICHT zwei Dateierweiterungen haben (zum Beispiel, "myfile.SPCVAR_PATCH_SPECIFIC_STRING" ist kein gültiger Name), nur "VAR_PATCH_SPECIFIC_STRING" (richtiges Beispiel: "myfileVAR_PATCH_SPECIFIC_STRING").
+Spiel konnte nicht identifiziert werden (bitte melden)
+Spiel konnte nicht gestartet werden (bitte melden)
+VAR_SOME_FILE konnte nicht gefunden werden
+Die ausführbare Datei ("VAR_UNITY_EXE_NAME") konnte nicht gefunden werden (normal bei Installation für keine Unity-Version)!
+SpecialK oder Reloaded-II wurden gefunden.\nEiniges könnte nicht wie erwartet funktionieren.\nTrotzdem fortfahren?
+Der Installationsbefehl ist leer (bitte melden)
+Wert für --install-dir fehlt.
+Wert für --patch-folder fehlt.
+Nicht alle Patch-Dateien konnten den entsprechenden Installationsdateien zugeordnet werden.
+Eine Datei wurde nicht korrekt installiert. Die Installation wurde abgebrochen und die geänderten Dateien wurden wiederhergestellt.
+Backup erstellt: VAR_BACKUP_FILE
+Installation gestartet. Zu verarbeitende Dateien: VAR_FILE_COUNT.
+Datei VAR_FILE_INDEX/VAR_FILE_COUNT wird verarbeitet: VAR_OUTPUT_FILE
+Ausführbare Datei übersprungen: VAR_OUTPUT_FILE (EXE-Zugriff ist deaktiviert).
+Original-Backup ist bereits vorhanden: VAR_BACKUP_FILE
+Original-Backup erstellt: VAR_BACKUP_FILE
+Patch wird angewendet: VAR_PATCH_FILE -> VAR_OUTPUT_FILE
+Patch-Befehl: VAR_COMMAND
+Patch-Tool mit Exit-Code VAR_EXIT_CODE für VAR_OUTPUT_FILE beendet.
+Ausgabe des Patch-Tools: VAR_TOOL_OUTPUT
+stderr des Patch-Tools: VAR_TOOL_ERROR
+Datei erfolgreich gepatcht: VAR_OUTPUT_FILE
+Datei VAR_FILE_INDEX/VAR_FILE_COUNT wird überprüft: VAR_OUTPUT_FILE
+Installation erfolgreich abgeschlossen. Geänderte Dateien: VAR_MODIFIED_COUNT/VAR_FILE_COUNT.
+Datei wird wiederhergestellt: VAR_OUTPUT_FILE
+Vorgang für VAR_OUTPUT_FILE fehlgeschlagen: VAR_EXCEPTION
+Backup-Snapshot wird erstellt: VAR_BACKUP_DIRECTORY
+Backup-Snapshot abgeschlossen: VAR_BACKUP_DIRECTORY
+Patch-Zuordnung: VAR_PATCH_FILE -> VAR_OUTPUT_FILE
+VAR_PATCH_COUNT Patch-Dateien gefunden; VAR_MATCHED_COUNT Dateien der Installation zugeordnet.
+Patch-Zusammenfassung bereit. Zu installierende Dateien: VAR_FILE_COUNT.
+Backup fehlgeschlagen: In der Installationsliste wurde ein leerer Dateipfad gefunden.
+Backup fehlgeschlagen: Quelldatei nicht gefunden: VAR_SOURCE_FILE
+Backup fehlgeschlagen: Es wurde eine Datei außerhalb der geprüften Installation angefordert: VAR_SOURCE_FILE
+Backup fehlgeschlagen: Der Zielpfad für VAR_SOURCE_FILE konnte nicht bestimmt werden
+Backup fehlgeschlagen: Doppelte Backup-Zieldatei: VAR_BACKUP_FILE
+Backup-Snapshot konnte nicht veröffentlicht werden: VAR_BACKUP_DIRECTORY
+Installation konnte nicht gestartet werden: Der geprüfte Installationsordner ist ungültig.
+Installation konnte nicht gestartet werden: Der Patch-Ordner ist ungültig.
+Installation konnte nicht gestartet werden: Keine Dateien sind zum Patchen bereit.
+Installation konnte nicht gestartet werden: Anzahl von Patches und Dateien stimmt nicht überein. Patches: VAR_PATCH_COUNT; Dateien: VAR_FILE_COUNT.
+Installation konnte nicht gestartet werden: Patch-Tool nicht gefunden: VAR_PATCH_TOOL
+Installation abgebrochen: Ein leerer Ziel-Dateipfad wurde gefunden.
+Installation abgebrochen: Zieldatei nicht gefunden: VAR_OUTPUT_FILE
+Installation abgebrochen: Patch-Datei nicht gefunden: VAR_PATCH_FILE
+Installation abgebrochen: Das Patch-Tool meldete Erfolg, hat aber keine Ausgabedatei erzeugt: VAR_OUTPUT_FILE
+Installation abgebrochen: Das Patch-Tool konnte nicht gestartet werden.
+Installation abgebrochen: Nicht unterstütztes Patch-Format.
+Installationsprüfung fehlgeschlagen: Zieldatei oder Original-Backup fehlt: VAR_OUTPUT_FILE
+Vorbereitung der Original-Backups vor dem Start des Patch-Tools.
+Installation/Aktualisierung angefordert.
+Pre-Installations-Backup fehlgeschlagen. Das Patch-Tool wurde nicht gestartet.
+Installationsphase fehlgeschlagen. Der Snapshot nach der Installation wurde nicht erstellt.
+Snapshot nach der Installation fehlgeschlagen. Die gepatchten Spieldateien bleiben installiert.
+Eine Installations-/Aktualisierungs-/Deinstallationsoperation läuft bereits. Warte, bis sie abgeschlossen ist, bevor du eine weitere startest.

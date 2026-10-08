@@ -1,0 +1,8 @@
+WARNUNG
+Es scheint einen Ordner mit dem exakt gleichen Namen wie die Datei zu geben. Fortfahren?
+Installationsordner auswählen
+Patch-Ordner auswählen
+Installieren / Updaten
+Deinstallieren
+POST-INSTALL - Datei existiert nicht: VAR_OUTPUT_FILE. Wird mit Backup manuell erstellt... (bitte melden)
+Jemand hat vergessen, die IT oder EN Übersetzung zu aktualisieren 👀 (bitte melden)
