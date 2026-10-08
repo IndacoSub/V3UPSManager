@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-
 namespace V3UPSManager;
 
 public partial class MainWindow : Form
@@ -29,7 +27,7 @@ public partial class MainWindow : Form
 	private bool CheckAITSFUnityConfiguration()
 	{
 		string exe = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			CurrentGame.UNITY_EXE_NAME);
 
 		if (!File.Exists(exe))
@@ -43,8 +41,8 @@ public partial class MainWindow : Form
 		}
 
 		string unityFind = Path.Combine(
-			installation_folder,
-			"AI_TheSomniumFiles_Data");
+			_installationFolder,
+			CurrentGame.UnityDataFolder);
 
 		if (!Directory.Exists(unityFind))
 		{
@@ -120,18 +118,9 @@ public partial class MainWindow : Form
 
 		if (!isXbox)
 		{
-			string exeMd5;
+			string exeMd5 = ComputeMd5(exe);
 
-			try
-			{
-				using MD5 md5 = MD5.Create();
-				using FileStream stream = File.OpenRead(exe);
-
-				exeMd5 = ToHex(
-					md5.ComputeHash(stream),
-					false);
-			}
-			catch
+			if (string.IsNullOrWhiteSpace(exeMd5))
 			{
 				Log(info[7], new Dictionary<string, string>()
 				{
@@ -141,13 +130,11 @@ public partial class MainWindow : Form
 				return false;
 			}
 
-			const string expectedHash =
-				"fb4c224a824f9cc3665c9d1098612815";
-
-			if (!string.Equals(
-				exeMd5,
-				expectedHash,
-				StringComparison.OrdinalIgnoreCase))
+			if (!string.IsNullOrWhiteSpace(CurrentGame.UnityExecutableHash) &&
+				!string.Equals(
+					exeMd5,
+					CurrentGame.UnityExecutableHash,
+					StringComparison.OrdinalIgnoreCase))
 			{
 				DialogResult proceed = Log(
 					info[8],
@@ -164,11 +151,11 @@ public partial class MainWindow : Form
 		}
 		else
 		{
-			CanAccessExe = false;
+			_canAccessExe = false;
 		}
 
 		string reshadeIni = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"ReShade.ini");
 
 		if (File.Exists(reshadeIni))
@@ -187,7 +174,7 @@ public partial class MainWindow : Form
 		}
 
 		string aiFix = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"BepInEx");
 
 		if (Directory.Exists(aiFix))
@@ -209,7 +196,7 @@ public partial class MainWindow : Form
 		}
 
 		string somniumDebugEnabler = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"Mods",
 			"SomniumDebugEnabler.dll");
 
@@ -232,7 +219,7 @@ public partial class MainWindow : Form
 		}
 
 		string dinputIni = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"dinput8.ini");
 
 		if (File.Exists(dinputIni))
@@ -256,7 +243,7 @@ public partial class MainWindow : Form
 	private bool CheckTokyoPsychodemicUnityConfiguration()
 	{
 		string exe = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			CurrentGame.UNITY_EXE_NAME);
 
 		if (!File.Exists(exe))
@@ -270,7 +257,7 @@ public partial class MainWindow : Form
 		}
 
 		string unityFind = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			CurrentGame.UnityDataFolder,
 			"StreamingAssets",
 			"AssetBundles");
@@ -281,18 +268,9 @@ public partial class MainWindow : Form
 			return false;
 		}
 
-		string exeMd5;
+		string exeMd5 = ComputeMd5(exe);
 
-		try
-		{
-			using MD5 md5 = MD5.Create();
-			using FileStream stream = File.OpenRead(exe);
-
-			exeMd5 = ToHex(
-				md5.ComputeHash(stream),
-				false);
-		}
-		catch
+		if (string.IsNullOrWhiteSpace(exeMd5))
 		{
 			Log(info[7], new Dictionary<string, string>()
 			{
@@ -302,13 +280,11 @@ public partial class MainWindow : Form
 			return false;
 		}
 
-		const string expectedHash =
-			"5786d34a424f5f731dd3751b7bd480f0";
-
-		if (!string.Equals(
-			exeMd5,
-			expectedHash,
-			StringComparison.OrdinalIgnoreCase))
+		if (!string.IsNullOrWhiteSpace(CurrentGame.UnityExecutableHash) &&
+			!string.Equals(
+				exeMd5,
+				CurrentGame.UnityExecutableHash,
+				StringComparison.OrdinalIgnoreCase))
 		{
 			DialogResult proceed = Log(
 				info[8],
@@ -324,7 +300,7 @@ public partial class MainWindow : Form
 		}
 
 		string reshadeIni = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"ReShade.ini");
 
 		if (File.Exists(reshadeIni))
@@ -343,7 +319,7 @@ public partial class MainWindow : Form
 		}
 
 		string dinputIni = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"dinput8.ini");
 
 		if (File.Exists(dinputIni))
@@ -366,17 +342,14 @@ public partial class MainWindow : Form
 
 	private bool CheckDRV3UnityConfiguration()
 	{
-		List<string> supportedTitleIds = new List<string>
-		{
-			"010063F014176000", // Standalone V3 from Nintendo eShop (Europe)
-		};
+		IReadOnlyList<string> supportedTitleIds = CurrentGame.SupportedUnityTitleIds;
 
 		string normalizedInstallationFolder;
 
 		try
 		{
 			normalizedInstallationFolder = Path.GetFullPath(
-			installation_folder)
+			_installationFolder)
 			.TrimEnd(
 				Path.DirectorySeparatorChar,
 				Path.AltDirectorySeparatorChar)
@@ -404,14 +377,14 @@ public partial class MainWindow : Form
 		}
 		else if (folderContainsValidTitleId)
 		{
-			TitleID = "010063F014176000"; // Assume standalone V3 from Nintendo eShop (Europe)
+			_titleId = supportedTitleIds.FirstOrDefault() ?? string.Empty;
 		}
 
 		Log(info[42]);
 
 		string unityFind = Path.Combine(
-			installation_folder,
-			"Data");
+			_installationFolder,
+			CurrentGame.UnityDataFolder);
 
 		if (!Directory.Exists(unityFind))
 		{
@@ -465,19 +438,11 @@ public partial class MainWindow : Form
 
 		try
 		{
-			bool hasPatchableFiles =
-				Directory.EnumerateFiles(
-					installation_folder,
-					"*.ab",
-					SearchOption.AllDirectories).Any() ||
-				Directory.EnumerateFiles(
-					installation_folder,
-					"*.assets",
-					SearchOption.AllDirectories).Any() ||
-				Directory.EnumerateFiles(
-					installation_folder,
-					"*.pb",
-					SearchOption.AllDirectories).Any();
+			bool hasPatchableFiles = CurrentGame.UnityValidationExtensions.Any(
+				extension => Directory.EnumerateFiles(
+					_installationFolder,
+					"*" + extension,
+					SearchOption.AllDirectories).Any());
 
 			if (!hasPatchableFiles)
 			{

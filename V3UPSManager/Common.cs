@@ -1,90 +1,64 @@
-﻿namespace V3UPSManager;
+namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
-	private bool CheckInstall(string data_folder)
+	private bool CheckInstall(string dataFolder)
 	{
-		switch (CurrentGame.GameID)
+		// Preserve the old default branch: an unrecognised game is never
+		// considered a valid installation merely because the folder exists.
+		if (CurrentGame.GameID == Game.None)
 		{
-			case Game.DanganronpaV3:
-				return CheckInstallV3(data_folder);
-			case Game.AITheSomniumFiles:
-			case Game.TokyoPsychodemic:
-				// Unity-specific validation is performed by CheckUnityConfiguration().
-				// This final check makes sure the folder selected for patching still
-				// exists before the installation is considered valid.
-				if (string.IsNullOrWhiteSpace(data_folder) ||
-					!Directory.Exists(data_folder))
-				{
-					Log(info[25], null, Verbosity.Error);
-					return false;
-				}
-
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	private bool CheckInstallV3(string data_folder)
-	{
-		// Dome some checks about the folder where the .ups files will be installed
-
-		if (data_folder == null || string.IsNullOrEmpty(data_folder) || !Directory.Exists(data_folder))
-		{
-			Log(info[25], null, Verbosity.Error);
 			return false;
 		}
 
-		string check_boot = Path.Combine(data_folder, "boot");
-		if (!Directory.Exists(check_boot))
+		if (!DirectoryExistsOrLogError(dataFolder))
 		{
-			Log(info[11], null, Verbosity.Error);
 			return false;
 		}
 
-		string check_flash = Path.Combine(data_folder, "flash");
-		if (!Directory.Exists(check_flash))
+		// Required directories are part of the game definition. This deliberately
+		// lives on GameBase instead of in a Game -> string[] lookup here.
+		foreach (string requiredDirectory in CurrentGame.RequiredDataDirectories)
 		{
-			Log(info[12], null, Verbosity.Error);
-			return false;
-		}
+			string path = Path.Combine(dataFolder, requiredDirectory);
 
-		string check_game_resident = Path.Combine(data_folder, "game_resident");
-		if (!Directory.Exists(check_game_resident))
-		{
-			Log(info[13], null, Verbosity.Error);
-			return false;
-		}
+			if (Directory.Exists(path))
+			{
+				continue;
+			}
 
-		string check_minigame = Path.Combine(data_folder, "minigame");
-		if (!Directory.Exists(check_minigame))
-		{
-			Log(info[14], null, Verbosity.Error);
-			return false;
-		}
-
-		string check_trial_font = Path.Combine(data_folder, "trial_font");
-		if (!Directory.Exists(check_trial_font))
-		{
-			Log(info[15], null, Verbosity.Error);
-			return false;
-		}
-
-		string check_wrd_data = Path.Combine(data_folder, "wrd_data");
-		if (!Directory.Exists(check_wrd_data))
-		{
-			Log(info[16], null, Verbosity.Error);
-			return false;
-		}
-
-		string check_wrd_script = Path.Combine(data_folder, "wrd_script");
-		if (!Directory.Exists(check_wrd_script))
-		{
-			Log(info[17], null, Verbosity.Error);
+			Log(GetMissingDirectoryMessage(requiredDirectory), null, Verbosity.Error);
 			return false;
 		}
 
 		return true;
+	}
+
+	private bool DirectoryExistsOrLogError(string path)
+	{
+		if (!string.IsNullOrWhiteSpace(path) && Directory.Exists(path))
+		{
+			return true;
+		}
+
+		Log(info[25], null, Verbosity.Error);
+		return false;
+	}
+
+	private string GetMissingDirectoryMessage(string directoryName)
+	{
+		// The directory names are game-owned data; the numeric message IDs remain
+		// here because localization is a UI concern, not a game-definition concern.
+		return directoryName switch
+		{
+			"boot" => info[11],
+			"flash" => info[12],
+			"game_resident" => info[13],
+			"minigame" => info[14],
+			"trial_font" => info[15],
+			"wrd_data" => info[16],
+			"wrd_script" => info[17],
+			_ => info[25],
+		};
 	}
 }

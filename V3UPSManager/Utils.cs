@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace V3UPSManager;
@@ -187,6 +188,30 @@ public partial class MainWindow : Form
 		}
 
 		return false;
+	}
+
+	/// <summary>
+	/// Computes an MD5 hash using the same lowercase hexadecimal representation
+	/// historically used by the game validators. An empty result means the file
+	/// could not be read.
+	/// </summary>
+	public static string ComputeMd5(string filename)
+	{
+		if (string.IsNullOrWhiteSpace(filename))
+		{
+			return string.Empty;
+		}
+
+		try
+		{
+			using MD5 md5 = MD5.Create();
+			using FileStream stream = File.OpenRead(filename);
+			return ToHex(md5.ComputeHash(stream), upperCase: false);
+		}
+		catch
+		{
+			return string.Empty;
+		}
 	}
 
 	public static string ToHex(byte[] bytes, bool upperCase)

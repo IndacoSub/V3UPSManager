@@ -2,43 +2,43 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
-	private readonly HashSet<string> already_checked =
+	private readonly HashSet<string> _alreadyChecked =
 		new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-	private readonly HashSet<string> couldnt_be_found =
+	private readonly HashSet<string> _missingPatchFiles =
 		new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-	private bool IsLegacy;
-	private bool IsUnity;
-	private string TitleID = "";
-	public bool CanAccessExe = true;
+	private bool _isLegacy;
+	private bool _isUnity;
+	private string _titleId = "";
+	private bool _canAccessExe = true;
 
 	private bool LoadInstallationFolder()
 	{
-		string previousInstallationFolder = installation_folder;
-		string previousVerifiedFolder = verified_installation_folder;
-		bool previousManuallySelectedInstall = manually_selected_install;
+		string previousInstallationFolder = _installationFolder;
+		string previousVerifiedFolder = _verifiedInstallationFolder;
+		bool previousManuallySelectedInstall = _manuallySelectedInstall;
 		bool previousSelectButtonEnabled = SelectInstallationFolderButton.Enabled;
 		bool previousUninstallButtonEnabled = UninstallButton.Enabled;
-		bool previousCanAccessExe = CanAccessExe;
-		bool previousIsLegacy = IsLegacy;
-		bool previousIsUnity = IsUnity;
-		string previousTitleID = TitleID;
+		bool previousCanAccessExe = _canAccessExe;
+		bool previousIsLegacy = _isLegacy;
+		bool previousIsUnity = _isUnity;
+		string previousTitleID = _titleId;
 		GameBase previousGame = CurrentGame;
 		string previousWindowTitle = Text;
 
-		verified_installation_folder = "";
-		CanAccessExe = true;
-		TitleID = "";
-		IsLegacy = false;
-		IsUnity = false;
+		_verifiedInstallationFolder = "";
+		_canAccessExe = true;
+		_titleId = "";
+		_isLegacy = false;
+		_isUnity = false;
 
 		SelectInstallationFolderButton.Enabled = false;
 		UninstallButton.Enabled = false;
 
 		try
 		{
-			if (!manually_selected_install)
+			if (!_manuallySelectedInstall)
 			{
 				using FolderBrowserDialog dialog = new FolderBrowserDialog();
 
@@ -49,13 +49,13 @@ public partial class MainWindow : Form
 				{
 					// Cancellation is not an error. Restore the complete previous state,
 					// including the detected game/platform information.
-					installation_folder = previousInstallationFolder;
-					verified_installation_folder = previousVerifiedFolder;
-					manually_selected_install = previousManuallySelectedInstall;
-					CanAccessExe = previousCanAccessExe;
-					IsLegacy = previousIsLegacy;
-					IsUnity = previousIsUnity;
-					TitleID = previousTitleID;
+					_installationFolder = previousInstallationFolder;
+					_verifiedInstallationFolder = previousVerifiedFolder;
+					_manuallySelectedInstall = previousManuallySelectedInstall;
+					_canAccessExe = previousCanAccessExe;
+					_isLegacy = previousIsLegacy;
+					_isUnity = previousIsUnity;
+					_titleId = previousTitleID;
 					CurrentGame = previousGame;
 					Text = previousWindowTitle;
 					SelectInstallationFolderButton.Enabled = previousSelectButtonEnabled;
@@ -63,23 +63,23 @@ public partial class MainWindow : Form
 					return false;
 				}
 
-				installation_folder = dialog.SelectedPath;
+				_installationFolder = dialog.SelectedPath;
 			}
 
-			if (string.IsNullOrWhiteSpace(installation_folder) ||
-				!Directory.Exists(installation_folder))
+			if (string.IsNullOrWhiteSpace(_installationFolder) ||
+				!Directory.Exists(_installationFolder))
 			{
 				Log(info[0], null, Verbosity.Error);
 				return false;
 			}
 
-			installation_folder = Path.GetFullPath(installation_folder);
+			_installationFolder = Path.GetFullPath(_installationFolder);
 
-			string dataFolder = installation_folder;
+			string dataFolder = _installationFolder;
 
-			if (!manually_selected_game)
+			if (!_manuallySelectedGame)
 			{
-				Game currentGameID = GetGameByFolder(installation_folder);
+				Game currentGameID = GetGameByFolder(_installationFolder);
 
 				if (currentGameID == Game.None)
 				{
@@ -103,77 +103,37 @@ public partial class MainWindow : Form
 				return false;
 			}
 
-			// Detect the game edition/platform.
+			// Detect the game edition/platform. The path rules themselves belong to
+			// the selected game so this workflow does not need another Game switch.
 			if (CheckLegacyConfiguration())
 			{
-				switch (CurrentGame.GameID)
-				{
-					case Game.DanganronpaV3:
-						dataFolder = Path.Combine(
-							installation_folder,
-							"data",
-							"win");
-						break;
-				}
-
-				IsLegacy = true;
-				IsUnity = false;
+				dataFolder = CurrentGame.GetLegacyDataFolder(_installationFolder);
+				_isLegacy = true;
+				_isUnity = false;
 			}
 			else if (CheckUnityConfiguration())
 			{
-				switch (CurrentGame.GameID)
-				{
-					case Game.DanganronpaV3:
-					case Game.AITheSomniumFiles:
-						string unityDataFolder = Path.Combine(
-							installation_folder,
-							CurrentGame.UnityDataFolder);
+				string streamingAssetsFolder = Path.Combine(
+					_installationFolder,
+					CurrentGame.UnityDataFolder,
+					"StreamingAssets");
 
-						string streamingAssetsFolder = Path.Combine(
-							unityDataFolder,
-							"StreamingAssets");
+				string platform = CurrentGame.UsesUnityPlatformFolder
+					? GetUnityPlatformByExclusion(streamingAssetsFolder)
+					: string.Empty;
 
-						// The platform directory is selected by exclusion inside
-						// StreamingAssets. The helper returns only the directory name.
-						string platform = GetUnityPlatformByExclusion(streamingAssetsFolder);
+				dataFolder = CurrentGame.GetUnityDataFolderPath(
+					_installationFolder,
+					platform);
 
-						dataFolder = streamingAssetsFolder;
-
-						if (!string.IsNullOrWhiteSpace(platform))
-						{
-							dataFolder = Path.Combine(
-								dataFolder,
-								platform);
-						}
-
-						break;
-
-					case Game.TokyoPsychodemic:
-						dataFolder = Path.Combine(
-							installation_folder,
-							CurrentGame.UnityDataFolder,
-							"StreamingAssets",
-							"AssetBundles");
-						break;
-				}
-
-				IsLegacy = false;
-				IsUnity = true;
+				_isLegacy = false;
+				_isUnity = true;
 			}
 			else if (CheckXboxConfiguration())
 			{
-				switch (CurrentGame.GameID)
-				{
-					case Game.DanganronpaV3:
-						dataFolder = Path.Combine(
-							installation_folder,
-							"data",
-							"WIN");
-						break;
-				}
-
-				IsLegacy = false;
-				IsUnity = false;
+				dataFolder = CurrentGame.GetXboxDataFolder(_installationFolder);
+				_isLegacy = false;
+				_isUnity = false;
 			}
 			else
 			{
@@ -187,9 +147,9 @@ public partial class MainWindow : Form
 
 			Log(info[18], null, Verbosity.Info, LogType.Print);
 
-			verified_installation_folder = installation_folder;
+			_verifiedInstallationFolder = _installationFolder;
 			InstallationPathPreviewTextbox.Text =
-				verified_installation_folder;
+				_verifiedInstallationFolder;
 
 			SelectInstallationFolderButton.Enabled =
 				previousSelectButtonEnabled;
@@ -202,13 +162,13 @@ public partial class MainWindow : Form
 		{
 			// Configuration checks and filesystem enumeration can fail for
 			// inaccessible, corrupt or disappearing files. Do not crash the GUI.
-			installation_folder = "";
-			verified_installation_folder = "";
-			manually_selected_install = false;
-			CanAccessExe = true;
-			IsLegacy = false;
-			IsUnity = false;
-			TitleID = "";
+			_installationFolder = "";
+			_verifiedInstallationFolder = "";
+			_manuallySelectedInstall = false;
+			_canAccessExe = true;
+			_isLegacy = false;
+			_isUnity = false;
+			_titleId = "";
 			CurrentGame = previousGame;
 			Text = previousWindowTitle;
 
@@ -217,17 +177,17 @@ public partial class MainWindow : Form
 		}
 		finally
 		{
-			if (string.IsNullOrWhiteSpace(verified_installation_folder))
+			if (string.IsNullOrWhiteSpace(_verifiedInstallationFolder))
 			{
 				// Any failed validation must not leave partially detected game/platform
 				// state behind. Preserve only the UI state belonging to a previous
 				// verified installation.
 				CurrentGame = previousGame;
 				Text = previousWindowTitle;
-				CanAccessExe = previousCanAccessExe;
-				IsLegacy = previousIsLegacy;
-				IsUnity = previousIsUnity;
-				TitleID = previousTitleID;
+				_canAccessExe = previousCanAccessExe;
+				_isLegacy = previousIsLegacy;
+				_isUnity = previousIsUnity;
+				_titleId = previousTitleID;
 
 				SelectInstallationFolderButton.Enabled = previousSelectButtonEnabled;
 				UninstallButton.Enabled = false;
@@ -237,14 +197,14 @@ public partial class MainWindow : Form
 
 	private bool LoadPatchFolder()
 	{
-		string previousPatchFolder = ups_folder;
-		bool previousManuallySelectedPatch = manually_selected_patch;
+		string previousPatchFolder = _patchFolder;
+		bool previousManuallySelectedPatch = _manuallySelectedPatch;
 		bool previousSelectButtonEnabled = SelectPatchFolderButton.Enabled;
 		bool previousInstallButtonEnabled = InstallButton.Enabled;
-		List<string> previousToApply = new List<string>(to_apply);
-		List<string> previousToBeApplied = new List<string>(to_be_applied);
+		List<string> previousToApply = new List<string>(_filesToPatch);
+		List<string> previousToBeApplied = new List<string>(_patchesToApply);
 		HashSet<string> previousMissingFiles = new HashSet<string>(
-			couldnt_be_found,
+			_missingPatchFiles,
 			StringComparer.OrdinalIgnoreCase);
 		bool operationCancelled = false;
 
@@ -253,14 +213,15 @@ public partial class MainWindow : Form
 
 		try
 		{
-			if (string.IsNullOrWhiteSpace(verified_installation_folder) ||
-				!Directory.Exists(verified_installation_folder))
+			if (string.IsNullOrWhiteSpace(_verifiedInstallationFolder) ||
+				!Directory.Exists(_verifiedInstallationFolder))
 			{
 				Log(info[19], null, Verbosity.Error);
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
-			if (!manually_selected_patch)
+			if (!_manuallySelectedPatch)
 			{
 				using FolderBrowserDialog dialog = new FolderBrowserDialog();
 
@@ -271,18 +232,18 @@ public partial class MainWindow : Form
 				{
 					// Cancellation is not an error. Restore the previous patch selection
 					// and leave the current install button state intact.
-					ups_folder = previousPatchFolder;
-					manually_selected_patch = previousManuallySelectedPatch;
+					_patchFolder = previousPatchFolder;
+					_manuallySelectedPatch = previousManuallySelectedPatch;
 
-					to_apply = previousToApply;
-					to_be_applied = previousToBeApplied;
+					_filesToPatch = previousToApply;
+					_patchesToApply = previousToBeApplied;
 
-					already_checked.Clear();
-					couldnt_be_found.Clear();
+					_alreadyChecked.Clear();
+					_missingPatchFiles.Clear();
 
 					foreach (string file in previousMissingFiles)
 					{
-						couldnt_be_found.Add(file);
+						_missingPatchFiles.Add(file);
 					}
 
 					SelectPatchFolderButton.Enabled = previousSelectButtonEnabled;
@@ -291,31 +252,33 @@ public partial class MainWindow : Form
 					return false;
 				}
 
-				ups_folder = dialog.SelectedPath;
+				_patchFolder = dialog.SelectedPath;
 			}
 
-			if (string.IsNullOrWhiteSpace(ups_folder) ||
-				!Directory.Exists(ups_folder))
+			if (string.IsNullOrWhiteSpace(_patchFolder) ||
+				!Directory.Exists(_patchFolder))
 			{
 				Log(info[20], null, Verbosity.Error);
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
 			// The previous state has already been preserved at this point, so a
 			// real new scan can safely discard its old pair/missing-file data.
-			already_checked.Clear();
-			couldnt_be_found.Clear();
-			to_apply = new List<string>();
-			to_be_applied = new List<string>();
+			_alreadyChecked.Clear();
+			_missingPatchFiles.Clear();
+			_filesToPatch = new List<string>();
+			_patchesToApply = new List<string>();
 
-			ups_folder = Path.GetFullPath(ups_folder);
+			_patchFolder = Path.GetFullPath(_patchFolder);
 
-			string patchRoot = GetPatchRoot(ups_folder);
+			string patchRoot = GetPatchRoot(_patchFolder);
 
 			if (string.IsNullOrWhiteSpace(patchRoot) ||
 				!Directory.Exists(patchRoot))
 			{
 				Log(info[21], null, Verbosity.Error);
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
@@ -337,7 +300,7 @@ public partial class MainWindow : Form
 				{
 					{ "VAR_PATCH_FORMAT_EXTENSION", patchFormat },
 				}, Verbosity.Error);
-
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
@@ -369,7 +332,7 @@ public partial class MainWindow : Form
 				{
 					{ "VAR_PATCH_FORMAT_EXTENSION", patchFormat },
 				}, Verbosity.Error);
-
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
@@ -387,12 +350,12 @@ public partial class MainWindow : Form
 					{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
 					{ "VAR_PATCH_SPECIFIC_STRING", CurrentGame.PatchSpecificString },
 				}, Verbosity.Error);
-
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
 			// GetToApply produces two aligned lists: each entry at index N in
-			// to_apply belongs to the patch at index N in to_be_applied.
+			// _filesToPatch belongs to the patch at index N in _patchesToApply.
 			GetToApply(patchCandidates.ToArray());
 
 			Log(
@@ -400,32 +363,33 @@ public partial class MainWindow : Form
 				new Dictionary<string, string>()
 				{
 					{ "VAR_PATCH_COUNT", patchCandidates.Count.ToString() },
-					{ "VAR_MATCHED_COUNT", to_apply.Count.ToString() },
+					{ "VAR_MATCHED_COUNT", _filesToPatch.Count.ToString() },
 				},
 				Verbosity.Info,
 				LogType.ConsoleOnly);
 			RefreshLogConsole();
 
-			if (to_be_applied.Count != patchCandidates.Count)
+			if (_patchesToApply.Count != patchCandidates.Count)
 			{
 				WriteDiagnosticFiles();
 				Log(info[53], null, Verbosity.Error);
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
-			if (to_apply.Count == 0)
+			if (_filesToPatch.Count == 0)
 			{
 				Log(info[27], new Dictionary<string, string>()
 				{
 					{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
 				}, Verbosity.Error);
-
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
-			if (couldnt_be_found.Count > 0)
+			if (_missingPatchFiles.Count > 0)
 			{
-				foreach (string file in couldnt_be_found)
+				foreach (string file in _missingPatchFiles)
 				{
 					Log(info[47], new Dictionary<string, string>()
 					{
@@ -435,16 +399,17 @@ public partial class MainWindow : Form
 
 				WriteDiagnosticFiles();
 				Log(info[53], null, Verbosity.Error);
+				SelectPatchFolderButton.Enabled = true;
 				return false;
 			}
 
 			Log(info[23]);
 
-			PatchPathPreviewTextbox.Text = ups_folder;
+			PatchPathPreviewTextbox.Text = _patchFolder;
 			SelectInstallationFolderButton.Enabled = true;
 			SelectPatchFolderButton.Enabled = previousSelectButtonEnabled;
 
-			if (!string.IsNullOrWhiteSpace(verified_installation_folder))
+			if (!string.IsNullOrWhiteSpace(_verifiedInstallationFolder))
 			{
 				InstallButton.Enabled = true;
 			}
@@ -453,10 +418,11 @@ public partial class MainWindow : Form
 		}
 		catch
 		{
-			ups_folder = "";
-			manually_selected_patch = false;
+			_patchFolder = "";
+			_manuallySelectedPatch = false;
 
 			Log(info[20], null, Verbosity.Error);
+			SelectPatchFolderButton.Enabled = true;
 			return false;
 		}
 		finally
@@ -465,7 +431,7 @@ public partial class MainWindow : Form
 			{
 				InstallButton.Enabled = previousInstallButtonEnabled;
 			}
-			else if (to_apply.Count == 0)
+			else if (_filesToPatch.Count == 0)
 			{
 				InstallButton.Enabled = false;
 			}
@@ -476,44 +442,13 @@ public partial class MainWindow : Form
 	{
 		if (CurrentGame == null)
 		{
-			return "";
+			return string.Empty;
 		}
 
-		if (!IsUnity)
-		{
-			switch (CurrentGame.GameID)
-			{
-				case Game.DanganronpaV3:
-					string dataFolder = Path.Combine(patchFolder, "data");
-					string winFolder = Path.Combine(
-						dataFolder,
-						IsLegacy ? "win" : "WIN");
-
-					if (!Directory.Exists(winFolder))
-					{
-						return "";
-					}
-
-					return winFolder;
-
-				default:
-					return patchFolder;
-			}
-		}
-
-		// Unity patch packages keep their files below the game's Unity
-		// Data/StreamingAssets tree.
-		string unityStreamingAssets = Path.Combine(
+		return CurrentGame.GetPatchRoot(
 			patchFolder,
-			CurrentGame.UnityDataFolder,
-			"StreamingAssets");
-
-		if (!Directory.Exists(unityStreamingAssets))
-		{
-			return "";
-		}
-
-		return patchFolder;
+			_isUnity,
+			_isLegacy);
 	}
 
 	private void RemoveFromMissingList(string path)
@@ -523,55 +458,34 @@ public partial class MainWindow : Form
 			return;
 		}
 
-		couldnt_be_found.Remove(path);
+		_missingPatchFiles.Remove(path);
 	}
 
-	private void GetToApply(string[] upsFiles)
+	private void GetToApply(string[] patchFiles)
 	{
-		to_apply = new List<string>();
-		to_be_applied = new List<string>();
-		already_checked.Clear();
-		couldnt_be_found.Clear();
+		_filesToPatch = new List<string>();
+		_patchesToApply = new List<string>();
+		_alreadyChecked.Clear();
+		_missingPatchFiles.Clear();
 
-		if (upsFiles == null || upsFiles.Length == 0)
+		if (patchFiles == null || patchFiles.Length == 0)
 		{
 			return;
 		}
 
-		IEnumerable<string> extensions;
-
-		switch (CurrentGame.GameID)
-		{
-			case Game.DanganronpaV3:
-				extensions = IsUnity
-					? new[] { ".spc", ".awb", ".pb", ".ab", ".assets" }
-					: new[] { ".spc", ".awb" };
-				break;
-
-			case Game.AITheSomniumFiles:
-				extensions = CanAccessExe
-					? new[] { "", ".assets", ".exe" }
-					: new[] { "", ".assets" };
-				break;
-
-			case Game.TokyoPsychodemic:
-				extensions = new[] { "", ".assets", ".dll" };
-				break;
-
-			default:
-				extensions = Array.Empty<string>();
-				break;
-		}
+		IReadOnlyList<string> extensions = CurrentGame.GetPatchTargetExtensions(
+			_isUnity,
+			_canAccessExe);
 
 		foreach (string extension in extensions)
 		{
-			TryToApplyFiles(upsFiles, extension);
+			TryToApplyFiles(patchFiles, extension);
 		}
 	}
 
-	private void TryToApplyFiles(string[] upsFiles, string extension)
+	private void TryToApplyFiles(string[] patchFiles, string extension)
 	{
-		foreach (string file in upsFiles)
+		foreach (string file in patchFiles)
 		{
 			if (string.IsNullOrWhiteSpace(file) ||
 				!file.EndsWith(
@@ -586,7 +500,7 @@ public partial class MainWindow : Form
 			try
 			{
 				secondHalf = Path.GetRelativePath(
-					ups_folder,
+					_patchFolder,
 					file);
 			}
 			catch
@@ -608,7 +522,7 @@ public partial class MainWindow : Form
 					Path.AltDirectorySeparatorChar,
 					Path.DirectorySeparatorChar);
 
-			if (already_checked.Contains(normalizedRelativePath))
+			if (_alreadyChecked.Contains(normalizedRelativePath))
 			{
 				continue;
 			}
@@ -629,7 +543,7 @@ public partial class MainWindow : Form
 				}
 
 				approximateFile = Path.Combine(
-					verified_installation_folder,
+					_verifiedInstallationFolder,
 					fileWithoutPatchSuffix);
 			}
 			catch
@@ -667,7 +581,7 @@ public partial class MainWindow : Form
 						!File.Exists(approximateFile) &&
 						!File.Exists(approximateFile + "_bak"))
 					{
-						couldnt_be_found.Add(approximateFile);
+						_missingPatchFiles.Add(approximateFile);
 						continue;
 					}
 
@@ -718,7 +632,7 @@ public partial class MainWindow : Form
 
 				if (targetFile == null)
 				{
-					couldnt_be_found.Add(
+					_missingPatchFiles.Add(
 						lowercaseCandidate);
 
 					continue;
@@ -737,7 +651,7 @@ public partial class MainWindow : Form
 				if (!File.Exists(approximateFile) &&
 					!File.Exists(approximateFile + "_bak"))
 				{
-					couldnt_be_found.Add(approximateFile);
+					_missingPatchFiles.Add(approximateFile);
 					continue;
 				}
 
@@ -756,19 +670,19 @@ public partial class MainWindow : Form
 	{
 		if (string.IsNullOrWhiteSpace(targetFile) ||
 			string.IsNullOrWhiteSpace(patchFile) ||
-			already_checked.Contains(relativePatchPath))
+			_alreadyChecked.Contains(relativePatchPath))
 		{
 			return;
 		}
 
-		if (to_apply.Contains(targetFile, StringComparer.OrdinalIgnoreCase))
+		if (_filesToPatch.Contains(targetFile, StringComparer.OrdinalIgnoreCase))
 		{
 			return;
 		}
 
-		to_apply.Add(targetFile);
-		to_be_applied.Add(patchFile);
-		already_checked.Add(relativePatchPath);
+		_filesToPatch.Add(targetFile);
+		_patchesToApply.Add(patchFile);
+		_alreadyChecked.Add(relativePatchPath);
 
 		// Record the exact patch-to-target association during discovery. This
 		// makes it possible to see what the installer intends to modify before

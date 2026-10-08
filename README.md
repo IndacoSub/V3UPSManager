@@ -4,9 +4,7 @@ A tool that allows you to easily mod "Danganronpa V3: Killing Harmony", as long 
 
 For example, it allows you to install the unofficial Italian translation!
 
-It supports both the "Legacy" (Steam) version and the "Anniversary Edition" (Switch) version.
-
-We'd also like to support the Xbox (Microsoft Store, Anniversary Edition) version, but due to our limited technical knowledge about .arc (ARC0) files, we cannot support it.
+It supports the "Legacy" (Steam) version, the "Xbox" (Microsoft Store on PC) version, and the "Unity" (Switch) version.
 
 Note: this program will NOT handle conflicts between files!
 

@@ -6,34 +6,34 @@ namespace V3UPSManager;
 public partial class MainWindow : Form
 {
 	// Files in the installation which will receive the patched data.
-	private List<string> to_apply = new List<string>();
+	private List<string> _filesToPatch = new List<string>();
 
-	// Patch files corresponding to to_apply. The two lists are kept in exactly
+	// Patch files corresponding to _filesToPatch. The two lists are kept in exactly
 	// the same order so each patch is always applied to its matching base file.
-	private List<string> to_be_applied = new List<string>();
+	private List<string> _patchesToApply = new List<string>();
 
 	private bool Install()
 	{
-		if (string.IsNullOrWhiteSpace(verified_installation_folder) ||
-			!Directory.Exists(verified_installation_folder))
+		if (string.IsNullOrWhiteSpace(_verifiedInstallationFolder) ||
+			!Directory.Exists(_verifiedInstallationFolder))
 		{
 			Log(info[82], null, Verbosity.Error, LogType.ConsoleOnly);
 			RefreshLogConsole();
 			return false;
 		}
 
-		if (string.IsNullOrWhiteSpace(ups_folder) ||
-			!Directory.Exists(ups_folder))
+		if (string.IsNullOrWhiteSpace(_patchFolder) ||
+			!Directory.Exists(_patchFolder))
 		{
 			Log(info[83], null, Verbosity.Error, LogType.ConsoleOnly);
 			RefreshLogConsole();
 			return false;
 		}
 
-		if (to_apply == null ||
-			to_be_applied == null ||
-			to_apply.Count == 0 ||
-			to_be_applied.Count == 0)
+		if (_filesToPatch == null ||
+			_patchesToApply == null ||
+			_filesToPatch.Count == 0 ||
+			_patchesToApply.Count == 0)
 		{
 			Log(info[84], null, Verbosity.Error, LogType.ConsoleOnly);
 			RefreshLogConsole();
@@ -42,15 +42,15 @@ public partial class MainWindow : Form
 
 		// A count mismatch is not just cosmetic: using two independently ordered
 		// lists could apply one patch to a different game's file.
-		if (to_apply.Count != to_be_applied.Count)
+		if (_filesToPatch.Count != _patchesToApply.Count)
 		{
 			WriteDiagnosticFiles();
 			Log(
 				info[85],
 				new Dictionary<string, string>()
 				{
-					{ "VAR_PATCH_COUNT", to_be_applied.Count.ToString() },
-					{ "VAR_FILE_COUNT", to_apply.Count.ToString() },
+					{ "VAR_PATCH_COUNT", _patchesToApply.Count.ToString() },
+					{ "VAR_FILE_COUNT", _filesToPatch.Count.ToString() },
 				},
 				Verbosity.Error,
 				LogType.ConsoleOnly);
@@ -84,8 +84,8 @@ public partial class MainWindow : Form
 
 		// Snapshot both aligned lists before any filesystem work begins. This makes
 		// the transaction independent from mutable UI state for its entire lifetime.
-		List<string> filesToApply = new List<string>(to_apply);
-		List<string> patchesToApply = new List<string>(to_be_applied);
+		List<string> filesToApply = new List<string>(_filesToPatch);
+		List<string> patchesToApply = new List<string>(_patchesToApply);
 
 		// Clean diagnostic files from previous attempts.
 		ClearDiagnosticFiles();
@@ -146,7 +146,7 @@ public partial class MainWindow : Form
 					".exe",
 					StringComparison.OrdinalIgnoreCase);
 
-				if (isExe && !CanAccessExe)
+				if (isExe && !_canAccessExe)
 				{
 					Log(
 						info[58],
@@ -240,7 +240,7 @@ public partial class MainWindow : Form
 					Path.GetExtension(outfile),
 					".exe",
 					StringComparison.OrdinalIgnoreCase) &&
-					!CanAccessExe)
+					!_canAccessExe)
 				{
 					Log(
 						info[58],
@@ -535,7 +535,7 @@ public partial class MainWindow : Form
 					".exe",
 					StringComparison.OrdinalIgnoreCase);
 
-				if (isExe && !CanAccessExe)
+				if (isExe && !_canAccessExe)
 				{
 					continue;
 				}
@@ -635,8 +635,8 @@ public partial class MainWindow : Form
 			string[] files =
 			{
 				"patch_log.txt",
-				"to_apply.txt",
-				"to_be_applied.txt",
+				"_filesToPatch.txt",
+				"_patchesToApply.txt",
 				"bak_files.txt",
 			};
 
@@ -661,13 +661,13 @@ public partial class MainWindow : Form
 		try
 		{
 			File.WriteAllLines(
-				Path.Combine(AppContext.BaseDirectory, "to_apply.txt"),
-				to_apply ?? new List<string>(),
+				Path.Combine(AppContext.BaseDirectory, "_filesToPatch.txt"),
+				_filesToPatch ?? new List<string>(),
 				Encoding.UTF8);
 
 			File.WriteAllLines(
-				Path.Combine(AppContext.BaseDirectory, "to_be_applied.txt"),
-				to_be_applied ?? new List<string>(),
+				Path.Combine(AppContext.BaseDirectory, "_patchesToApply.txt"),
+				_patchesToApply ?? new List<string>(),
 				Encoding.UTF8);
 		}
 		catch

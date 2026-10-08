@@ -22,8 +22,8 @@ public partial class MainWindow : Form
 			return true;
 		}
 
-		if (string.IsNullOrWhiteSpace(verified_installation_folder) ||
-			!Directory.Exists(verified_installation_folder))
+		if (string.IsNullOrWhiteSpace(_verifiedInstallationFolder) ||
+			!Directory.Exists(_verifiedInstallationFolder))
 		{
 			Log(info[82], null, Verbosity.Error, LogType.ConsoleOnly);
 			RefreshLogConsole();
@@ -31,7 +31,7 @@ public partial class MainWindow : Form
 			return false;
 		}
 
-		if (to_apply == null || to_apply.Count == 0)
+		if (_filesToPatch == null || _filesToPatch.Count == 0)
 		{
 			Log(info[84], null, Verbosity.Error, LogType.ConsoleOnly);
 			RefreshLogConsole();
@@ -41,8 +41,8 @@ public partial class MainWindow : Form
 
 		// Snapshot the operation inputs so later UI/state changes cannot mutate
 		// the collection while the backup transaction is iterating it.
-		List<string> filesToBackup = new List<string>(to_apply);
-		string installationRoot = Path.GetFullPath(verified_installation_folder);
+		List<string> filesToBackup = new List<string>(_filesToPatch);
+		string installationRoot = Path.GetFullPath(_verifiedInstallationFolder);
 		string backupDirectory = use_mod_folder
 			? GetModFolder()
 			: GetBackupFolder();
@@ -78,12 +78,12 @@ public partial class MainWindow : Form
 
 			string actualBackupRoot = temporaryDirectory;
 
-			// Switch/emulator installations keep their content below TitleID/romfs.
-			if (!string.IsNullOrEmpty(TitleID))
+			// Switch/emulator installations keep their content below _titleId/romfs.
+			if (!string.IsNullOrEmpty(_titleId))
 			{
 				actualBackupRoot = Path.Combine(
 					actualBackupRoot,
-					TitleID,
+					_titleId,
 					"romfs");
 
 				Directory.CreateDirectory(actualBackupRoot);
@@ -105,7 +105,7 @@ public partial class MainWindow : Form
 					".exe",
 					StringComparison.OrdinalIgnoreCase);
 
-				if (isExe && !CanAccessExe)
+				if (isExe && !_canAccessExe)
 				{
 					continue;
 				}
@@ -151,7 +151,7 @@ public partial class MainWindow : Form
 					fullSource);
 
 				// Refuse to copy anything outside the verified installation
-				// folder, even if a malformed path somehow enters to_apply.
+				// folder, even if a malformed path somehow enters _filesToPatch.
 				if (relativePath == ".." ||
 					relativePath.StartsWith(
 						".." + Path.DirectorySeparatorChar,
@@ -331,7 +331,7 @@ public partial class MainWindow : Form
 
 	private void DisplayStatus()
 	{
-		if (to_apply == null || to_apply.Count == 0)
+		if (_filesToPatch == null || _filesToPatch.Count == 0)
 		{
 			Log(info[34], null, Verbosity.Error);
 			return;
@@ -341,13 +341,13 @@ public partial class MainWindow : Form
 		int successfulFiles = 0;
 		List<string> missingBackups = new List<string>();
 
-		foreach (string file in to_apply)
+		foreach (string file in _filesToPatch)
 		{
 			if (string.Equals(
 				Path.GetExtension(file),
 				".exe",
 				StringComparison.OrdinalIgnoreCase) &&
-				!CanAccessExe)
+				!_canAccessExe)
 			{
 				// Executable patching is intentionally disabled for editions where the
 				// executable cannot be safely accessed. It must not count as a failed
@@ -382,7 +382,7 @@ public partial class MainWindow : Form
 		{
 			string applyFile = Path.Combine(
 				AppContext.BaseDirectory,
-				"to_apply.txt");
+				"_filesToPatch.txt");
 
 			string backupFiles = Path.Combine(
 				AppContext.BaseDirectory,
@@ -390,7 +390,7 @@ public partial class MainWindow : Form
 
 			File.WriteAllLines(
 				applyFile,
-				to_apply,
+				_filesToPatch,
 				System.Text.Encoding.UTF8);
 
 			File.WriteAllLines(

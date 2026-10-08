@@ -1,29 +1,24 @@
-using System.Security.Cryptography;
-
 namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
 	private bool CheckLegacyConfiguration()
 	{
-		switch (CurrentGame.GameID)
+		if (!CurrentGame.SupportsLegacyEdition)
 		{
-			case Game.DanganronpaV3:
-				return CheckDRV3LegacyConfiguration();
-
-			case Game.AITheSomniumFiles:
-			case Game.TokyoPsychodemic:
-			default:
-				// These titles currently have no Legacy configuration.
-				return false;
+			return false;
 		}
+
+		// Only Danganronpa V3 currently implements a Legacy-specific validator.
+		return CurrentGame.GameID == Game.DanganronpaV3 &&
+			CheckDRV3LegacyConfiguration();
 	}
 
 	// Legacy = Steam version
 	private bool CheckDRV3LegacyConfiguration()
 	{
 		string exe = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			CurrentGame.LEGACY_EXE_NAME);
 
 		if (!File.Exists(exe))
@@ -37,8 +32,8 @@ public partial class MainWindow : Form
 		}
 
 		string configLanguage = Path.Combine(
-			installation_folder,
-			"language.txt");
+			_installationFolder,
+			CurrentGame.LegacyLanguageFile);
 
 		if (!File.Exists(configLanguage))
 		{
@@ -52,17 +47,14 @@ public partial class MainWindow : Form
 		// on how it was created. Trim it before validating the language code.
 		if (!string.Equals(
 			language.Trim(),
-			"US",
+			CurrentGame.LegacyLanguageValue,
 			StringComparison.OrdinalIgnoreCase))
 		{
 			Log(info[3]);
 			return false;
 		}
 
-		string windata = Path.Combine(
-			installation_folder,
-			"data",
-			"win");
+		string windata = CurrentGame.GetLegacyDataFolder(_installationFolder);
 
 		if (!Directory.Exists(windata))
 		{
@@ -70,41 +62,19 @@ public partial class MainWindow : Form
 			return false;
 		}
 
-		string cpk1 = Path.Combine(
-			windata,
-			"partition_data_win.cpk");
-
-		string cpk2 = Path.Combine(
-			windata,
-			"partition_data_win_us.cpk");
-
-		string cpk3 = Path.Combine(
-			windata,
-			"partition_resident_win.cpk");
-
-		if (File.Exists(cpk1) ||
-			File.Exists(cpk2) ||
-			File.Exists(cpk3))
+		foreach (string archiveFile in CurrentGame.LegacyArchiveFiles)
 		{
-			Log(info[5], null, Verbosity.Error);
-			return false;
+			if (File.Exists(Path.Combine(windata, archiveFile)))
+			{
+				Log(info[5], null, Verbosity.Error);
+				return false;
+			}
 		}
 
-		// Any of the Anniversary ARC files means this is not a clean Legacy
-		// installation. Check all known language variants, not only the first
-		// three names.
-		string[] anniversaryArcFiles =
+		// Any Anniversary ARC file means this is not a clean Legacy installation.
+		foreach (string archiveFile in CurrentGame.AnniversaryArchiveFiles)
 		{
-			"partition_data_win_us.arc",
-			"partition_data_win.arc",
-			"partition_resident_win.arc",
-			"partition_data_win_jp.arc",
-			"partition_data_win_zh.arc",
-		};
-
-		foreach (string arcFile in anniversaryArcFiles)
-		{
-			if (File.Exists(Path.Combine(windata, arcFile)))
+			if (File.Exists(Path.Combine(windata, archiveFile)))
 			{
 				Log(info[38]);
 				return false;
@@ -131,26 +101,7 @@ public partial class MainWindow : Form
 			return false;
 		}
 
-		string exeMd5;
-
-		try
-		{
-			using MD5 md5 = MD5.Create();
-			using FileStream stream = File.OpenRead(exe);
-
-			exeMd5 = ToHex(
-				md5.ComputeHash(stream),
-				false);
-		}
-		catch
-		{
-			Log(info[7], new Dictionary<string, string>()
-			{
-				{ "VAR_LEGACY_EXE_NAME", CurrentGame.LEGACY_EXE_NAME },
-			});
-
-			return false;
-		}
+		string exeMd5 = ComputeMd5(exe);
 
 		if (string.IsNullOrWhiteSpace(exeMd5))
 		{
@@ -164,11 +115,10 @@ public partial class MainWindow : Form
 
 		// This hash is tied to the supported game build. Do not treat a hash
 		// mismatch as a hard failure because a legitimate newer build may exist.
-		const string expectedHash = "ff2dd8163a9b2f5b018339fbee69f5ea";
-
-		if (!string.Equals(
-			exeMd5,
-			expectedHash,
+		if (!string.IsNullOrWhiteSpace(CurrentGame.LegacyExecutableHash) &&
+			!string.Equals(
+				exeMd5,
+				CurrentGame.LegacyExecutableHash,
 			StringComparison.OrdinalIgnoreCase))
 		{
 			DialogResult proceed = Log(
@@ -185,7 +135,7 @@ public partial class MainWindow : Form
 		}
 
 		string reshadeIni = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"ReShade.ini");
 
 		if (File.Exists(reshadeIni))
@@ -204,7 +154,7 @@ public partial class MainWindow : Form
 		}
 
 		string dr3FixConfig = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"dr3fix.cfg");
 
 		if (File.Exists(dr3FixConfig))
@@ -226,7 +176,7 @@ public partial class MainWindow : Form
 		}
 
 		string dinputIni = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"dinput8.ini");
 
 		if (File.Exists(dinputIni))

@@ -4,27 +4,21 @@ public partial class MainWindow : Form
 {
 	private bool CheckXboxConfiguration()
 	{
-		switch (CurrentGame.GameID)
+		if (!CurrentGame.SupportsXboxEdition)
 		{
-			case Game.DanganronpaV3:
-				return CheckDRV3XboxConfiguration();
-
-			case Game.AITheSomniumFiles:
-			// The Steam and Xbox versions of AI are very similar (but not the same)
-			// The main differences are the presence of the Movie folder inside StreamingAssets and PathID changes
-			// But they are "similar enough" that we can get away with only checking once
-			//[[fallthrough]]
-			case Game.TokyoPsychodemic:
-			default:
-				return false;
+			return false;
 		}
+
+		// Only Danganronpa V3 currently has an Xbox/Anniversary validator.
+		return CurrentGame.GameID == Game.DanganronpaV3 &&
+			CheckDRV3XboxConfiguration();
 	}
 
 	// Xbox = Microsoft Store "Anniversary Edition" version
 	private bool CheckDRV3XboxConfiguration()
 	{
 		string exe = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			CurrentGame.ANNIVERSARY_EXE_NAME);
 
 		if (!File.Exists(exe))
@@ -37,10 +31,7 @@ public partial class MainWindow : Form
 			return false;
 		}
 
-		string windata = Path.Combine(
-			installation_folder,
-			"data",
-			"WIN");
+		string windata = CurrentGame.GetXboxDataFolder(_installationFolder);
 
 		if (!Directory.Exists(windata))
 		{
@@ -48,34 +39,18 @@ public partial class MainWindow : Form
 			return false;
 		}
 
-		string[] legacyCpkFiles =
+		foreach (string archiveFile in CurrentGame.LegacyArchiveFiles)
 		{
-			"partition_data_win.cpk",
-			"partition_data_win_us.cpk",
-			"partition_resident_win.cpk",
-		};
-
-		foreach (string cpkFile in legacyCpkFiles)
-		{
-			if (File.Exists(Path.Combine(windata, cpkFile)))
+			if (File.Exists(Path.Combine(windata, archiveFile)))
 			{
 				Log(info[39], null, Verbosity.Error);
 				return false;
 			}
 		}
 
-		string[] anniversaryArcFiles =
+		foreach (string archiveFile in CurrentGame.AnniversaryArchiveFiles)
 		{
-			"partition_data_win_us.arc",
-			"partition_data_win.arc",
-			"partition_resident_win.arc",
-			"partition_data_win_jp.arc",
-			"partition_data_win_zh.arc",
-		};
-
-		foreach (string arcFile in anniversaryArcFiles)
-		{
-			if (File.Exists(Path.Combine(windata, arcFile)))
+			if (File.Exists(Path.Combine(windata, archiveFile)))
 			{
 				Log(info[40], null, Verbosity.Error);
 				return false;
@@ -83,7 +58,7 @@ public partial class MainWindow : Form
 		}
 
 		string reshadeIni = Path.Combine(
-			installation_folder,
+			_installationFolder,
 			"ReShade.ini");
 
 		if (File.Exists(reshadeIni))
@@ -103,7 +78,7 @@ public partial class MainWindow : Form
 
 		// Microsoft Store/Xbox installations do not expose the executable in
 		// the same way as the Legacy edition, so executable patching is disabled.
-		CanAccessExe = false;
+		_canAccessExe = false;
 
 		return true;
 	}
