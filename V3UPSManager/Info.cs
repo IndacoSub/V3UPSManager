@@ -1,4 +1,4 @@
-﻿namespace V3UPSManager;
+namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
@@ -9,7 +9,7 @@ public partial class MainWindow : Form
 	// Actual localization strings/data moved to Localization.cs
 	//
 
-	private void LanguageComboBox_SelectedIndexChanged(object sender, EventArgs e)
+	private void LanguageComboBox_SelectedIndexChanged(object? sender, EventArgs e)
 	{
 		CheckIndexChange();
 	}

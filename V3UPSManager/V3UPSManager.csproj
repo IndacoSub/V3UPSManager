@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -11,6 +11,10 @@
     <SignAssembly>False</SignAssembly>
     <AnalysisLevel>5.0</AnalysisLevel>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../V3UPSManager.Core/V3UPSManager.Core.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="publish\**" />

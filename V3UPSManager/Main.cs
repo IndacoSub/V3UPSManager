@@ -14,8 +14,6 @@ public partial class MainWindow : Form
 
 	private int _fileOperationRunning;
 
-	private const string FileOperationMutexName = "Local\\V3UPSManager.FileOperation";
-
 	public MainWindow(string[] args)
 	{
 		InitializeComponent();
@@ -110,7 +108,7 @@ public partial class MainWindow : Form
 		string errorMessage,
 		out string? value)
 	{
-		if (index + 1 >= args.Length)
+		if (index + 1 >= args.Length || args[index + 1].StartsWith("--", StringComparison.Ordinal))
 		{
 			Log(errorMessage, null, Verbosity.Error);
 			value = null;
@@ -128,7 +126,7 @@ public partial class MainWindow : Form
 			return;
 		}
 
-		CurrentGame = SpawnGameByID(requestedGame.Value);
+		CurrentGame = GameCatalog.Create(requestedGame.Value);
 		_manuallySelectedGame = CurrentGame.GameID != Game.None;
 
 		if (_manuallySelectedGame)
@@ -229,8 +227,7 @@ public partial class MainWindow : Form
 		=> RunFileOperation(
 			operation: () =>
 			{
-				Uninstall();
-				return true;
+				return Uninstall();
 			},
 			keepInstallButtonDisabledOnSuccess: false);
 
@@ -250,14 +247,15 @@ public partial class MainWindow : Form
 			return;
 		}
 
-		using Mutex operationMutex = new Mutex(false, FileOperationMutexName);
+		Mutex? operationMutex = null;
 		bool mutexAcquired = false;
 		bool operationSucceeded = false;
 		ControlState previousState = CaptureControlState();
 
 		try
 		{
-			mutexAcquired = TryAcquireOperationMutex(operationMutex);
+			operationMutex = new Mutex(false, FileOperationLock.Name);
+			mutexAcquired = FileOperationLock.TryAcquire(operationMutex);
 			if (!mutexAcquired)
 			{
 				Log(info[99], null, Verbosity.Error, LogType.ConsoleOnly);
@@ -268,28 +266,24 @@ public partial class MainWindow : Form
 			SetOperationControlsEnabled(false);
 			operationSucceeded = operation();
 		}
+		catch (Exception exception)
+		{
+			Log(info[70], new()
+			{
+				["VAR_OUTPUT_FILE"] = _verifiedInstallationFolder,
+				["VAR_EXCEPTION"] = exception.Message
+			}, Verbosity.Error);
+		}
 		finally
 		{
 			if (mutexAcquired)
 			{
-				operationMutex.ReleaseMutex();
+				operationMutex!.ReleaseMutex();
 			}
 
+			operationMutex?.Dispose();
 			Interlocked.Exchange(ref _fileOperationRunning, 0);
 			RestoreControlState(previousState, operationSucceeded, keepInstallButtonDisabledOnSuccess);
-		}
-	}
-
-	private static bool TryAcquireOperationMutex(Mutex mutex)
-	{
-		try
-		{
-			return mutex.WaitOne(0);
-		}
-		catch (AbandonedMutexException)
-		{
-			// Ownership is transferred to this process after an abandoned mutex.
-			return true;
 		}
 	}
 
@@ -317,10 +311,9 @@ public partial class MainWindow : Form
 		bool operationSucceeded,
 		bool keepInstallButtonDisabledOnSuccess)
 	{
-		InstallButton.Enabled =
-			operationSucceeded && keepInstallButtonDisabledOnSuccess
-				? false
-				: state.InstallButtonEnabled;
+		InstallButton.Enabled = operationSucceeded
+			? !keepInstallButtonDisabledOnSuccess && _filesToPatch.Count > 0
+			: state.InstallButtonEnabled;
 
 		SelectInstallationFolderButton.Enabled = state.InstallationButtonEnabled;
 		SelectPatchFolderButton.Enabled = state.PatchButtonEnabled;

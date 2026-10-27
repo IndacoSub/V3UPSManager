@@ -1,49 +1,26 @@
-﻿namespace V3UPSWizard
+namespace V3UPSWizard;
+
+partial class Form1
 {
-	partial class Form1
-	{
-		/// <summary>
-		///  Required designer variable.
-		/// </summary>
-		private System.ComponentModel.IContainer components = null;
+    private System.ComponentModel.IContainer components = new System.ComponentModel.Container();
 
-		/// <summary>
-		///  Clean up any resources being used.
-		/// </summary>
-		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing && (components != null))
-			{
-				components.Dispose();
-			}
-			base.Dispose(disposing);
-		}
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) components.Dispose();
+        base.Dispose(disposing);
+    }
 
-		#region Windows Form Designer generated code
-
-		/// <summary>
-		///  Required method for Designer support - do not modify
-		///  the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
-			SuspendLayout();
-			// 
-			// Form1
-			// 
-			AutoScaleDimensions = new SizeF(7F, 15F);
-			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(800, 450);
-			MaximizeBox = false;
-			MaximumSize = new Size(816, 489);
-			MinimizeBox = false;
-			MinimumSize = new Size(816, 489);
-			Name = "Form1";
-			Text = "V3UPSWizard";
-			ResumeLayout(false);
-		}
-
-		#endregion
-	}
+    private void InitializeComponent()
+    {
+        SuspendLayout();
+        AutoScaleDimensions = new SizeF(96F, 96F);
+        AutoScaleMode = AutoScaleMode.Dpi;
+        Font = new Font("Segoe UI", 10F);
+        ClientSize = new Size(1000, 650);
+        MinimumSize = new Size(920, 640);
+        StartPosition = FormStartPosition.CenterScreen;
+        Name = "Form1";
+        Text = "V3UPS Setup";
+        ResumeLayout(false);
+    }
 }

@@ -2,9 +2,6 @@ namespace V3UPSManager;
 
 public partial class MainWindow : Form
 {
-	private readonly HashSet<string> _alreadyChecked =
-		new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
 	private readonly HashSet<string> _missingPatchFiles =
 		new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -75,11 +72,9 @@ public partial class MainWindow : Form
 
 			_installationFolder = Path.GetFullPath(_installationFolder);
 
-			string dataFolder = _installationFolder;
-
 			if (!_manuallySelectedGame)
 			{
-				Game currentGameID = GetGameByFolder(_installationFolder);
+				Game currentGameID = GameCatalog.Detect(_installationFolder);
 
 				if (currentGameID == Game.None)
 				{
@@ -87,7 +82,7 @@ public partial class MainWindow : Form
 					return false;
 				}
 
-				CurrentGame = SpawnGameByID(currentGameID);
+				CurrentGame = GameCatalog.Create(currentGameID);
 
 				if (CurrentGame == null || CurrentGame.GameID == Game.None)
 				{
@@ -103,47 +98,12 @@ public partial class MainWindow : Form
 				return false;
 			}
 
-			// Detect the game edition/platform. The path rules themselves belong to
-			// the selected game so this workflow does not need another Game switch.
-			if (CheckLegacyConfiguration())
-			{
-				dataFolder = CurrentGame.GetLegacyDataFolder(_installationFolder);
-				_isLegacy = true;
-				_isUnity = false;
-			}
-			else if (CheckUnityConfiguration())
-			{
-				string streamingAssetsFolder = Path.Combine(
-					_installationFolder,
-					CurrentGame.UnityDataFolder,
-					"StreamingAssets");
-
-				string platform = CurrentGame.UsesUnityPlatformFolder
-					? GetUnityPlatformByExclusion(streamingAssetsFolder)
-					: string.Empty;
-
-				dataFolder = CurrentGame.GetUnityDataFolderPath(
-					_installationFolder,
-					platform);
-
-				_isLegacy = false;
-				_isUnity = true;
-			}
-			else if (CheckXboxConfiguration())
-			{
-				dataFolder = CurrentGame.GetXboxDataFolder(_installationFolder);
-				_isLegacy = false;
-				_isUnity = false;
-			}
-			else
-			{
-				return false;
-			}
-
-			if (!CheckInstall(dataFolder))
-			{
-				return false;
-			}
+			InstallationValidationResult? validation = ValidateInstallation();
+			if (validation is null) return false;
+			_isLegacy = validation.IsLegacy;
+			_isUnity = validation.IsUnity;
+			_canAccessExe = validation.CanAccessExecutable;
+			_titleId = validation.TitleId;
 
 			Log(info[18], null, Verbosity.Info, LogType.Print);
 
@@ -153,6 +113,18 @@ public partial class MainWindow : Form
 
 			SelectInstallationFolderButton.Enabled =
 				previousSelectButtonEnabled;
+
+			if (!string.Equals(previousVerifiedFolder, _verifiedInstallationFolder, StringComparison.OrdinalIgnoreCase))
+			{
+				_filesToPatch.Clear();
+				_patchesToApply.Clear();
+				_missingPatchFiles.Clear();
+				_patchFolder = "";
+				_manuallySelectedPatch = false;
+				PatchPathPreviewTextbox.Clear();
+				InstallButton.Enabled = false;
+				SelectPatchFolderButton.Enabled = true;
+			}
 
 			UninstallButton.Enabled = true;
 
@@ -191,6 +163,12 @@ public partial class MainWindow : Form
 
 				SelectInstallationFolderButton.Enabled = previousSelectButtonEnabled;
 				UninstallButton.Enabled = false;
+				InstallButton.Enabled = false;
+				_filesToPatch.Clear();
+				_patchesToApply.Clear();
+				_missingPatchFiles.Clear();
+				InstallationPathPreviewTextbox.Clear();
+				PatchPathPreviewTextbox.Clear();
 			}
 		}
 	}
@@ -207,6 +185,7 @@ public partial class MainWindow : Form
 			_missingPatchFiles,
 			StringComparer.OrdinalIgnoreCase);
 		bool operationCancelled = false;
+		bool planAccepted = false;
 
 		SelectPatchFolderButton.Enabled = false;
 		InstallButton.Enabled = false;
@@ -238,7 +217,6 @@ public partial class MainWindow : Form
 					_filesToPatch = previousToApply;
 					_patchesToApply = previousToBeApplied;
 
-					_alreadyChecked.Clear();
 					_missingPatchFiles.Clear();
 
 					foreach (string file in previousMissingFiles)
@@ -265,111 +243,27 @@ public partial class MainWindow : Form
 
 			// The previous state has already been preserved at this point, so a
 			// real new scan can safely discard its old pair/missing-file data.
-			_alreadyChecked.Clear();
 			_missingPatchFiles.Clear();
 			_filesToPatch = new List<string>();
 			_patchesToApply = new List<string>();
 
 			_patchFolder = Path.GetFullPath(_patchFolder);
 
-			string patchRoot = GetPatchRoot(_patchFolder);
-
-			if (string.IsNullOrWhiteSpace(patchRoot) ||
-				!Directory.Exists(patchRoot))
+			PatchDiscoveryResult plan = PatchDiscovery.Discover(CurrentGame,
+				_verifiedInstallationFolder, _patchFolder, _isUnity, _isLegacy, _canAccessExe);
+			_filesToPatch = plan.Targets.Select(target => target.FilePath).ToList();
+			_patchesToApply = plan.Targets.Select(target => target.PatchPath).ToList();
+			foreach (string missing in plan.MissingFiles)
 			{
-				Log(info[21], null, Verbosity.Error);
-				SelectPatchFolderButton.Enabled = true;
-				return false;
+				_missingPatchFiles.Add(missing);
+				Log(info[47], new() { ["VAR_SOME_FILE"] = missing }, Verbosity.Error, LogType.ConsoleOnly);
 			}
-
-			string patchFormat = CurrentGame.PatchFormatExtension;
-
-			string[] files = Directory.EnumerateFiles(
-				patchRoot,
-				"*",
-				SearchOption.AllDirectories)
-			.Where(file =>
-				file.EndsWith(
-					patchFormat,
-					StringComparison.OrdinalIgnoreCase))
-			.ToArray();
-
-			if (files.Length == 0)
+			Log(info[74], new()
 			{
-				Log(info[22], new Dictionary<string, string>()
-				{
-					{ "VAR_PATCH_FORMAT_EXTENSION", patchFormat },
-				}, Verbosity.Error);
-				SelectPatchFolderButton.Enabled = true;
-				return false;
-			}
-
-			List<string> actualPatchFiles = new List<string>();
-
-			foreach (string file in files)
-			{
-				if (IsDirectory(file))
-				{
-					continue;
-				}
-
-				actualPatchFiles.Add(file);
-
-				// PatchSpecificString identifies files which belong to this
-				// patch package. Use a case-insensitive comparison so the same
-				// package behaves consistently across filesystems.
-				if (!file.EndsWith(
-					CurrentGame.PatchSpecificString,
-					StringComparison.OrdinalIgnoreCase))
-				{
-					continue;
-				}
-			}
-
-			if (actualPatchFiles.Count == 0)
-			{
-				Log(info[22], new Dictionary<string, string>()
-				{
-					{ "VAR_PATCH_FORMAT_EXTENSION", patchFormat },
-				}, Verbosity.Error);
-				SelectPatchFolderButton.Enabled = true;
-				return false;
-			}
-
-			List<string> patchCandidates = actualPatchFiles
-				.Where(file =>
-					file.EndsWith(
-						CurrentGame.PatchSpecificString,
-						StringComparison.OrdinalIgnoreCase))
-				.ToList();
-
-			if (patchCandidates.Count == 0)
-			{
-				Log(info[44], new Dictionary<string, string>()
-				{
-					{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
-					{ "VAR_PATCH_SPECIFIC_STRING", CurrentGame.PatchSpecificString },
-				}, Verbosity.Error);
-				SelectPatchFolderButton.Enabled = true;
-				return false;
-			}
-
-			// GetToApply produces two aligned lists: each entry at index N in
-			// _filesToPatch belongs to the patch at index N in _patchesToApply.
-			GetToApply(patchCandidates.ToArray());
-
-			Log(
-				info[74],
-				new Dictionary<string, string>()
-				{
-					{ "VAR_PATCH_COUNT", patchCandidates.Count.ToString() },
-					{ "VAR_MATCHED_COUNT", _filesToPatch.Count.ToString() },
-				},
-				Verbosity.Info,
-				LogType.ConsoleOnly);
-			RefreshLogConsole();
-
-			if (_patchesToApply.Count != patchCandidates.Count)
+				["VAR_PATCH_COUNT"] = plan.CandidateCount.ToString(),
+				["VAR_MATCHED_COUNT"] = plan.Targets.Count.ToString()
+			}, Verbosity.Info, LogType.ConsoleOnly);
+			if (!plan.IsComplete)
 			{
 				WriteDiagnosticFiles();
 				Log(info[53], null, Verbosity.Error);
@@ -377,32 +271,7 @@ public partial class MainWindow : Form
 				return false;
 			}
 
-			if (_filesToPatch.Count == 0)
-			{
-				Log(info[27], new Dictionary<string, string>()
-				{
-					{ "VAR_PATCH_FORMAT", CurrentGame.PatchFormat.ToString() },
-				}, Verbosity.Error);
-				SelectPatchFolderButton.Enabled = true;
-				return false;
-			}
-
-			if (_missingPatchFiles.Count > 0)
-			{
-				foreach (string file in _missingPatchFiles)
-				{
-					Log(info[47], new Dictionary<string, string>()
-					{
-						{ "VAR_SOME_FILE", file },
-					}, Verbosity.Info, LogType.ConsoleOnly);
-				}
-
-				WriteDiagnosticFiles();
-				Log(info[53], null, Verbosity.Error);
-				SelectPatchFolderButton.Enabled = true;
-				return false;
-			}
-
+			planAccepted = true;
 			Log(info[23]);
 
 			PatchPathPreviewTextbox.Text = _patchFolder;
@@ -431,274 +300,14 @@ public partial class MainWindow : Form
 			{
 				InstallButton.Enabled = previousInstallButtonEnabled;
 			}
-			else if (_filesToPatch.Count == 0)
+			else if (!planAccepted)
 			{
+				_filesToPatch.Clear();
+				_patchesToApply.Clear();
+				PatchPathPreviewTextbox.Clear();
 				InstallButton.Enabled = false;
 			}
 		}
 	}
 
-	private string GetPatchRoot(string patchFolder)
-	{
-		if (CurrentGame == null)
-		{
-			return string.Empty;
-		}
-
-		return CurrentGame.GetPatchRoot(
-			patchFolder,
-			_isUnity,
-			_isLegacy);
-	}
-
-	private void RemoveFromMissingList(string path)
-	{
-		if (string.IsNullOrWhiteSpace(path))
-		{
-			return;
-		}
-
-		_missingPatchFiles.Remove(path);
-	}
-
-	private void GetToApply(string[] patchFiles)
-	{
-		_filesToPatch = new List<string>();
-		_patchesToApply = new List<string>();
-		_alreadyChecked.Clear();
-		_missingPatchFiles.Clear();
-
-		if (patchFiles == null || patchFiles.Length == 0)
-		{
-			return;
-		}
-
-		IReadOnlyList<string> extensions = CurrentGame.GetPatchTargetExtensions(
-			_isUnity,
-			_canAccessExe);
-
-		foreach (string extension in extensions)
-		{
-			TryToApplyFiles(patchFiles, extension);
-		}
-	}
-
-	private void TryToApplyFiles(string[] patchFiles, string extension)
-	{
-		foreach (string file in patchFiles)
-		{
-			if (string.IsNullOrWhiteSpace(file) ||
-				!file.EndsWith(
-					CurrentGame.PatchSpecificString,
-					StringComparison.OrdinalIgnoreCase))
-			{
-				continue;
-			}
-
-			string secondHalf;
-
-			try
-			{
-				secondHalf = Path.GetRelativePath(
-					_patchFolder,
-					file);
-			}
-			catch
-			{
-				continue;
-			}
-
-			if (string.IsNullOrWhiteSpace(secondHalf) ||
-				secondHalf == "." ||
-				secondHalf.StartsWith(
-					"..",
-					StringComparison.Ordinal))
-			{
-				continue;
-			}
-
-			string normalizedRelativePath =
-				secondHalf.Replace(
-					Path.AltDirectorySeparatorChar,
-					Path.DirectorySeparatorChar);
-
-			if (_alreadyChecked.Contains(normalizedRelativePath))
-			{
-				continue;
-			}
-
-			string approximateFile;
-
-			try
-			{
-				string fileWithoutPatchSuffix = normalizedRelativePath
-					.Substring(
-						0,
-						normalizedRelativePath.Length -
-						CurrentGame.PatchSpecificString.Length);
-
-				if (string.IsNullOrWhiteSpace(fileWithoutPatchSuffix))
-				{
-					continue;
-				}
-
-				approximateFile = Path.Combine(
-					_verifiedInstallationFolder,
-					fileWithoutPatchSuffix);
-			}
-			catch
-			{
-				continue;
-			}
-
-			if (IsDirectory(approximateFile))
-			{
-				DialogResult result = Log(
-					ui_messages[1],
-					null,
-					Verbosity.Info,
-					LogType.Ask);
-
-				if (result != DialogResult.Yes)
-				{
-					continue;
-				}
-			}
-
-			if (extension.Length > 0)
-			{
-				string existingExtension = Path.GetExtension(approximateFile);
-
-				if (string.Equals(
-					existingExtension,
-					extension,
-					StringComparison.OrdinalIgnoreCase))
-				{
-					// If the patch name already contains the target extension,
-					// accept either the live file or an existing backup. Install()
-					// can reconstruct a missing live file from that backup.
-					if (!FileExistsCaseSensitive(approximateFile) &&
-						!File.Exists(approximateFile) &&
-						!File.Exists(approximateFile + "_bak"))
-					{
-						_missingPatchFiles.Add(approximateFile);
-						continue;
-					}
-
-					AddPatchPair(
-						approximateFile,
-						file,
-						normalizedRelativePath);
-
-					continue;
-				}
-
-				string lowercaseCandidate =
-					approximateFile + extension.ToLowerInvariant();
-
-				string uppercaseCandidate =
-					approximateFile + extension.ToUpperInvariant();
-
-				string? targetFile = null;
-
-				if (FileExistsCaseSensitive(lowercaseCandidate))
-				{
-					targetFile = lowercaseCandidate;
-				}
-				else if (FileExistsCaseSensitive(uppercaseCandidate))
-				{
-					targetFile = uppercaseCandidate;
-				}
-				else if (File.Exists(lowercaseCandidate))
-				{
-					// On a case-insensitive filesystem the exact-case helper can
-					// legitimately return false even though the target exists.
-					// Prefer the lowercase candidate because it matches the
-					// normal naming convention used by these game files.
-					targetFile = lowercaseCandidate;
-				}
-				else if (File.Exists(uppercaseCandidate))
-				{
-					targetFile = uppercaseCandidate;
-				}
-				else if (File.Exists(lowercaseCandidate + "_bak"))
-				{
-					targetFile = lowercaseCandidate;
-				}
-				else if (File.Exists(uppercaseCandidate + "_bak"))
-				{
-					targetFile = uppercaseCandidate;
-				}
-
-				if (targetFile == null)
-				{
-					_missingPatchFiles.Add(
-						lowercaseCandidate);
-
-					continue;
-				}
-
-				AddPatchPair(
-					targetFile,
-					file,
-					normalizedRelativePath);
-			}
-			else
-			{
-				// Files without an extension are valid for some Unity titles.
-				// Do not modify the installation during discovery: Install()
-				// will restore an existing _bak only when it is actually needed.
-				if (!File.Exists(approximateFile) &&
-					!File.Exists(approximateFile + "_bak"))
-				{
-					_missingPatchFiles.Add(approximateFile);
-					continue;
-				}
-
-				AddPatchPair(
-					approximateFile,
-					file,
-					normalizedRelativePath);
-			}
-		}
-	}
-
-	private void AddPatchPair(
-		string targetFile,
-		string patchFile,
-		string relativePatchPath)
-	{
-		if (string.IsNullOrWhiteSpace(targetFile) ||
-			string.IsNullOrWhiteSpace(patchFile) ||
-			_alreadyChecked.Contains(relativePatchPath))
-		{
-			return;
-		}
-
-		if (_filesToPatch.Contains(targetFile, StringComparer.OrdinalIgnoreCase))
-		{
-			return;
-		}
-
-		_filesToPatch.Add(targetFile);
-		_patchesToApply.Add(patchFile);
-		_alreadyChecked.Add(relativePatchPath);
-
-		// Record the exact patch-to-target association during discovery. This
-		// makes it possible to see what the installer intends to modify before
-		// the external patch tool is launched.
-		Log(
-			info[73],
-			new Dictionary<string, string>()
-			{
-				{ "VAR_PATCH_FILE", patchFile },
-				{ "VAR_OUTPUT_FILE", targetFile },
-			},
-			Verbosity.Info,
-			LogType.ConsoleOnly);
-		RefreshLogConsole();
-
-		RemoveFromMissingList(targetFile);
-		RemoveFromMissingList(targetFile.ToLowerInvariant());
-	}
 }

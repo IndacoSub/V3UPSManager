@@ -17,7 +17,7 @@ public enum FormatType
 /// <summary>
 /// Describes everything that is intrinsic to a supported game.
 ///
-/// The UI and the installer contain the workflow; the concrete game classes
+/// Core services implement the workflow; the concrete game classes
 /// own the values and filesystem rules that differ from one title to another.
 /// This keeps additions to the game list local to Games/*.cs instead of
 /// scattering another switch/dictionary through the application.
@@ -168,90 +168,3 @@ public sealed class NoneGame : GameBase
 {
 }
 
-public partial class MainWindow : Form
-{
-	private static readonly IReadOnlyDictionary<Game, Func<GameBase>> GameFactories =
-		new Dictionary<Game, Func<GameBase>>
-		{
-			[Game.DanganronpaV3] = static () => new DRV3(),
-			[Game.AITheSomniumFiles] = static () => new AITSF(),
-			[Game.TokyoPsychodemic] = static () => new TokyoPsychodemic(),
-		};
-
-	private static readonly GameBase[] SupportedGames =
-		GameFactories.Values.Select(factory => factory()).ToArray();
-
-	public static Game GetGameByFolder(string folder)
-	{
-		if (string.IsNullOrWhiteSpace(folder))
-		{
-			return Game.None;
-		}
-
-		string normalizedFolder;
-		try
-		{
-			normalizedFolder = NormalizePath(folder);
-		}
-		catch
-		{
-			return Game.None;
-		}
-
-		if (normalizedFolder.Length == 0)
-		{
-			return Game.None;
-		}
-
-		foreach (GameBase game in SupportedGames)
-		{
-			foreach (string identifier in game.FolderIdentifiers)
-			{
-				if (string.IsNullOrWhiteSpace(identifier))
-				{
-					continue;
-				}
-
-				string normalizedIdentifier = NormalizePathSegment(identifier);
-
-				// A segment boundary is required so a folder such as
-				// "My Danganronpa V3" cannot accidentally match a title.
-				if (string.Equals(
-					normalizedFolder,
-					normalizedIdentifier,
-					StringComparison.OrdinalIgnoreCase) ||
-					normalizedFolder.EndsWith(
-						"/" + normalizedIdentifier,
-						StringComparison.OrdinalIgnoreCase))
-				{
-					return game.GameID;
-				}
-			}
-		}
-
-		return Game.None;
-	}
-
-	public GameBase SpawnGameByID(Game currentGameID)
-	{
-		return GameFactories.TryGetValue(
-			currentGameID,
-			out Func<GameBase>? factory)
-			? factory()
-			: new NoneGame();
-	}
-
-	private static string NormalizePath(string path)
-	{
-		return Path.GetFullPath(path)
-			.TrimEnd(
-				Path.DirectorySeparatorChar,
-				Path.AltDirectorySeparatorChar)
-			.Replace('\\', '/');
-	}
-
-	private static string NormalizePathSegment(string path)
-	{
-		return path.Trim().Trim('/').Replace('\\', '/');
-	}
-}
